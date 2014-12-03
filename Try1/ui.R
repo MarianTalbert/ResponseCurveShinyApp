@@ -7,14 +7,14 @@ shinyUI(fluidPage(
   
   fluidRow( 
     column(3,
-      fileInput("file", label = h3("Please point to the shapefile .shp"))),
-    
+      fileInput("NpsShapes", label = h3("Please point to the shapefile .shp"))),
+   
    column(3, 
-      textInput("text", label = h3("Park Name for Graphics"), 
+      textInput("ParkName", label = h3("Park Name for Graphics"), 
         value = "Enter text ...")),
    
    column(3,
-   radioButtons("radio2", label = h3("Clip to Polygon"),
+   radioButtons("Clip", label = h3("Clip to Polygon"),
         choices = list("Yes" = 1, 
                        "No (uses the bounding box)" = 2)
                   )
@@ -25,7 +25,7 @@ shinyUI(fluidPage(
   fluidRow(
        
     column(8, 
-      sliderInput("slider1", label = h3("Baseline Years"),
+      sliderInput("Baseline", label = h3("Baseline Years"),
         min = 1895, max = as.numeric(as.character(years(Sys.time()))), value =c(1895,2010))
       )
   ),
@@ -34,13 +34,13 @@ shinyUI(fluidPage(
     
   fluidRow(
     column(3,
-      radioButtons("radio", label = h3("Plot Units"),
-        choices = list("Metric (C/mm per month)" = 1, 
-                       "US units (F/ inches per month)" = 2)
+      radioButtons("PlotUnits", label = h3("Plot Units"),
+        choices = list("Metric (C/mm per month)" = "c(\"C\",\"mm\")", 
+                       "US units (F/ inches per month)" = "c(\"F\",\"In\")")
                   ) 
     ),  
     column(3, 
-      checkboxGroupInput("checkGroup", 
+      checkboxGroupInput("RCP", 
         label = h3("RCPs for Plotting"), 
         choices = list("RCP 2.6" = 1, 
            "RCP 4.5" = 2,
@@ -50,7 +50,10 @@ shinyUI(fluidPage(
         selected = 1)
     ),    
     column(3,
-      submitButton("Submit"))       
-  )
+      submitButton("Submit"))
+          
+  ),
+  mainPanel(
+   textOutput("ShapeFile"))
 
 ))
