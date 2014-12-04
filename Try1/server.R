@@ -9,13 +9,6 @@ shinyServer(function(input, output,session) {
   #  1) It is "reactive" and therefore should re-execute automatically
   #     when inputs change
   #  2) Its output type is a plot
-   output$ShapeFile <- reactive({
-    if(is.null(input$NpsShapes)) {
-      return("NULL")
-    } else {
-      return(input$file_input$datapath)
-    }
-  })
   
   
   observe({
@@ -23,9 +16,10 @@ shinyServer(function(input, output,session) {
 			return()
 		obj<-switch(input$Dataset,
            NpsShapes = "H:\\Desktop\\Climate\\InputLayers\\NPS_boundaries\\nps_boundary.shp", 
-         StateBounds = "H:\\Desktop\\Climate\\InputLayers\\StateBounds\\statep010.shp")	 
+         StateBounds = "H:\\Desktop\\Climate\\InputLayers\\StateBounds\\statep010.shp")
 		dat <- readShapePoly(obj)
       var.opts <- names(dat)
+    #output$Shape<-dat  
 		updateSelectInput(session, "Attribute", choices = var.opts)
 		updateSelectInput(session, "group", choices = var.opts)
 		})
