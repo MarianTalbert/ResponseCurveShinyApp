@@ -2,12 +2,29 @@
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
-  titlePanel("Climate Primer"),
-  h3("Park Information"),
-  
-  fluidRow( 
+  headerPanel("Climate Primer"),
+  h3("Park Information",align="left"),
+  p("Please either select from the available shape files or upload the desired file.",align="left"),
+  fluidRow(
+   
+    column(3,
+      selectInput("Dataset", label = h3("Default Shapefiles"), 
+        choices = list("NPS Shape" = "NpsShapes", 
+                       "State Boundaries" = "StateBounds",
+                       "County Boundaries" = "CountyBounds"), selected = "NpsShapes")),
+   
+		
+    column(3,
+      selectInput("Attribute", "Attribute:","Loading...") 
+        ),
+    column(3,
+      selectInput("AttributeValue", label = h3("Select the Attribute Value"), 
+        choices = list("NPS Shape" = "NpsShapes", 
+                       "State Boundaries" = "StateBounds",
+                       "County Boundaries" = "CountyBounds"), selected = "NpsShapes")),                                      
     column(3,
       fileInput("NpsShapes", label = h3("Please point to the shapefile .shp"))),
+      
    
    column(3, 
       textInput("ParkName", label = h3("Park Name for Graphics"), 
@@ -50,10 +67,10 @@ shinyUI(fluidPage(
         selected = 1)
     ),    
     column(3,
-      submitButton("Submit"))
-          
+      submitButton("Submit"))          
   ),
   mainPanel(
-   textOutput("ShapeFile"))
+   plotOutput("plotTry")
+  )
 
 ))

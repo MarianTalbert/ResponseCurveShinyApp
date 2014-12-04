@@ -1,7 +1,7 @@
 library(shiny)
-
+library(maptools)
 # Define server logic required to draw a histogram
-shinyServer(function(input, output) {
+shinyServer(function(input, output,session) {
 
   # Expression that generates a histogram. The expression is
   # wrapped in a call to renderPlot to indicate that:
@@ -11,10 +11,39 @@ shinyServer(function(input, output) {
   #  2) Its output type is a plot
    output$ShapeFile <- reactive({
     if(is.null(input$NpsShapes)) {
-      return("goodby")
+      return("NULL")
     } else {
-      return("hello")
+      return(input$file_input$datapath)
     }
+  })
+  
+  
+  observe({
+		if (is.null(input$Dataset))
+			return()
+		obj<-switch(input$Dataset,
+           NpsShapes = "H:\\Desktop\\Climate\\InputLayers\\NPS_boundaries\\nps_boundary.shp", 
+         StateBounds = "H:\\Desktop\\Climate\\InputLayers\\StateBounds\\statep010.shp")	 
+		dat <- readShapePoly(obj)
+      var.opts <- names(dat)
+		updateSelectInput(session, "Attribute", choices = var.opts)
+		updateSelectInput(session, "group", choices = var.opts)
+		})
+		
+	#observe({
+	#	if (is.null(input$Attribute))
+	#		return()
+	#	m<-match(names(output$Shape),output$Attribute)
+#		browser()
+#    names(output$Shape)
+#		dat <- readShapePoly(obj)
+#      var.opts <- names(dat)
+#		updateSelectInput(session, "Attribute", choices = var.opts)
+#		updateSelectInput(session, "group", choices = var.opts)
+#		})	
+    
+  output$plotTry<-renderPlot({
+    plot(seq(1:10),sqrt(seq(1:10)),cex=seq(1:10),col=seq(1:10),pch=seq(1:10))
   })
    
  
