@@ -11,19 +11,18 @@ shinyUI(fluidPage(
         h1("Park Information"),
         helpText("Please either select from the available", 
               "shapefiles or upload the desired file."),
-        selectInput("Dataset", label = h4("Default Shapefiles"), 
+        selectInput("Dataset", label = h4("Available Shapefiles"), 
           choices = list("NPS Shape" = "NpsShapes", 
                          "State Boundaries" = "StateBounds",
-                         "County Boundaries" = "CountyBounds"), selected = "NpsShapes"),
+                         "County Boundaries" = "CountyBounds",
+                         "Please Select..."="None"), selected = "None"),
      
         fileInput("NpsShapes", label = h4("Please point to the shapefile .shp")),
         
         selectInput("Attribute", label=h4("Select Attribute"),"Loading..."), 
          
         selectInput("AttributeValue", label = h4("Select the Attribute Value"), 
-          choices = list("NPS Shape" = "NpsShapes", 
-                         "State Boundaries" = "StateBounds",
-                         "County Boundaries" = "CountyBounds"), selected = "NpsShapes"),                                      
+          "Loading..."),                                      
      
         textInput("ParkName", label = h4("Park Name for Graphics"), 
           value = "Enter text ..."),

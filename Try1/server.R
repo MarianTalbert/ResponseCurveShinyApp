@@ -12,29 +12,25 @@ shinyServer(function(input, output,session) {
   
   
   observe({
-		if (is.null(input$Dataset))
+		if (input$Dataset=="None")
 			return()
 		obj<-switch(input$Dataset,
            NpsShapes = "H:\\Desktop\\Climate\\InputLayers\\NPS_boundaries\\nps_boundary.shp", 
          StateBounds = "H:\\Desktop\\Climate\\InputLayers\\StateBounds\\statep010.shp")
 		dat <- readShapePoly(obj)
       var.opts <- names(dat)
-    #output$Shape<-dat  
+    Shape<<-dat #this is global  
 		updateSelectInput(session, "Attribute", choices = var.opts)
-		updateSelectInput(session, "group", choices = var.opts)
 		})
 		
-	#observe({
-	#	if (is.null(input$Attribute))
-	#		return()
-	#	m<-match(names(output$Shape),output$Attribute)
-#		browser()
-#    names(output$Shape)
-#		dat <- readShapePoly(obj)
-#      var.opts <- names(dat)
-#		updateSelectInput(session, "Attribute", choices = var.opts)
-#		updateSelectInput(session, "group", choices = var.opts)
-#		})	
+	observe({
+		if (input$Attribute=="Loading...")
+			return()
+    m<-match(input$Attribute,names(Shape))
+      var.opts <- as.character(Shape[[m]])
+      
+		updateSelectInput(session, "AttributeValue", choices = var.opts)
+		})	
     
   output$plotTry<-renderPlot({
     plot(seq(1:10),sqrt(seq(1:10)),cex=seq(1:10),col=seq(1:10),pch=seq(1:10))
