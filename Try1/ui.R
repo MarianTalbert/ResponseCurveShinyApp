@@ -3,21 +3,22 @@
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
     titlePanel("Climate Primer"),
+    #========= Main Panel================#
     mainPanel(
         img(src="NCCSClogo.jpg",height=250,width=250),
-        plotOutput("plotTry",width=600,height=600)
+        img(src="Temp_1950_to_2100_EmissionsSD.png",height=650,width=650)
+        #plotOutput("plotTry",width=600,height=600)
     ),
+    
+    #========== Sidebar Options =========#
     sidebarPanel(position="right",
         h1("Park Information"),
         helpText("Please either select from the available", 
               "shapefiles or upload the desired file."),
-        selectInput("Dataset", label = h4("Available Shapefiles"), 
-          choices = list("NPS Shape" = "NpsShapes", 
-                         "State Boundaries" = "StateBounds",
-                         "County Boundaries" = "CountyBounds",
-                         "Please Select..."="None"), selected = "None"),
-     
-        fileInput("NpsShapes", label = h4("Please point to the shapefile .shp")),
+        
+        selectInput("Dataset", choices=names(ShapeList),label=h4("Available Shapefiles")),
+        
+        fileInput("InputFile", label = h4("Please point to the .zip containing the shapefile")),
         
         selectInput("Attribute", label=h4("Select Attribute"),"Loading..."), 
          
