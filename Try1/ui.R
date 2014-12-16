@@ -34,8 +34,8 @@ shinyUI(fluidPage(
   
         h1("Plot Information"),
         sliderInput("Baseline", label = h4("Baseline Years"),
-          min = 1895, max = as.numeric(as.character(years(Sys.time()))), value =c(1895,2010)),
-     
+          min = 1895, max = as.numeric(as.character(format(Sys.time(),"%Y"))), value =c(1895,2010),format="#",width="100%"),
+			
         radioButtons("PlotUnits", label = h4("Plot Units"),
           choices = list("Metric (C/mm per month)" = "c(\"C\",\"mm\")", 
                          "US units (F/ inches per month)" = "c(\"F\",\"In\")")

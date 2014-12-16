@@ -16,6 +16,7 @@ shinyServer(function(input, output,session) {
      ShapeFile<-FileList[match(".shp",substr(FileList,nchar(FileList)-3,nchar(FileList)))]
      ShapeList[[length(ShapeList)+1]]<-ShapeFile
      names(ShapeList)[length(ShapeList)]<-gsub(".zip","",input$InputFile$name)
+   
      ShapeList<<-ShapeList #assign this to global
       updateSelectInput(session, "Dataset", choices = names(ShapeList))
 		})
@@ -29,14 +30,16 @@ shinyServer(function(input, output,session) {
     #if(!is.na(m<-match("PleaseSelect",names(ShapeList)))){ 
     # ShapeList[[m]]<-NULL
      #write to global
+    
 		#updateSelectInput(session, "Dataset", choices = names(ShapeList))
 		#}
+	
     if(!is.null(input$InputFile)){
      #add any new shapefiles that have been uploaded to the list
      ShapeList[[length(ShapeList)+1]]<-input$InputFile$datapath
      names(ShapeList[[length(ShapeList)]])<-input$InputFile$name
     }
-  
+      
     obj<-ShapeList[[match(input$Dataset,names(ShapeList))]]
 		dat <- readShapePoly(obj)
       var.opts <- names(dat)
