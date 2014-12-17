@@ -6,4 +6,5 @@
 ShapeList<-list(NpsShapes= "J:\\Research\\nccsc\\Private\\Staff\\TalbertM\\Climate\\InputLayers\\NPS_boundaries\\nps_boundary.shp",
                 StateBounds = "J:\\Research\\nccsc\\Private\\Staff\\TalbertM\\Climate\\InputLayers\\StateBounds\\statep010.shp")
                 
-TempLoc<-"J:\\Research\\nccsc\\Private\\Staff\\TalbertM\\Climate\\InputLayers\\Temp"             
+TempLoc<-"J:\\Research\\nccsc\\Private\\Staff\\TalbertM\\Climate\\InputLayers\\Temp"
+             
