@@ -1,13 +1,41 @@
  library(shiny)
-
+LatLst<-as.list(seq(from=29,to=50))
+LonLst<-as.list(seq(from=-125,to=-67))
+names(LatLst)<-seq(from=29,to=50) 
+names(LonLst)<-seq(from=-125,to=-67) 
 # Define UI for application that draws a histogram
 shinyUI(navbarPage("Climate Primer",
-
+#===============================================
+# ==========  Data Specification Tab ==========#
  tabPanel("Data Specifications",
 
         #========= Main Panel================#
         mainPanel(
-           
+ h4("Latitude"),
+ div(class="row",
+  div(class="span1", selectInput("LatStart",choices=LatLst, 
+    selected = 29,label="")),
+  div(class="span2", selectInput("LatSDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+    selected = 1,label="")),
+  div(class="span.5",h4("to")),
+   div(class="span1", selectInput("LatEnd",choices=LatLst, 
+    selected = 50,label="")),
+  div(class="span2", selectInput("LaEtDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+    selected = 1,label=""))  
+),
+
+h4("Longitude"),
+ div(class="row",
+  div(class="span1", selectInput("LonStart",choices=LonLst, 
+    selected =-125,label="")),
+  div(class="span2", selectInput("LonSDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+    selected = 1,label="")),
+  div(class="span.5",h4("to")),
+   div(class="span1", selectInput("LonEnd",choices=LonLst, 
+    selected = -67,label="")),
+  div(class="span2", selectInput("LoEtDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+    selected = 1,label=""))  
+),
             #img(src="Temp_1950_to_2100_EmissionsSD.png",height=650,width=650),
             
             leafletMap("map", 700, 550, initialTileLayer = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -27,21 +55,21 @@ shinyUI(navbarPage("Climate Primer",
         sidebarPanel(position="right",
             h1("Study Area Information"),
             helpText("Please either select from the available", 
-                  "shapefiles or upload the desired file."),
-            
+                  "shapefiles, upload the desired file or specify a bounding box."),
+ 
             selectInput("Dataset", choices=names(ShapeList),label=h4("Available Shapefiles")),
             
             fileInput("InputFile", label = h4("Please point to the .zip containing the shapefile")),
             
-            selectInput("Attribute", label=h4("Select Attribute"),"Loading..."), 
+            selectInput("Attribute", label=h5("Select Attribute"),"Loading..."), 
              
-            selectInput("AttributeValue", label = h4("Select the Attribute Value"), 
+            selectInput("AttributeValue", label = h5("Select the Attribute Value"), 
               "Loading..."),                                      
          
-            textInput("ParkName", label = h4("Park Name for Graphics"), 
+            textInput("ParkName", label = h3("Park Name for Graphics"), 
               value = "Enter text ..."),
       
-            radioButtons("Clip", label = h4("Clip to Polygon"),
+            radioButtons("Clip", label = h3("Clip to Polygon"),
               choices = list("Yes" = 1, 
                              "No (uses the bounding box)" = 2)),
       
@@ -67,10 +95,13 @@ shinyUI(navbarPage("Climate Primer",
         
         )
     ),
+#===============================================
+# ==========  Mapped Output Tab ==========#    
     tabPanel("Mapped Output",
     	mainPanel(
                  h2("Available Color Scales for Mapped Output"),
-                img(src="MapDefaultColors.png",height="70%",width="100%")
+                img(src="MapDefaultColors.png",height="70%",width="80%"),
+                 img(src="NCCSClogo.jpg",height=250,width=250) 
             ),
       sidebarPanel(position="right",
             h1("Map Specification"),
@@ -86,7 +117,7 @@ shinyUI(navbarPage("Climate Primer",
                 choices = list("FullYear"=1,"Jan" = 2, "Feb" = 3,
                        "March" = 4,"April"=5), selected = 1),
               checkboxGroupInput("MapRCP", 
-                  label = h3("RCPs for Plotting"), 
+                  label = h4("RCPs for Plotting"), 
                   choices = list("RCP 2.6" = 1, 
                      "RCP 4.5" = 2,
                      "RCP 6.0" = 3,
@@ -97,15 +128,27 @@ shinyUI(navbarPage("Climate Primer",
               min = 1895, max = as.numeric(as.character(format(Sys.time(),"%Y"))), value =c(1895,2010),format="#",width="100%"),         
               
               sliderInput("FutureTime1", label = h4("Future Period 1"),
-              min = 2015, max = 2100, value =c(2030,2060),format="#",width="100%"),
+              min = 2015, max = 2100, value =c(2030,2060),format="#",width="50%"),
               
               sliderInput("FutureTime2", label = h4("Future Period 2"),
-              min = 2015, max = 2100, value =c(2070,2100),format="#",width="100%")         
+              min = 2015, max = 2100, value =c(2070,2100),format="#",width="50%"),
+              
+              selectInput("ColorScale", label = h4("Color Scale"), 
+                choices = list("Default"=0,"yellow to red" = 1, "teal to blue" = 2,
+                       "red to blue" = 3,"brown to blue"=4,"green to red"=4,"brown to purple"=4), selected = 0),         
                        
-                                                  
+              checkboxGroupInput("AddBoundaries", 
+                  label = h4("Add boundaries"), 
+                  choices = list("Shape Boundary" = 1, 
+                     "State Boundary" = 2
+                     ),
+                  selected = 1) 
+                                                      
              )     
                         
-         ),  
+         ),
+#===============================================
+# ==========  About Tab ==========#           
   tabPanel("About",
     	mainPanel(
                 #img(src="NCCSClogo.jpg",height=250,width=250),
