@@ -1,6 +1,4 @@
-ChkLibs(list("shiny","leaflet","maptools","rgdal","raster","ncdf4","fields","maps",
-            "ggplot2","zoo","XML","RColorBrewer","chron"))
-            
+
 # Define server logic required to draw a histogram
 shinyServer(function(input, output,session) {
   dat<-NA
@@ -84,10 +82,11 @@ shinyServer(function(input, output,session) {
             
            }
         })	
-  
-  output$plotTry<-renderPlot({
-    plot(seq(1:10),sqrt(seq(1:10)),cex=seq(1:10),col=seq(1:10),pch=seq(1:10))
+
+  output$EmissionsPlot<-renderPlot({
+    Tmn<-EmissionSDPlot(GDOTmin,PastClim=MaurerTmin,ParkName=ParkName,
+    DisplayOutput=TRUE,OutputGraphics=OutputGraphics,rcp=input$RibbonRCP,cexMult=.9,writeMain=writeMain,Period=5)
   })
-   
+
  
 })

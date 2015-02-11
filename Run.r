@@ -1,3 +1,8 @@
+#load the workspace and code for example graphics for now...
+load("C:\\Users\\mtalbert\\Downloads\\Example.RData")
+ChkLibs(list("maptools","rgdal","raster","ncdf4","fields","maps","RNCEP",
+            "ggplot2","zoo","XML","RCurl","RColorBrewer","chron","ncdf"))
+            
 setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
 sourceList<-list("Try1/external/ChkLibs.r","Try1/external/GetParkBoundary.r")
 unlist(lapply(sourceList,source))

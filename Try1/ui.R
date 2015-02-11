@@ -97,14 +97,14 @@ shinyUI(navbarPage("Climate Primer",
           wellPanel(              
           h2("Future Projection Ribbon Plots"),
           div(class="row",
-                div(class="span3", checkboxGroupInput("RCPRibbon", 
+                div(class="span3", checkboxGroupInput("RibbonRCP", 
               label = h3("RCPs for Plotting"), 
-              choices = list("RCP 2.6" = 1, 
-                 "RCP 4.5" = 2,
-                 "RCP 6.0" = 3,
-                 "RCP 8.5" = 4
+              choices = list("RCP 2.6" = "rcp26", 
+                 "RCP 4.5" = "rcp45",
+                 "RCP 6.0" = "rcp60",
+                 "RCP 8.5" = "rcp85"
                  ),
-              selected = 1)),
+              selected = c("rcp26","rcp45","rcp60","rcp85"))),
              div(class="span3",sliderInput("Baseline", label = h4("Plot Years"),
               min = 1895, max = 2100, value =c(1895,2100),format="#",width="100%"))),
             
@@ -115,14 +115,16 @@ shinyUI(navbarPage("Climate Primer",
                                  "NEX" = "Nex")
                             )),
                 div(class="span3",  
-                      checkboxGroupInput("ObsRibbon", 
+                      radioButtons("ObsRibbon", 
                     label = h4("Add Observational Data"), 
                     choices = list("Maurer" = 1, 
                        "PRISM" = 2
                        ),
                     selected = 1))), 
                 
-             actionButton("action", label = "Create Graphics")    
+             actionButton("action", label = "Create Graphics"),
+            plotOutput("EmissionsPlot") 
+                 
            ),
           wellPanel(              
           h2("Historic Trend Plots")   
