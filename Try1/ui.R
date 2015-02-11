@@ -6,8 +6,8 @@ names(LonLst)<-seq(from=-125,to=-67)
 # Define UI for application that draws a histogram
 shinyUI(navbarPage("Climate Primer",
 #===============================================
-# ==========  Data Specification Tab ==========#
- tabPanel("Data Specifications",
+# ==========  Study Area Specification Tab ==========#
+ tabPanel("Specify Study Area",
 
         #========= Main Panel================#
         mainPanel(
@@ -73,43 +73,69 @@ shinyUI(navbarPage("Climate Primer",
            
            img(src="NCCSClogo.jpg",height=250,width=250)      
             #plotOutput("plotTry",width=600,height=600)
-      ),
+      )
    
-       
-        #========== Sidebar Options =========#
-        sidebarPanel(position="right",
+        
+    ),
+    
+   #========================================
+   #  Generate Trend Graphics  
+    tabPanel("Generate Trend Graphics",
+     sidebarPanel(
                                                 
-         h1("Study Area Information"),
-            textInput("ParkName", label = h3("Study area name for graphics"), 
+         h2("Settings that Apply for all Graphics"),
+            textInput("ParkName", label = h4("Study area name for graphics"), 
               value = "Enter text ..."),
-      
-            
-      
-            h1("Plot Information"),
-            sliderInput("Baseline", label = h4("Baseline Years"),
-              min = 1895, max = as.numeric(as.character(format(Sys.time(),"%Y"))), value =c(1895,2010),format="#",width="100%"),
-    			
+			
             radioButtons("PlotUnits", label = h4("Plot Units"),
               choices = list("Metric (C/mm per month)" = "c(\"C\",\"mm\")", 
                              "US units (F/ inches per month)" = "c(\"F\",\"In\")")
-                        ), 
-                        
-            checkboxGroupInput("RCP", 
+                        )
+        
+        ),
+        mainPanel(
+          wellPanel(              
+          h2("Future Projection Ribbon Plots"),
+          div(class="row",
+                div(class="span3", checkboxGroupInput("RCPRibbon", 
               label = h3("RCPs for Plotting"), 
               choices = list("RCP 2.6" = 1, 
                  "RCP 4.5" = 2,
                  "RCP 6.0" = 3,
                  "RCP 8.5" = 4
                  ),
-              selected = 1),
-         
-            actionButton("action", label = "Create Graphics")
-        
+              selected = 1)),
+             div(class="span3",sliderInput("Baseline", label = h4("Plot Years"),
+              min = 1895, max = 2100, value =c(1895,2100),format="#",width="100%"))),
+            
+            div(class="row",
+                div(class="span3", 
+                       radioButtons("ProjRibbon", label = h4("Projected Data"),
+                           choices = list("BCSD CMIP5" = "BCSD", 
+                                 "NEX" = "Nex")
+                            )),
+                div(class="span3",  
+                      checkboxGroupInput("ObsRibbon", 
+                    label = h4("Add Observational Data"), 
+                    choices = list("Maurer" = 1, 
+                       "PRISM" = 2
+                       ),
+                    selected = 1))), 
+                
+             actionButton("action", label = "Create Graphics")    
+           ),
+          wellPanel(              
+          h2("Historic Trend Plots")   
+           ),
+          wellPanel(              
+          h2("Anomaly Plots")   
+           )  
+           
         )
     ),
 #===============================================
 # ==========  Mapped Output Tab ==========#    
-    tabPanel("Mapped Output",
+    tabPanel("Generate Maps",
     	mainPanel(
                  h2("Available Color Scales for Mapped Output"),
                 img(src="MapDefaultColors.png",height="70%",width="80%"),
