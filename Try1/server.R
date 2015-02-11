@@ -1,7 +1,4 @@
-sourceList<-list("external/ChkLibs.r","external/GetParkBoundary.r")
-unlist(lapply(sourceList,source))
-
- ChkLibs(list("shiny","leaflet","maptools","rgdal","raster","ncdf4","fields","maps",
+ChkLibs(list("shiny","leaflet","maptools","rgdal","raster","ncdf4","fields","maps",
             "ggplot2","zoo","XML","RColorBrewer","chron"))
             
 # Define server logic required to draw a histogram
@@ -44,7 +41,7 @@ shinyServer(function(input, output,session) {
      ShapeList[[length(ShapeList)+1]]<-input$InputFile$datapath
      names(ShapeList[[length(ShapeList)]])<-input$InputFile$name
     }
-   
+  
     ShapePath<-ShapeList[[match(input$Dataset,names(ShapeList))]]
 		dat <- readShapePoly(ShapePath)
 	
