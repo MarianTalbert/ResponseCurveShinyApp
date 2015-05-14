@@ -105,27 +105,40 @@ shinyUI(navbarPage("Climate Primer",
                      "RCP 8.5" = "RCP 8.5"
                      ),
                   selected = c("RCP 2.6","RCP 4.5","RCP 6.0","RCP 8.5")),
-                
-               radioButtons("ObsRibbon", 
+                   
+                 radioButtons("ObsRibbon", 
                         label = h4("Add Observational Data"), 
                         choices = list("Maurer" = "Maurer", 
                            "PRISM" = "Prism",
                            "TopoWx"="TopoWx"
                            ),
                         selected = "Maurer")
+              
         
         ),
       mainPanel(
         wellPanel(              
-              h2("Future Projection Ribbon Plots"),
+              h2("Projected Trends"),
                 radioButtons("RibbonOrLine", 
                         label = h4(""), 
                         choices = list("Ribbon" = "Ribbon", 
-                           "Line" = "Line",
-                           "Seasonal Boxplot"="SeasonalBox"
+                           "Line" = "Line"
                            ),
-                        selected = "Ribbon"),    
-                plotOutput("Emissions")
+                        selected = "Ribbon"),            
+                plotOutput("Emissions"),
+                    helpText("Projections of mean annual temperature and total annual precipitation",
+                    "are produced using 1/8th degree BCSD data that was downloaded from the Green Data Oasis",
+                    "heavy lines indicate mean by RCP. A 5-year rolling average smooth",
+                    "is applied to obserational data before plotting.",
+                    "The limits of the Ribbon represent the 5% and 95% quantiles for all models within a given RCP"),
+                h2("Projected Trends by Season"),
+                plotOutput("ProjBoxplot"),
+                   helpText("Seasonal Box plots are produced using the",
+                   "1/8th degree BCSD data from the GDO.",
+                   " Each box is created by calculating ",
+                   "the seasonal mean (or total for precipitation) for each run and available model",
+                   "within a 20 year period for the given RCP. The boxes represent the 25% to",
+                   "75% quantiles and the whiskers extend out to 1.5*IQR (Inter-quantile range).")
                
                  
         )
@@ -135,20 +148,30 @@ shinyUI(navbarPage("Climate Primer",
 #======= Historic Trends    
 tabPanel("Historic Trends",
     h2("Historic Trend Plots"),
-    div(class="row",
+        div(class="row",
                     div(class="span5",              
               checkboxInput("Trend", label = h6("Add Linear Trend"),
                                value = TRUE),
               checkboxInput("MovAvg", label = h6("Add Moving Average"),
                                value = TRUE),
-               radioButtons("ObsHist", 
+              radioButtons("ObsHist", 
                         label = h4("Observational Data"), 
                         choices = list("Maurer" = "Maurer", 
-                           "PRISM" = "Prism"
+                           "PRISM" = "Prism",
+                           "TopoWx"="TopoWx",
+                           "Compare"="CompareHist"
                            ),
-                        selected = "Maurer")),                                  
-              div(class="span8",plotOutput("HistoricTrends"))   
-           ),
+                        selected = "Maurer"),
+               radioButtons("HistVar", 
+                    label = h3("Variable"), 
+                    choices = list("Max Temp" = 1, 
+                 "Min Temp" = 2,
+                 "Avg Temp" = 3,
+                 "Precip" = 4
+                  ),
+              selected = 1)),                                  
+             div(class="span8",plotOutput("HistoricTrends"))   
+            ),
        h2("Anomaly Plots"),
        div(class="row",    
           div(class="span5",       

@@ -83,48 +83,74 @@ shinyServer(function(input, output,session) {
            }
         })	
 
-  output$Emissions<-renderPlot({ 
+         output$Emissions<-renderPlot({
         if(input$ObsRibbon=="Prism") PastLst<-PrismLst 
         if(input$ObsRibbon=="Maurer") PastLst<-MaurerLst
         if(input$ObsRibbon=="TopoWx") PastLst<-TopoWxLst
         
-        if(input$RibbonOrLine=="Ribbon"){
+         if(input$RibbonOrLine=="Ribbon") 
                 EmissionSDPlot(GDOLst[[as.numeric(input$Var)]],PastClim=PastLst[[as.numeric(input$Var)]],
                 ParkName=ParkName,DisplayOutput=TRUE,OutputGraphics=OutputGraphics,rcp=input$RibbonRCP,
-                cexMult=.9,writeMain=writeMain,Period=5)}
-        if(input$RibbonOrLine=="Line"){ 
+                cexMult=1.2,writeMain=writeMain,Period=5)
+         if(input$RibbonOrLine=="Line")
                 EmissionLinePlot(GDOLst[[as.numeric(input$Var)]],PastClim=PastLst[[as.numeric(input$Var)]],
-                ParkName,DisplayOutput=TRUE,OutputGraphics=OutputGraphics,rcp=input$RibbonRCP,cexMult=.9,
-                writeMain=writeMain) }
-        if(input$RibbonOrLine=="SeasonalBox"){ 
-                BoxplotRCP(InputDat=GDOLst[[as.numeric(input$Var)]],BaseDat=PastLst[[as.numeric(input$Var)]],Baseline=c(1950,1980),
+                ParkName,DisplayOutput=TRUE,OutputGraphics=OutputGraphics,rcp=input$RibbonRCP,cexMult=1.2,
+                writeMain=writeMain,Period=5)
+           })
+        output$ProjBoxplot<-renderPlot({
+        if(input$ObsRibbon=="Prism") PastLst<-PrismLst 
+        if(input$ObsRibbon=="Maurer") PastLst<-MaurerLst
+        if(input$ObsRibbon=="TopoWx") PastLst<-TopoWxLst
+       
+             BoxplotRCP(InputDat=GDOLst[[as.numeric(input$Var)]],BaseDat=PastLst[[as.numeric(input$Var)]],Baseline=c(1950,1980),
                 BarAvg=20,AllOnePlot=TRUE,Col=NA,DisplayOutput=TRUE,
-                OutputGraphics=OutputGraphics,cexMult=1.2,writeMain=TRUE,PlotBase=FALSE,RCP=input$RibbonRCP)} 
+                OutputGraphics=OutputGraphics,cexMult=1.5,writeMain=TRUE,PlotBase=FALSE,RCP=input$RibbonRCP)
   })
  
 #==================================
 #==== Historic Trends plots  
   output$HistoricTrends<-renderPlot({ 
-       if(input$ObsHist=="Prism") PlotDat<-PrismLst 
-       if(input$ObsHist=="Maurer") PlotDat<-MaurerLst
-       TminPlot<-YearlyLinePlot(PlotDat[[as.numeric(input$Var)]],MovAvgPeriod=10,
+       if(input$ObsHist=="Prism") PastLst<-list(PRISM=PrismLst[[as.numeric(input$HistVar)]]) 
+       if(input$ObsHist=="Maurer") PastLst<-list(Maurer=MaurerLst[[as.numeric(input$HistVar)]])
+       if(input$ObsHist=="TopoWx") PastLst<-list(TopoWx=TopoWxLst[[as.numeric(input$HistVar)]])
+       if(input$ObsHist=="CompareHist"){
+             PastLst=list(PRISM=PrismLst[[as.numeric(input$HistVar)]],
+                    Maurer=MaurerLst[[as.numeric(input$HistVar)]],
+                    TopoWx=TopoWxLst[[as.numeric(input$HistVar)]]) 
+                                    }
+       TminPlot<-YearlyLinePlot(PastLst,MovAvgPeriod=10,
                    Xlab=(""),
                    MovAvg=input$MovAvg,LM=input$Trend,maCol="blue",
                    DisplayOutput=TRUE,OutputGraphics=OutputGraphics,cexMult=1.4,writeMain=writeMain)
                
   })
-  
+ output$MonthlyLine<-renderPlot({ 
+       if(input$ObsHist=="Prism") PastLst<-list(PRISM=PrismLst[[as.numeric(input$HistVar)]]) 
+       if(input$ObsHist=="Maurer") PastLst<-list(Maurer=MaurerLst[[as.numeric(input$HistVar)]])
+       if(input$ObsHist=="TopoWx") PastLst<-list(TopoWx=TopoWxLst[[as.numeric(input$HistVar)]])
+       if(input$ObsHist=="CompareHist"){
+             PastLst=list(PRISM=PrismLst[[as.numeric(input$HistVar)]],
+                    Maurer=MaurerLst[[as.numeric(input$HistVar)]],
+                    TopoWx=TopoWxLst[[as.numeric(input$HistVar)]]) 
+                                    }
+      MonthlyLine(Observational=PastLst,Baseline=c(1970,2010),cexMult=3,plotLegend=FALSE)
+               
+  })
+   
   output$AnomalyPlot<-renderPlot({
-     if(input$ObsHist=="Prism") PlotDat<-PrismLst 
-     if(input$ObsHist=="Maurer") PlotDat<-MaurerLst
-  AnomalyPlot(PlotDat[[as.numeric(input$Var)]],Baseline=input$Baseline,ParkName=ParkName,
+     if(input$ObsHist=="Prism") PastLst<-PrismLst 
+       if(input$ObsHist=="Maurer") PastLst<-MaurerLst
+       if(input$ObsHist=="TopoWx") PastLst<-TopoWxLst
+       
+  AnomalyPlot(PastLst[[as.numeric(input$HistVar)]],Baseline=input$Baseline,ParkName=ParkName,
    DisplayOutput=TRUE,OutputGraphics=OutputGraphics,cexMult=1,writeMain=writeMain)
    })
    
       output$ImagePlot<-renderPlot({ 
-       if(input$ObsHist=="Prism") PlotDat<-PrismLst 
-       if(input$ObsHist=="Maurer") PlotDat<-MaurerLst
+       if(input$ObsHist=="Prism") PastLst<-PrismLst 
+       if(input$ObsHist=="Maurer") PastLst<-MaurerLst
+       if(input$ObsHist=="TopoWx") PastLst<-TopoWxLst
        
-        ImagePlot(PlotDat[[as.numeric(input$Var)]],Baseline=input$Baseline,DisplayOutput=TRUE,OutputGraphics=OutputGraphics,cexMult=2.1,writeMain=writeMain)
+        ImagePlot(PastLst[[as.numeric(input$HistVar)]],Baseline=input$Baseline,DisplayOutput=TRUE,OutputGraphics=OutputGraphics,cexMult=2.1,writeMain=writeMain)
        })
 })   
