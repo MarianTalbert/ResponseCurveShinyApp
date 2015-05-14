@@ -10,77 +10,74 @@ shinyUI(navbarPage("Climate Primer",
  tabPanel("Specify Study Area",
 
         #========= Main Panel================#
-        mainPanel(
- wellPanel(              
-       h2("Specify a bounding box for the study"),       
+    mainPanel(
+       wellPanel(              
+           h2("Specify a bounding box for the study"),       
+          
+           div(class="row",
+            div(class="span1",h5("Latitude")),
+            div(class="span1", selectInput("LatStart",choices=LatLst, 
+              selected = 29,label="")),
+            div(class="span2", selectInput("LatSDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+              selected = 1,label="")),
+            div(class="span.5",h5("to")),
+             div(class="span1", selectInput("LatEnd",choices=LatLst, 
+              selected = 50,label="")),
+            div(class="span2", selectInput("LaEtDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+              selected = 1,label=""))  
+          ),
+          
+         
+           div(class="row",
+           div(class="span1",h5("Longitude")),
+            div(class="span1", selectInput("LonStart",choices=LonLst, 
+              selected =-125,label="")),
+            div(class="span2", selectInput("LonSDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+              selected = 1,label="")),
+            div(class="span.5",h5("to")),
+             div(class="span1", selectInput("LonEnd",choices=LonLst, 
+              selected = -67,label="")),
+            div(class="span2", selectInput("LoEtDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+              selected = 1,label=""))  
+          )
+        ),
       
-       div(class="row",
-        div(class="span1",h5("Latitude")),
-        div(class="span1", selectInput("LatStart",choices=LatLst, 
-          selected = 29,label="")),
-        div(class="span2", selectInput("LatSDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
-          selected = 1,label="")),
-        div(class="span.5",h5("to")),
-         div(class="span1", selectInput("LatEnd",choices=LatLst, 
-          selected = 50,label="")),
-        div(class="span2", selectInput("LaEtDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
-          selected = 1,label=""))  
-      ),
-      
-     
-       div(class="row",
-       div(class="span1",h5("Longitude")),
-        div(class="span1", selectInput("LonStart",choices=LonLst, 
-          selected =-125,label="")),
-        div(class="span2", selectInput("LonSDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
-          selected = 1,label="")),
-        div(class="span.5",h5("to")),
-         div(class="span1", selectInput("LonEnd",choices=LonLst, 
-          selected = -67,label="")),
-        div(class="span2", selectInput("LoEtDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
-          selected = 1,label=""))  
-      )
-  ),
-  
-  wellPanel(
-            h2("or upload a shapefile"),
-            helpText("Please either select from the available", 
-                  "shapefiles, upload the desired file or specify a bounding box."),
-             div(class="row",
-                div(class="span3", 
-                selectInput("Dataset", choices=names(ShapeList),label=h4("Available Shapefiles"))),
-            
-                div(class="span3",
-                fileInput("InputFile", label = h5("Please point to the .zip containing the shapefile")))),
-            
-             div(class="row",
-                div(class="span3", 
-            selectInput("Attribute", label=h5("Select Attribute"),"Loading...")), 
-                 div(class="span3",
-            selectInput("AttributeValue", label = h5("Select the Attribute Value"), 
-              "Loading...")))
-            #img(src="Temp_1950_to_2100_EmissionsSD.png",height=650,width=650),
-   ),       
-   
-    actionButton("DisplayShape", label = "Display study area on map"),  
-            leafletMap("map", 700, 550, initialTileLayer = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                    initialTileLayerAttribution = HTML('&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'),
-                    options = list(center = c(37.45, -93.85),
-          zoom = 4,
-          maxBounds = list(list(15.961329,-129.92981), list(52.908902,-56.80481)))),
-            
-            
-           
-           img(src="NCCSClogo.jpg",height=250,width=250)      
-            #plotOutput("plotTry",width=600,height=600)
-      )
+        wellPanel(
+                h2("or upload a shapefile"),
+                helpText("Please either select from the available", 
+                      "shapefiles, upload the desired file or specify a bounding box."),
+                 div(class="row",
+                    div(class="span3", 
+                    selectInput("Dataset", choices=names(ShapeList),label=h4("Available Shapefiles"))),
+                
+                    div(class="span3",
+                    fileInput("InputFile", label = h5("Please point to the .zip containing the shapefile")))),
+                
+                 div(class="row",
+                    div(class="span3", 
+                selectInput("Attribute", label=h5("Select Attribute"),"Loading...")), 
+                     div(class="span3",
+                selectInput("AttributeValue", label = h5("Select the Attribute Value"), 
+                  "Loading...")))
+                #img(src="Temp_1950_to_2100_EmissionsSD.png",height=650,width=650),
+        ),       
+       
+        actionButton("DisplayShape", label = "Display study area on map"),  
+        leafletMap("map", 700, 550, initialTileLayer = "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            initialTileLayerAttribution = 
+            HTML('&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'),
+            options = list(center = c(37.45, -93.85),
+              zoom = 4, maxBounds = list(list(15.961329,-129.92981), list(52.908902,-56.80481)))),
+         img(src="NCCSClogo.jpg",height=250,width=250)      
+              
+    )
    
         
     ),
     
    #========================================
-   #  Generate Trend Graphics  
-    tabPanel("Generate Trend Graphics",
+   #  Projected Trends  
+ tabPanel("Projected Trends",
      sidebarPanel(
                                                 
          h2("Settings that Apply for all Graphics"),
@@ -88,62 +85,97 @@ shinyUI(navbarPage("Climate Primer",
               value = "Enter text ..."),
 			
             radioButtons("PlotUnits", label = h4("Plot Units"),
-              choices = list("Metric (C/mm per month)" = "c(\"C\",\"mm\")", 
-                             "US units (F/ inches per month)" = "c(\"F\",\"In\")")
-                        )
+              choices = list("US units (F/ inches per month)" = "c(\"F\",\"In\")",
+                              "Metric (C/mm per month)" = "c(\"C\",\"mm\")")
+                        ),
+              radioButtons("Var", 
+                    label = h3("Variable"), 
+                    choices = list("Max Temp" = 1, 
+                 "Min Temp" = 2,
+                 "Avg Temp" = 3,
+                 "Precip" = 4
+                  ),
+              selected = 1),
+              
+              checkboxGroupInput("RibbonRCP", 
+                  label = h4("RCPs for Plotting"), 
+                  choices = list("RCP 2.6" = "RCP 2.6", 
+                     "RCP 4.5" = "RCP 4.5",
+                     "RCP 6.0" = "RCP 6.0",
+                     "RCP 8.5" = "RCP 8.5"
+                     ),
+                  selected = c("RCP 2.6","RCP 4.5","RCP 6.0","RCP 8.5")),
+                
+               radioButtons("ObsRibbon", 
+                        label = h4("Add Observational Data"), 
+                        choices = list("Maurer" = "Maurer", 
+                           "PRISM" = "Prism",
+                           "TopoWx"="TopoWx"
+                           ),
+                        selected = "Maurer")
         
         ),
-        mainPanel(
-          wellPanel(              
-          h2("Future Projection Ribbon Plots"),
-          div(class="row",
-                div(class="span3", checkboxGroupInput("RibbonRCP", 
-              label = h3("RCPs for Plotting"), 
-              choices = list("RCP 2.6" = "rcp26", 
-                 "RCP 4.5" = "rcp45",
-                 "RCP 6.0" = "rcp60",
-                 "RCP 8.5" = "rcp85"
-                 ),
-              selected = c("rcp26","rcp45","rcp60","rcp85"))),
-             div(class="span3",sliderInput("Baseline", label = h4("Plot Years"),
-              min = 1895, max = 2100, value =c(1895,2100),format="#",width="100%"))),
-            
-            div(class="row",
-                div(class="span3", 
-                       radioButtons("ProjRibbon", label = h4("Projected Data"),
-                           choices = list("BCSD CMIP5" = "BCSD", 
-                                 "NEX" = "Nex")
-                            )),
-                div(class="span3",  
-                      radioButtons("ObsRibbon", 
-                    label = h4("Add Observational Data"), 
-                    choices = list("Maurer" = 1, 
-                       "PRISM" = 2
-                       ),
-                    selected = 1))), 
-                
-             actionButton("action", label = "Create Graphics"),
-            plotOutput("EmissionsPlot") 
+      mainPanel(
+        wellPanel(              
+              h2("Future Projection Ribbon Plots"),
+                radioButtons("RibbonOrLine", 
+                        label = h4(""), 
+                        choices = list("Ribbon" = "Ribbon", 
+                           "Line" = "Line",
+                           "Seasonal Boxplot"="SeasonalBox"
+                           ),
+                        selected = "Ribbon"),    
+                plotOutput("Emissions")
+               
                  
-           ),
-          wellPanel(              
-          h2("Historic Trend Plots")   
-           ),
-          wellPanel(              
-          h2("Anomaly Plots")   
-           )  
-           
         )
+      )
     ),
+#====================================================
+#======= Historic Trends    
+tabPanel("Historic Trends",
+    h2("Historic Trend Plots"),
+    div(class="row",
+                    div(class="span5",              
+              checkboxInput("Trend", label = h6("Add Linear Trend"),
+                               value = TRUE),
+              checkboxInput("MovAvg", label = h6("Add Moving Average"),
+                               value = TRUE),
+               radioButtons("ObsHist", 
+                        label = h4("Observational Data"), 
+                        choices = list("Maurer" = "Maurer", 
+                           "PRISM" = "Prism"
+                           ),
+                        selected = "Maurer")),                                  
+              div(class="span8",plotOutput("HistoricTrends"))   
+           ),
+       h2("Anomaly Plots"),
+       div(class="row",    
+          div(class="span5",       
+          
+          sliderInput("Baseline", label = h4("Baseline Years"),
+                  min = 1895, max = 2010, value =c(1895,1980),format="#",width="100%")),
+          div(class="span8",plotOutput("AnomalyPlot"))   
+           ), 
+      h2("Monthly Anomaly Plots"),
+       div(class="row",    
+          div(class="span5",       
+          
+          sliderInput("Baseline", label = h4("Baseline Years"),
+                  min = 1895, max = 2010, value =c(1895,1980),format="#",width="100%")),
+          div(class="span8",plotOutput("ImagePlot"))   
+           )       
+            
+),    
 #===============================================
 # ==========  Mapped Output Tab ==========#    
-    tabPanel("Generate Maps",
-    	mainPanel(
+tabPanel("Generate Maps",
+    mainPanel(
                  h2("Available Color Scales for Mapped Output"),
                 img(src="MapDefaultColors.png",height="70%",width="80%"),
                  img(src="NCCSClogo.jpg",height=250,width=250) 
-            ),
-      sidebarPanel(position="right",
+     ),
+     sidebarPanel(position="right",
             h1("Map Specification"),
             #helpText("Please either select from the available", 
              #     "shapefiles or upload the desired file.")
@@ -186,7 +218,7 @@ shinyUI(navbarPage("Climate Primer",
                                                       
              )     
                         
-         ),
+  ),
 #===============================================
 # ==========  About Tab ==========#           
   tabPanel("About",
