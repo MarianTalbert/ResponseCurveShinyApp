@@ -1,17 +1,22 @@
 shinyServer(function(input, output) {
+ XYs <- reactiveValues(
+    Xlocs = NULL,
+    Ylocs = NULL
+  )
 
-XYupdate <- reactive({
-if(!is.null(input$plot_click)){
-browser()
-  Xlocs<-append(input$plot_click$x,Xlocs)[1:min(5,(length(Xlocs)+1))]
-  Ylocs<-append(input$plot_click$y,Ylocs)[1:min(5,(length(Ylocs)+1))]
-  }else{
-   Xlocs<-NA
-   Ylocs<-NA
-  }
-  XYdat<-as.data.frame(cbind(X=Xlocs,Y=Ylocs))
-  return(XYdat)
-})
+  # Handle clicks on the plot
+  observeEvent(input$plot_click, {
+    if (is.null(XYs$Xlocs)) {
+      # We don't have a first click, so this is the first click
+      XYs$Xlocs <- input$plot_click$x
+      XYs$Ylocs<-  input$plot_click$y
+    } else {
+    browser()
+    XYs$Xlocs<-append(input$plot_click$x,XYs$Xlocs)[1:min(5,(length(XYs$Xlocs)+1))]
+    XYs$Ylocs<-append(input$plot_click$y,XYs$Ylocs)[1:min(5,(length(XYs$Ylocs)+1))]
+
+    }
+  })
 
 output$map <- renderPlot({
   #Plot the Map      
@@ -22,6 +27,8 @@ output$map <- renderPlot({
       scale_fill_gradientn (
             colours=Colors,
             values = c (seq(0,1,length.out=255)))+
+            #scale_x_discrete(breaks=NULL)+
+            #scale_y_discrete(breaks=NULL)+
       #scale_fill_gradient('MAP (mm/yr)", limits=c(0,2500)) +
       theme(axis.title.x = element_text(size=16),
       axis.title.y = element_text(size=16, angle=90),
@@ -32,12 +39,11 @@ output$map <- renderPlot({
       legend.position = "right",
       legend.key = element_blank()
       )
-      xy<-XYupdate()
-      browser()
-      if((any(!is.na(xy)))){
-      xy$group<-as.factor(seq(1:nrow(xy)))
-      g<-g+geom_point(data=xy, aes(x = X, y = Y,group=group),fill=Cols[nrow(xy)],colour=rep("black",times=nrow(xy)),size=7,shape=21)
-      g
+
+      XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
+      if((any(!is.na(XYdat)))){
+      XYdat$group<-as.factor(seq(1:nrow(XYdat)))
+      g<-g+geom_point(data=XYdat, aes(x = X, y = Y,group=group),fill=Cols[1:nrow(XYdat)],colour=rep("black",times=nrow(XYdat)),size=7,shape=21)
       }
      g
      
@@ -45,8 +51,9 @@ output$map <- renderPlot({
   
 output$curves <- renderPlot({
   #Plot the Curves
- XYs<-XYupdate()
- if(any(!is.na(XYs))) vals<-extract(stk,XYs)
+
+ XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
+ if(any(!is.null(XYs$Xlocs))) vals<-extract(stk,XYdat)
  else vals<-NULL
     response.curves(fitLst,modelLst,vals)
   })

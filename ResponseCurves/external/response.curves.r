@@ -18,7 +18,7 @@ response.curves<-function(fitLst,modelLst,vals=NULL){
          
         if(is.null(vals)) vals<-matrix(means,nrow=1)
          else vals<-rbind(means,vals)
-         Cols<-wes_palette("Moonrise3")
+         
         
         # Cols<-c("red","blue","green","blueviolet","darkgoldenrod1","aquamarine","violetred","slateblue")
        
@@ -31,17 +31,21 @@ response.curves<-function(fitLst,modelLst,vals=NULL){
                     test <- do.call("rbind", replicate(n, vals[v,], simplify=FALSE))
                     test[,pIdx] <- seq(mins[pIdx], maxs[pIdx], length.out=n)
                     test<-as.data.frame(test)
+                    test<-rbind(test,vals[v,])
                     colnames(test)<-names(means)
                      Response<-pred.fct(fitLst[[j]]$mods$final.mod, test,modelLst[j])
+                     lR<-length(Response)
                       if(v==1){
-                      plot(test[,pIdx],Response, ylim = y.lim, xlab = "",
+                      plot(test[1:(lR-1),pIdx],Response[1:(lR-1)], ylim = y.lim, xlab = "",
                           ylab = "", type = "l", lwd=2,cex=3,cex.main=3,cex.axis=1.2,yaxt=ifelse(pIdx==1,"s","n"),
                           xaxt="n",main="")
+                 
                        }
                        if(v!=1){
-                       lines(test[,pIdx],Response, ylim = y.lim, xlab = "",
+                       lines(test[1:(lR-1),pIdx],Response[1:(lR-1)], ylim = y.lim, xlab = "",
                           ylab = "", type = "l", lwd=2,cex=3,cex.main=3,cex.axis=1.2,yaxt=ifelse(pIdx==1,"s","n"),
                           xaxt="n",main="",col=Cols[v-1])
+                          segments(x0=vals[v,pIdx],y0=0,y1=Response[lR],x1=vals[v,pIdx],col=Cols[v-1])
                        }   
                           if(j==1) mtext(names(dat)[pIdx],line=1,cex=1.2)
                           if(pIdx==1) mtext(modelLst[[j]],side=2,outer=TRUE,at=seq(from=1/(2*nRow),to=(1-1/(2*nRow)),length=nRow)[j+1],line=3,cex=1.2)
