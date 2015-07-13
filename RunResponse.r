@@ -14,6 +14,7 @@ unlist(lapply(sourceList,source))
 ChkLibs(list("gbm","randomForest","maptools","rgdal","shiny","leaflet","maptools","rgdal","raster","ncdf4","fields","maps",
             "ggplot2","zoo","XML","RColorBrewer","chron","wesanderson"))
 
+
 output.dir="C:\\temp\\SAHM_workspace"
 rc="responseBinary"
 wsLst<-list()
@@ -39,18 +40,20 @@ vals<-extract(stk,cbind(x,y))
 
 #reading in the map and converting it to a ggplot format
 map<-raster("C:\\temp\\SAHM_workspace\\rf_7_prob_map.tif")
+map<-aggregate(map,by=10)
 #convert the raster to points for plotting
 map.p <- rasterToPoints(map)
 #Make the points a dataframe for ggplot
 ras <- data.frame(map.p)
 #Make appropriate column headings
 colnames(ras) <- c("Longitude", "Latitude", "MAP")
+Cols<<-wes_palette("Moonrise3")
 vals<-rbind(c(.2,.1,50,-10,.2,.06,.5,2),
 c(.9,-.6,50,-10,.2,.06,.5,2),
 c(.2,.1,50,-10,.2,0,.17,2),
 c(.2,.1,50,-10,.2,.06,.5,0))
-x=vector()
-y=vector()
-
 response.curves(fitLst,modelLst,vals)
+
+Xlocs<<-vector()
+Ylocs<<-vector()
 runApp("ResponseCurves")
