@@ -17,20 +17,52 @@ shinyServer(function(input, output) {
     }
   })
 
-output$map <- renderPlot({
+   
+ output$map1 <- renderPlot({
   #Plot the Map
       par(oma=c(0,0,0,0))
-      plot(map,col=Colors,xaxt="n",yaxt="n")
+      plot(mapStk,1,maxpixels=30000,col=Colors,xaxt="n",yaxt="n")
+
+      XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
+      if((any(!is.na(XYdat)))){
+      points(x=XYdat$X,y=XYdat$Y,pch=21,col="black",bg=Cols[1:nrow(XYdat)],cex=2.5)
+      }   
+  })  
+  
+ output$map2 <- renderPlot({
+  #Plot the Map
+      par(oma=c(0,0,0,0))
+      plot(mapStk,2,maxpixels=30000,col=Colors,xaxt="n",yaxt="n")
 
       XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
       if((any(!is.na(XYdat)))){
       points(x=XYdat$X,y=XYdat$Y,pch=21,col="black",bg=Cols[1:nrow(XYdat)],cex=2.5)
       }
-
-     
-  })  
+  })
   
-output$curves <- renderPlot({
+output$map3 <- renderPlot({
+  #Plot the Map
+      par(oma=c(0,0,0,0))
+      plot(mapStk,3,maxpixels=30000,col=Colors,xaxt="n",yaxt="n")
+
+      XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
+      if((any(!is.na(XYdat)))){
+      points(x=XYdat$X,y=XYdat$Y,pch=21,col="black",bg=Cols[1:nrow(XYdat)],cex=2.5)
+      }
+  })
+ 
+ output$map4 <- renderPlot({
+  #Plot the Map
+      par(oma=c(0,0,0,0))
+      plot(mapStk,4,maxpixels=30000,col=Colors,xaxt="n",yaxt="n")
+
+      XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
+      if((any(!is.na(XYdat)))){
+      points(x=XYdat$X,y=XYdat$Y,pch=21,col="black",bg=Cols[1:nrow(XYdat)],cex=2.5)
+      }
+  })
+        
+output$curves1 <- renderPlot({
   #Plot the Curves
 
  XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
@@ -38,10 +70,39 @@ output$curves <- renderPlot({
  else vals<-NULL
     response.curvesOneModel(fitLst[[1]],modelLst[[1]],vals)
   })
+
+output$curves2 <- renderPlot({
+  #Plot the Curves
+
+ XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
+ if(any(!is.null(XYs$Xlocs))) vals<-extract(stk,XYdat)
+ else vals<-NULL
+
+    response.curvesOneModel(fitLst[[2]],modelLst[[2]],vals)
+  })
+    
+output$curves3 <- renderPlot({
+  #Plot the Curves
+
+ XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
+ if(any(!is.null(XYs$Xlocs))) vals<-extract(stk,XYdat)
+ else vals<-NULL
+
+    response.curvesOneModel(fitLst[[3]],modelLst[[3]],vals)
+  })
+  
+output$curves4 <- renderPlot({
+  #Plot the Curves
+
+ XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
+ if(any(!is.null(XYs$Xlocs))) vals<-extract(stk,XYdat)
+ else vals<-NULL
+
+    response.curvesOneModel(fitLst[[4]],modelLst[[4]],vals)
+  })
   
 
-  
-  
+      
  
   #output$info <- renderPrint({
     # With base graphics, need to tell it what the x and y variables are.

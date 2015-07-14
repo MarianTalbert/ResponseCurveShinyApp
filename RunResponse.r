@@ -25,6 +25,7 @@ wsLst[[4]]<-"C:\\temp\\SAHM_workspace\\ForResponseCurveTool\\brewersSparrow\\rf_
 
 fitLst<-list()
 modelLst<-list()
+mapLst<-vector()
 rastLst<-vector()
 for(w in 1:length(wsLst)){
  load(wsLst[[w]])
@@ -33,7 +34,9 @@ for(w in 1:length(wsLst)){
   if(w>1 & any(rastLst!=out$dat$tif.ind)) stop("Rasters Don't match for all workspaces")
   fitLst[[w]]<-out
   rm(out)
+  mapLst[[w]]<-file.path(dirname(wsLst[[w]]),paste(modelLst[[w]],"prob_map.tif",sep="_"))
 }
+mapStk<<-stack(mapLst)
 stk<-stack(rastLst)
 vals<-extract(stk,cbind(x,y))
 
@@ -47,13 +50,19 @@ map.p <- rasterToPoints(map)
 ras <- data.frame(map.p)
 #Make appropriate column headings
 colnames(ras) <- c("Longitude", "Latitude", "MAP")
-Cols<<-wes_palette("Moonrise3")
+Cols<<-c(wes_palette("Darjeeling"),wes_palette("Moonrise3"))
+max_plots<-5
+nModels<<-4
+#=========================================
+#    This is where the ma
+runApp("ResponseCurves")
+
+
+#=========================================
+# scratch pad 
 vals<-rbind(c(.2,.1,50,-10,.2,.06,.5,2),
 c(.9,-.6,50,-10,.2,.06,.5,2),
 c(.2,.1,50,-10,.2,0,.17,2),
 c(.2,.1,50,-10,.2,.06,.5,0))
 response.curves(fitLst,modelLst,vals)
-
-Xlocs<<-vector()
-Ylocs<<-vector()
-runApp("ResponseCurves")
+response.curvesOneModel(fitLst[[2]],modelLst[[2]],vals) 

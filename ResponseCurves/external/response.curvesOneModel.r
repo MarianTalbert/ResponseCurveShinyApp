@@ -25,7 +25,7 @@ response.curvesOneModel<-function(fitLst,model,vals=NULL){
             par(mfrow=c(1,ncol(dat)),mar=c(0,0,0,0),oma=c(3,5,3,0),xpd=TRUE)
             y.lim<-c(0,1)
               nRow<-1
-
+                
                  for (pIdx in 1:ncol(dat)) {
                    for(v in 1:nrow(vals)){
                     test <- do.call("rbind", replicate(n, vals[v,], simplify=FALSE))
@@ -33,7 +33,7 @@ response.curvesOneModel<-function(fitLst,model,vals=NULL){
                     test<-as.data.frame(test)
                     test<-rbind(test,vals[v,])
                     colnames(test)<-names(means)
-                     Response<-pred.fct(fitLst$mods$final.mod, test,modelLst)
+                     Response<-pred.fct(fitLst$mods$final.mod, test,model)
                      lR<-length(Response)
                       if(v==1){
                       plot(test[1:(lR-1),pIdx],Response[1:(lR-1)], ylim = y.lim, xlab = "",
@@ -48,7 +48,7 @@ response.curvesOneModel<-function(fitLst,model,vals=NULL){
                           segments(x0=vals[v,pIdx],y0=0,y1=Response[lR],x1=vals[v,pIdx],col=Cols[v-1],lty=2)
                        }   
                           mtext(names(dat)[pIdx],line=1,cex=1.2)
-                          if(pIdx==1) mtext(modelLst[[j]],side=2,outer=TRUE,at=seq(from=1/(2*nRow),to=(1-1/(2*nRow)),length=nRow)[j+1],line=3,cex=1.2)
+                          if(pIdx==1) mtext(model,side=2,outer=TRUE,at=seq(from=1/(2*nRow),to=(1-1/(2*nRow)),length=nRow)[j+1],line=3,cex=1.2)
                      }
                  } 
   }         
