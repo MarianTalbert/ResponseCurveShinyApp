@@ -38,21 +38,19 @@ for(w in 1:length(wsLst)){
 }
 mapStk<<-stack(mapLst)
 stk<-stack(rastLst)
-vals<-extract(stk,cbind(x,y))
 
 
-#reading in the map and converting it to a ggplot format
-map<-raster("C:\\temp\\SAHM_workspace\\rf_7_prob_map.tif")
-map<-aggregate(map,by=10)
-#convert the raster to points for plotting
-map.p <- rasterToPoints(map)
-#Make the points a dataframe for ggplot
-ras <- data.frame(map.p)
-#Make appropriate column headings
-colnames(ras) <- c("Longitude", "Latitude", "MAP")
 Cols<<-c(wes_palette("Darjeeling"),wes_palette("Moonrise3"))
 max_plots<-5
 nModels<<-4
+Variables<<-unique(unlist(lapply(fitLst,FUN=function(fit){fit$mods$vnames})))
+
+dat<-fitLst[[1]]$dat$ma$train$dat[,-1]
+resp<-fitLst[[1]]$dat$ma$train$dat[,1]
+ d=data.frame(Name=names(dat),min=apply(dat,2,min,na.rm=TRUE),
+   max=apply(dat,2,max,na.rm=TRUE),mean=apply(dat,2,mean,na.rm=TRUE))
+dataLst<-split(d,f=seq(1:nrow(d)))
+names(dat),range=apply(dat,2,range,na.rm=TRUE),means=apply(dat,2,mean,na.rm=TRUE),Name=names(dat)        
 #=========================================
 #    This is where the ma
 runApp("ResponseCurves")
@@ -60,9 +58,15 @@ runApp("ResponseCurves")
 
 #=========================================
 # scratch pad 
+par(mfrow=c(2,2),mar=c(0,0,2,0),oma=c(0,0,0,0))
+ response.curvesInteraction(fitLst[[1]],modelLst[[1]],vals,phi=phi,theta=theta)
+  response.curvesInteraction(fitLst[[2]],modelLst[[2]],vals,phi=phi,theta=theta)
+  response.curvesInteraction(fitLst[[3]],modelLst[[3]],vals,phi=phi,theta=theta)
+  response.curvesInteraction(fitLst[[4]],modelLst[[4]],vals,phi=phi,theta=theta)
 vals<-rbind(c(.2,.1,50,-10,.2,.06,.5,2),
 c(.9,-.6,50,-10,.2,.06,.5,2),
 c(.2,.1,50,-10,.2,0,.17,2),
 c(.2,.1,50,-10,.2,.06,.5,0))
+response.curvesInteraction(fitLst[[3]],modelLst[[3]],vals)
 response.curves(fitLst,modelLst,vals)
-response.curvesOneModel(fitLst[[2]],modelLst[[2]],vals) 
+response.curvesOneModel(fitLst[[3]],modelLst[[3]],vals) 

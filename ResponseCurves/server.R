@@ -87,14 +87,30 @@ output$curves4 <- renderPlot({
   })
   
 output$interact<-renderPlot({
+
+SlideVals<-unlist(lapply(names(dat),FUN=function(l) input[[l]]))
+
+if(input$Model=="All"){
 par(mfrow=c(2,2),mar=c(0,0,2,0),oma=c(0,0,0,0))
-  response.curvesInteraction(fitLst[[1]],modelLst[[1]],vals,phi=input$phi,theta=input$theta)
-  response.curvesInteraction(fitLst[[2]],modelLst[[2]],vals,phi=input$phi,theta=input$theta)
-  response.curvesInteraction(fitLst[[3]],modelLst[[3]],vals,phi=input$phi,theta=input$theta)
-  response.curvesInteraction(fitLst[[4]],modelLst[[4]],vals,phi=input$phi,theta=input$theta)
+  interactionPlot(fitLst[[1]],modelLst[[1]],vals=SlideVals,phi=input$phi,theta=input$theta,x=input$FirstPredictor,y=input$SecondPredictor)
+  interactionPlot(fitLst[[2]],modelLst[[2]],vals=SlideVals,phi=input$phi,theta=input$theta,x=input$FirstPredictor,y=input$SecondPredictor)
+  interactionPlot(fitLst[[3]],modelLst[[3]],vals=SlideVals,phi=input$phi,theta=input$theta,x=input$FirstPredictor,y=input$SecondPredictor)
+  interactionPlot(fitLst[[4]],modelLst[[4]],vals=SlideVals,phi=input$phi,theta=input$theta,x=input$FirstPredictor,y=input$SecondPredictor)
+  } else{
+   i<-match(input$Model,unlist(modelLst))
+    interactionPlot(fitLst[[i]],modelLst[[i]],vals=SlideVals,phi=input$phi,theta=input$theta,x=input$FirstPredictor,y=input$SecondPredictor)
+  }
+  
 })
       
- 
+output$sliders <- renderUI({
+    
+    f<-function(l){
+    sliderInput(inputId=as.character(l$Name),label=as.character(l$Name),min=signif(l$min,digits=3),max=signif(l$max,digits=3),value=signif(l$mean,digits=3))
+    }
+    lapply(dataLst, f)
+      
+    })
   #output$info <- renderPrint({
     # With base graphics, need to tell it what the x and y variables are.
    # nearPoints(ras, input$plot_click,threshold=500,addDist=TRUE,maxpoints=1)

@@ -1,4 +1,4 @@
-response.curvesInteraction<-function(fitLst,model,vals=NULL,theta=30,phi=25){
+interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y){
     
         #How to check that models and data match
         dat<-fitLst$dat$ma$train$dat[,-1]
@@ -14,20 +14,11 @@ response.curvesInteraction<-function(fitLst,model,vals=NULL,theta=30,phi=25){
          mins  <- sapply(dat, min,  na.rm=TRUE)
          maxs  <- sapply(dat, max,  na.rm=TRUE)
          means <- sapply(dat, mean, na.rm=TRUE)
+         vals<-as.vector(vals)
+         if(is.null(vals)) vals<-means
          n <- 50
-         
-        if(is.null(vals)) vals<-matrix(means,nrow=1)
-         else vals<-rbind(means,vals)
-         
-        v=1
-        x="bio1"
-        y="asage_1km"
-        # Cols<-c("red","blue","green","blueviolet","darkgoldenrod1","aquamarine","violetred","slateblue")
-           
-          
-            y.lim<-c(0,1)
-              nRow<-1
-                          test <- do.call("rbind", replicate(n^2, vals[v,], simplify=FALSE))
+
+                          test <- do.call("rbind", replicate(n^2, vals, simplify=FALSE))
                           yCol= match(y,names(dat))
                           xCol=match(x,names(dat))
                           test[, yCol] <- rep(seq(mins[yCol], maxs[yCol], length.out=n),each=n)
