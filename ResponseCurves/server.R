@@ -87,7 +87,8 @@ output$curves4 <- renderPlot({
   })
   
 output$interact<-renderPlot({
-
+ 
+ #get the value from the sliders using their position
 SlideVals<-unlist(lapply(names(dat),FUN=function(l) input[[l]]))
 
 if(input$Model=="All"){
@@ -106,9 +107,16 @@ par(mfrow=c(2,2),mar=c(0,0,2,0),oma=c(0,0,0,0))
 output$sliders <- renderUI({
     
     f<-function(l){
-    sliderInput(inputId=as.character(l$Name),label=as.character(l$Name),min=signif(l$min,digits=3),max=signif(l$max,digits=3),value=signif(l$mean,digits=3))
+    sliderInput(inputId=as.character(l$Name),label=as.character(l$Name),min=signif(l$min,digits=3),max=signif(l$max,digits=3),value=signif(l$mean,digits=3),round=TRUE)
     }
-    lapply(dataLst, f)
+    getNames<-function(x){as.character(x[[1]])}
+    #we're not holding the predictors used in the surface constant so remove them from the
+    #input slider list
+    datNames<-unlist(lapply(dataLst,getNames))
+    match(c(input$FirstPredictor,input$SecondPredictor),datNames)
+   # datForSliders<-dataLst[-c(match(c(input$FirstPredictor,input$SecondPredictor),datNames))]
+   # lapply(datForSliders, f)
+   lapply(dataLst,f)
       
     })
   #output$info <- renderPrint({

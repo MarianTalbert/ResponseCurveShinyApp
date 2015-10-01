@@ -54,23 +54,27 @@ titlePanel("Slide Explorer")
 tabPanel("Interaction Tool",
 titlePanel("Interaction Tool"),
 helpText("Explore the interaction between two predictors in the model while holding",
-   "all other predictors constant"),
+   "all other predictors constant at the values spefified using the sliders"),
 sidebarPanel(  
-     
-       sliderInput("phi", label = h4("phi"),
-                                  min = 0, max = 180,value=35),
-       sliderInput("theta", label = h4("theta"),
-                                  min = 0, max = 180,value=60),
-       uiOutput("sliders"),                           
- width=2
+            uiOutput("sliders"),                           
+            width=2
  ),                           
 mainPanel(
- selectInput("FirstPredictor", choices=Variables,label=h4("First Predictor")),
-      selectInput("SecondPredictor", choices=Variables,label=h4("Second Predictor")),
-      selectInput("Model", choices=c("All",unlist(modelLst)),label=h4("Model")),
-      
+fluidRow(
+  column(3,
+      selectInput("FirstPredictor", choices=Variables,selected=Variables[1],label=h4("First Predictor"))),
+  column(3,    
+      selectInput("SecondPredictor", choices=Variables,selected=Variables[max(length(Variables),2)],label=h4("Second Predictor"))),
+  column(3,    
+      selectInput("Model", choices=c("All",unlist(modelLst)),label=h4("Model")))
+ ),     
 wellPanel(
-plotOutput("interact"),width="100%",height="120%")
+    plotOutput("interact"),
+     sliderInput("phi", label = h4("phi"),
+                                      min = 0, max = 180,value=35),
+     sliderInput("theta", label = h4("theta"),
+                                      min = 0, max = 180,value=60),
+    width="100%",height="120%")                               
 )
 )
 

@@ -49,7 +49,7 @@ response.curvesOneModel<-function(fitLst,model,vals=NULL){
                                 segments(x0=vals[v,pIdx],y0=0,y1=Response[lR],x1=vals[v,pIdx],col=Cols[v-1],lty=2)
                              }   
                                 mtext(names(dat)[pIdx],line=1,cex=1.2)
-                                if(pIdx==1) mtext(model,side=2,outer=TRUE,at=seq(from=1/(2*nRow),to=(1-1/(2*nRow)),length=nRow)[j+1],line=3,cex=1.2)
+                               # if(pIdx==1) mtext(model,side=2,outer=TRUE,at=seq(from=1/(2*nRow),to=(1-1/(2*nRow)),length=nRow)[j+1],line=3,cex=1.2)
                            }
                  } 
   }         

@@ -14,51 +14,55 @@ shinyUI(navbarPage("Climate Primer",
        wellPanel(              
            h2("Specify a bounding box for the study"),       
           
-           div(class="row",
-            div(class="span1",h5("Latitude")),
-            div(class="span1", selectInput("LatStart",choices=LatLst, 
-              selected = 29,label="")),
-            div(class="span2", selectInput("LatSDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
-              selected = 1,label="")),
-            div(class="span.5",h5("to")),
-             div(class="span1", selectInput("LatEnd",choices=LatLst, 
-              selected = 50,label="")),
-            div(class="span2", selectInput("LaEtDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
-              selected = 1,label=""))  
+          fluidRow(
+           column(2,h3("Latitude")),
+           column(1,
+               selectInput("LatStart",choices=LatLst, 
+                   selected = 29,label="")),
+            column(2,
+              selectInput("LatSDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+                 selected = 1,label="")),
+             column(1,h3("To")),
+             column(1,
+               selectInput("LatEnd",choices=LatLst, 
+              selected = 50,label="")),                       
+             column(2,
+              selectInput("LatEtDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+                 selected = 1,label=""))
           ),
-          
-         
-           div(class="row",
-           div(class="span1",h5("Longitude")),
-            div(class="span1", selectInput("LonStart",choices=LonLst, 
-              selected =-125,label="")),
-            div(class="span2", selectInput("LonSDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
-              selected = 1,label="")),
-            div(class="span.5",h5("to")),
-             div(class="span1", selectInput("LonEnd",choices=LonLst, 
-              selected = -67,label="")),
-            div(class="span2", selectInput("LoEtDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
-              selected = 1,label=""))  
+          fluidRow(
+           column(2,h3("Longitude")),
+           column(1,
+               selectInput("LonStart",choices=LonLst, 
+                  selected =-125,label="")),
+            column(2,
+               selectInput("LonSDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+                  selected = 1,label="")),
+             column(1,h3("To")),
+             column(1,
+               selectInput("LonEnd",choices=LonLst, 
+              selected = -67,label="")),                       
+             column(2,
+               selectInput("LonEtDec",choices=list(".0625" = .0625, ".1875" = .1875, ".3125" = .3125), 
+                  selected = 1,label=""))
           )
+          
         ),
       
         wellPanel(
                 h2("or upload a shapefile"),
                 helpText("Please either select from the available", 
                       "shapefiles, upload the desired file or specify a bounding box."),
-                 div(class="row",
-                    div(class="span3", 
-                    selectInput("Dataset", choices=names(ShapeList),label=h4("Available Shapefiles"))),
+                 fluidRow(
+                 column(3,
+                    selectInput("Dataset", choices=names(ShapeList),label=h4("Available Shapefiles")),
+                    fileInput("InputFile", label = h5("Please point to the .zip containing the shapefile"))),
                 
-                    div(class="span3",
-                    fileInput("InputFile", label = h5("Please point to the .zip containing the shapefile")))),
-                
-                 div(class="row",
-                    div(class="span3", 
-                selectInput("Attribute", label=h5("Select Attribute"),"Loading...")), 
+                column(3,
+                selectInput("Attribute", label=h5("Select Attribute"),"Loading..."), 
                      div(class="span3",
                 selectInput("AttributeValue", label = h5("Select the Attribute Value"), 
-                  "Loading...")))
+                  "Loading..."))))
                 #img(src="Temp_1950_to_2100_EmissionsSD.png",height=650,width=650),
         ),       
        
