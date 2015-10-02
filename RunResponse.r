@@ -8,7 +8,7 @@ source("GLM.helper.fcts.r")
 source("BRT.helper.fcts.r")
 source("RF.helper.fcts.r")
 source("MAXENT.helper.fcts.r")
-#setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
+setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
 ShinyCode<-file.path(ScriptPath,"ResponseCurves\\External")
 sourceList<-list.files(ShinyCode,full.names=TRUE)
 unlist(lapply(as.list(sourceList),source))
@@ -91,7 +91,7 @@ rspHgt<-c("150px","300px","550px","750px")[length(fitLst)]
 
 #=========================================
 #    This is where the magic happens
-runApp("C:\\GoogleDrive\\Python\\DevWorkspace\\userpackages\\sahm\\pySAHM\\Resources\\R_Modules\\ResponseCurves")
+runApp("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode\\ResponseCurves")
 
 
 #=============================================
