@@ -43,6 +43,10 @@ output[[paste("map",i,sep="")]] <- renderPlot({
       par(oma=c(0,0,0,0),mar=c(0,0,2,0),xpd=FALSE) 
       plot(predictedStk,i,maxpixels=60000,col=Colors,xaxt="n",yaxt="n",bty="n")
       XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
+      if(!is.null(input$showTrain)){
+         if("showPres"%in%inpu$showTrain) points(x=PresCoords[,1],y=PresCoords[,2])
+         if("showAbs"%in%inpu$showTrain) points(x=AbsCoords[,1],y=AbsCoords[,2])
+      } 
       if((any(!is.na(XYdat)))){
       points(x=XYdat$X,y=XYdat$Y,pch=21,col="black",bg=Cols[1:nrow(XYdat)],cex=2.5)  
   }

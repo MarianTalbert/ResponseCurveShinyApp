@@ -4,6 +4,8 @@ library(mgcv)
 library(dismo)
 library(shiny)
 library(earth)
+library(nnet)
+library(kernlab)
  files <- list.files(path=paste(system.file(package="dismo"),
  '/ex', sep=''), pattern='grd', full.names=TRUE)
  files<-files[c(1,5,2,7)]
@@ -36,11 +38,15 @@ fitLst<-list()
 predictedStk<-list()
 varImpLst<-list()
 fitLst<-list(
- GAM_Model = gam(pb ~ bio1 + bio5 + bio12 + bio7, data=sdmdata,family=binomial),
  GLM_Model = glm(pb ~ bio1 + bio5 + bio12+ bio7, data=sdmdata,family=binomial),
  MARS_Model = earth(pb~ bio1 + bio5 + bio12 + bio7, data=sdmdata,glm=list(family=binomial)),
- RF_Model=randomForest(pb~ bio1 + bio5 + bio12 + bio7,data=sdmdata)
+ RF_Model=randomForest(pb~ bio1 + bio5 + bio12 + bio7,data=sdmdata),
+ GAM_Model<-gam(pb ~ s(bio1) + s(bio5) + s(bio12) + s(bio7), data=sdmdata),
+ SVM_Model <- ksvm(pb ~ bio1+bio5+bio12+bio7, data=sdmdata)
  )
+
+
+ 
 modelLst<-names(fitLst)
 for(i in 1:length(fitLst)){
 predictedStk[[i]]<-predict(layerStk,fitLst[[i]],type='response')
@@ -65,6 +71,8 @@ rspHgt<-c("150px","300px","550px","750px")[length(fitLst)]
 #=========================================
 #    This is where the magic happens
 runApp("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode\\ResponseCurves")
+runApp("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode\\PairsExplore")
+
 
 r2<-sampleRegular(r,size=20000,xy=TRUE)
 a<- matrix(r2[,3],nrow=length(unique(r2[,1])))
