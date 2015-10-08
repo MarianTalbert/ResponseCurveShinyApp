@@ -1,13 +1,10 @@
-interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y){
+interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y,dat,resp){
     
-        #How to check that models and data match
-        dat<-fitLst$dat$ma$train$dat[,-1]
-        resp<-fitLst$dat$ma$train$dat[,1]
         VarNames<-names(dat)
         
         #Don't plot the interaction if neither predictor is in the model
         Col=Colors
-        if(sum(c(x,y)%in%fitLst$mods$vnames)==0) Col=rep("grey92",times=length(Colors))
+        #if(sum(c(x,y)%in%fitLst$mods$vnames)==0) Col=rep("grey92",times=length(Colors))
         
         myPredict <- function (x, y, ...) { 
           out <- predict(x, y, type='response', args=c("outputformat=logistic"), ...);
@@ -30,7 +27,7 @@ interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y){
                           test[, xCol] <- rep(seq(mins[xCol], maxs[xCol], length.out=n),times=n)
                           test<-as.data.frame(test)
                           colnames(test)<-names(means)
-                           Response<-pred.fct(fitLst$mods$final.mod, test,model)
+                           Response<-predict(fitLst, test,type='response')
                            z<-matrix(Response,ncol=n)
                            nrz <- nrow(z)
                            ncz <- ncol(z)

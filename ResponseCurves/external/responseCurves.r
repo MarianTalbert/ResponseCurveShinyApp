@@ -1,9 +1,5 @@
-responseCurves<-function(fitLst,model,vals=NULL,varImp,addImp,pIdx){
+responseCurves<-function(fitLst,model,vals=NULL,varImp,addImp,pIdx,dat,resp){
     
-        #How to check that models and data match
-        dat<-fitLst[[1]]$dat$ma$train$dat[,-1]
-        resp<-fitLst[[1]]$dat$ma$train$dat[,1]
-       
         myPredict <- function (x, y, ...) { 
           out <- predict(x, y, type='response', args=c("outputformat=logistic"), ...);
           return (out)
@@ -23,13 +19,13 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,addImp,pIdx){
          
          byVar<-ifelse(missing(pIdx),FALSE,TRUE)
         
-           
+              
             if(byVar) par(mfrow=c((length(fitLst)+1),1),mar=c(0,2,0,0),oma=c(0,1,0,0),xpd=TRUE) 
             else { par(mfrow=c(1,ncol(dat)),mar=c(0,0,6,0),oma=c(0,5,0,0),xpd=TRUE)
                   if(ncol(dat)>9) par(mfrow=c(2,ceiling(ncol(dat)/2)))
             }
            
-            y.lim<-c(0,1)
+              y.lim=c(0,1)
               nRow<-1
              #set up what we're cycling over
               modelCycle<-1:length(fitLst)
@@ -43,7 +39,7 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,addImp,pIdx){
                     allVarImp[allVarImp<0]<-0 #set the minimum to zero so it shows up white
                     bgCol<-bgRamp[cut(x=allVarImp,breaks=seq(from=0,to=max(varImp[[j]]),length=11),include.lowest=TRUE)] 
                  for (pIdx in predCycle) {
-                     plotR<- (names(dat)[pIdx]%in%fitLst[[j]]$mods$vnames)
+                     plotR<- TRUE #I'm not sure this information is always available
                      
                      for(v in 1:nrow(vals)){
                               test <- do.call("rbind", replicate(n, vals[v,], simplify=FALSE))
@@ -51,7 +47,7 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,addImp,pIdx){
                               test<-as.data.frame(test)
                               test<-rbind(test,vals[v,])
                               colnames(test)<-names(means)
-                               Response<-pred.fct(fitLst[[j]]$mods$final.mod, test,model[[j]])
+                               Response<-predict(fitLst[[j]], test,type='response')
                                lR<-length(Response)
                                 if(v==1){
                                    plot(test[1:(lR-1),pIdx],Response[1:(lR-1)], ylim = y.lim, xlab = "",
