@@ -37,7 +37,7 @@ fluidRow(
   column(6,
   wellPanel(plotOutput("curves1",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
   ),
-conditionalPanel(length(modelLst)>1,
+conditionalPanel(length(responseInput$modelLst)>1,
  fluidRow(
   column(4,
   wellPanel(
@@ -46,7 +46,7 @@ conditionalPanel(length(modelLst)>1,
   wellPanel(plotOutput("curves2",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
   )
  ),
- conditionalPanel(length(modelLst)>2,
+ conditionalPanel(length(responseInput$modelLst)>2,
  fluidRow(
   column(4,
   wellPanel(
@@ -55,7 +55,7 @@ conditionalPanel(length(modelLst)>1,
   wellPanel(plotOutput("curves3",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
   )
  ),
- conditionalPanel(length(modelLst)>3,
+ conditionalPanel(length(responseInput$modelLst)>3,
  fluidRow(
   column(4,
   wellPanel(
@@ -82,11 +82,11 @@ column(2,
 ),
 
 fluidRow(
-lapply(1:length(dataLst),function(i){
+lapply(1:length(responseInput$Variables),function(i){
 column(1,uiOutput(paste0("slide",i)))
 })),
 fluidRow(
-lapply(1:length(dataLst),function(i){
+lapply(1:length(responseInput$Variables),function(i){
 column(1,plotOutput(paste0("slideRsp",i),height=rspHgt))
 }))
 
@@ -104,11 +104,13 @@ sidebarPanel(
 mainPanel(
   fluidRow(
     column(3,
-        selectInput("FirstPredictor", choices=Variables,selected=Variables[1],label=h4("First Predictor"))),
+        selectInput("FirstPredictor", choices=responseInput$Variables,
+          selected=responseInput$Variables[1],label=h4("First Predictor"))),
     column(3,    
-        selectInput("SecondPredictor", choices=Variables,selected=Variables[max(length(Variables),2)],label=h4("Second Predictor"))),
+        selectInput("SecondPredictor", choices=responseInput$Variables,
+           selected=responseInput$Variables[max(length(responseInput$Variables),2)],label=h4("Second Predictor"))),
     column(3,    
-        selectInput("Model", choices=c("All",unlist(modelLst)),label=h4("Model")))
+        selectInput("Model", choices=c("All",unlist(responseInput$modelLst)),label=h4("Model")))
    ),     
   wellPanel(
       plotOutput("interact"),
