@@ -1,4 +1,4 @@
-densityPlot<-function(fitLst){
+densityPlot<-function(fitLst,dat,resp){
 
         #How to check that models and data match
         cols<-c("blue","red")

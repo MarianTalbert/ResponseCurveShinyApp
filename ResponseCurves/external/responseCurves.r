@@ -1,4 +1,4 @@
-responseCurves<-function(fitLst,model,vals=NULL,varImp,addImp,pIdx,dat,resp){
+responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,dat,resp){
     
         myPredict <- function (x, y, ...) { 
           out <- predict(x, y, type='response', args=c("outputformat=logistic"), ...);
@@ -35,11 +35,11 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,addImp,pIdx,dat,resp){
                for(j in modelCycle){
                    
                     allVarImp<-rep(0,times=ncol(dat))
-                    allVarImp[match(names(varImp[[j]]),names(dat))]<-as.vector(varImp[[j]][1]) 
+                    allVarImp<-as.vector(varImp[[j]][1]) 
                     allVarImp[allVarImp<0]<-0 #set the minimum to zero so it shows up white
                     bgCol<-bgRamp[cut(x=allVarImp,breaks=seq(from=0,to=max(varImp[[j]]),length=11),include.lowest=TRUE)] 
                  for (pIdx in predCycle) {
-                     plotR<- TRUE #I'm not sure this information is always available
+                     plotR<- varIncluded[[j]][pIdx] #I'm not sure this information is always available
                      
                      for(v in 1:nrow(vals)){
                               test <- do.call("rbind", replicate(n, vals[v,], simplify=FALSE))
@@ -50,10 +50,11 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,addImp,pIdx,dat,resp){
                                Response<-predict(fitLst[[j]], test,type='response')
                                lR<-length(Response)
                                 if(v==1){
+                                
                                    plot(test[1:(lR-1),pIdx],Response[1:(lR-1)], ylim = y.lim, xlab = "",
                                     type = ifelse(plotR,"l","n"), lwd=2,cex=3,cex.main=3,cex.axis=1.2,yaxt=ifelse(pIdx==1 & !byVar,"s","n"),
                                     ylab=ifelse(pIdx==1 & !byVar,"Predicted Value",""),
-                                    xaxt="n",main="")
+                                    xaxt="n",main="",bg=bgCol[v])
                                     if(addImp){
                                       Xext<-extendrange(test[1:(lR-1),pIdx])
                                       Yext<-extendrange(c(0,1))
