@@ -130,6 +130,7 @@ MyPairs<-function(x,missing.summary,my.labels,labels, panel = points, ..., lower
        par(mar = c(bottom.gap[i],left.gap[j+1],top.gap[i],gap/2))
 
 
+
          if(j==0){
          localPlot(x[, i],response, xlab = "", ylab = "", axes = FALSE,
                 type="n",...)
