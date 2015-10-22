@@ -1,9 +1,9 @@
 exploreCurves<-function(fitLst,inputLayers,data,threshold=2,boundary=NA){
 
 cat("The interactive widget should come up momentarilly\n")
-cat("Press escape to exit the interactive widget") 
+cat("Press escape to exit the interactive widget\n") 
     #putting together all of the global input needed by both the server and ui fcts
-    predictedStk<-varImp<-predictedVals<-varIncluded<-Thresh<-messStk<-binaryStk<-list()
+    predictedStk<-varImp<-predictedVals<-binaryVals<-varIncluded<-Thresh<-messStk<-binaryStk<-Stats<-list()
     
     modelLst<-names(fitLst)
     PresCoords<-data[data[,3]==1,c(1,2)]
@@ -11,19 +11,22 @@ cat("Press escape to exit the interactive widget")
     resp<-data[,3]
     dat<-data[,-c(1:3)]
     Variables<-names(dat)
-    browser()
+    Split<-seq(1:length(resp))
+    
     for(i in 1:length(fitLst)){
         predictedStk[[i]]<-predict(inputLayers,fitLst[[i]],type='response')
         predictedVals[[i]]<-predict(fitLst[[i]],dat,type='response')
         AUCVal<-roc(resp,predictedVals[[i]])
         Thresh[[i]]<-optimal.thresholds(DATA=cbind(seq(1:nrow(dat)),resp,predictedVals[[i]]))[2,threshold]
+        binaryVals<-as.numeric(predictedVals[[i]]>=Thresh[[i]])
         messStk[[i]]<-mess(inputLayers,dat,full=FALSE)
+        Stats[[i]]<-calcStat(predictedVals[[i]],resp,Split,Thresh[[i]])
         binaryStk[[i]]<-createBinary(predictedStk[[i]],Thresh[[i]])
       Permuted<-PermutePredict(dat,fitLst[[i]],resp)
       varIncluded[[i]]<-Permuted$varIncluded  
       varImp[[i]]<-AUCVal-Permuted$AUC
     }
-      
+    
     messStk<-stack(messStk)  
     predictedStk<-stack(predictedStk)
     binaryStk<-stack(binaryStk)
@@ -43,6 +46,7 @@ rspHgt<-c("150px","300px","550px","750px")[length(fitLst)]
 
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget") 
+
 #=========================================
 app <- shinyApp(
   server=function(input, output) {
@@ -88,13 +92,17 @@ app <- shinyApp(
       lapply(1:length(modelLst),function(i){
       output[[paste("map",i,sep="")]] <- renderPlot({       
         #Plot the Map
-            par(oma=c(0,0,0,0),mar=c(0,0,2,0),xpd=FALSE) 
-             
-             if(input$mapType=="mprob") plot(predictedStk,i,maxpixels=60000,col=Colors,xaxt="n",yaxt="n",bty="n")
-             if(input$mapType=="mbinary") plot(binaryStk,i,maxpixels=60000,xaxt="n",yaxt="n",bty="n")
-             if(input$mapType=="mess") plot(messStk,i,maxpixels=60000,col=colorRampPalette(c("magenta","white","green"))(21),
-              breaks=pretty(c(-100,100),22),xaxt="n",yaxt="n",bty="n")
-              if(!is.na(boundary)) plot(boundary,add=TRUE)
+            if(input$showResid){ 
+                  residImage(x=data$lon,y=data$lat,z=Stats[[i]]$devResid,boundary,predictedStk,i,rastColors=Colors)
+            }else{
+                par(oma=c(0,0,0,0),mar=c(0,0,2,0),xpd=FALSE) 
+                 
+                  if(input$mapType=="mprob") plot(predictedStk,i,maxpixels=60000,col=Colors,xaxt="n",yaxt="n",bty="n")
+                  if(input$mapType=="mbinary") plot(binaryStk,i,maxpixels=60000,xaxt="n",yaxt="n",bty="n")
+                  if(input$mapType=="mess") plot(messStk,i,maxpixels=60000,col=colorRampPalette(c("magenta","white","green"))(21),
+                  breaks=pretty(c(-100,100),22),xaxt="n",yaxt="n",bty="n")
+                  if(class(boundary)=="SpatialPolygonsDataFrame") plot(boundary,add=TRUE)
+            }
             XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
             if(!is.null(input$showTrain)){
            
@@ -107,7 +115,8 @@ app <- shinyApp(
         })
       })    
       #============================    
-      #Response Curve Generation for Map 
+      #Response Curve Generation for Map
+      #============================ 
       lapply(1:length(modelLst),function(i){
       output[[paste("curves",i,sep="")]] <- renderPlot({        
         #Plot the Curves
@@ -115,6 +124,22 @@ app <- shinyApp(
               dat=dat,resp=resp)
         })
         })
+      
+      #============================
+      # Evaluation Plot
+      #============================
+      lapply(1:length(modelLst),function(i){
+      output[[paste("confusion",i,sep="")]]<-renderPlot({
+        confusionMatrix(list(Stats=Stats[[i]]),"none")
+      })
+      }) 
+      
+       lapply(1:length(modelLst),function(i){
+      output[[paste("resid",i,sep="")]]<-renderPlot({
+       
+        residImage(x=data$lon,y=data$lat,z=Stats[[i]]$devResid,boundary,predictedStk,i,rastColors=Colors)
+      })
+      }) 
       
       #==============================================
       # Sliders   
@@ -211,7 +236,7 @@ app <- shinyApp(
 ui=navbarPage("Respones Curve Explorer",
         #===============================================
         # ==========  Map Explorer ==========#
-        tabPanel("Map Explorer",
+        tabPanel("Response Map Explorer",
         
         helpText("The response curves that are generated by holding each predictor constant at the mean",
            "are displayed in black",
@@ -231,7 +256,9 @@ ui=navbarPage("Respones Curve Explorer",
             column(2,
               checkboxGroupInput("showTrain","Show Training Data",
               c("add presence points"="showPres",
-              "add absence/background points"="showAbs"))),
+              "add absence/background points"="showAbs")),
+              checkboxInput("showResid","Add deviance residuals",value=FALSE)),
+              
             
             column(2,
               checkboxInput("addMImp", label = "show variable importance with background color",value=FALSE),
@@ -275,6 +302,31 @@ ui=navbarPage("Respones Curve Explorer",
           
           )
           )
+        ),
+        #===============================================
+        # ==========  Model Evaluation ==========#
+        tabPanel("Model Evaluation",
+         selectInput("evaluationMetric", label = h3("Model Evaluation Plot"), 
+         choices = list("ROC curve" = 1, "Confusion Matrix" = 2, 
+                        "Calibration Plot" = 3,"Variable Importance"=4,
+                        "Deviance Residuals"=5), 
+         selected = 1),
+         fluidRow(
+          column(4,
+          wellPanel(
+          plotOutput("resid1", height="350px"),style="padding: 5px;"),style="padding: 5px;"),
+          column(6,
+          wellPanel(plotOutput("confusion1",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
+          ),
+        conditionalPanel(length(modelLst)>1,
+         fluidRow(
+          column(4,
+          wellPanel(
+          plotOutput("resid2", height="350px"),style="padding: 5px;"),style="padding: 5px;"),
+          column(6,
+          wellPanel(plotOutput("confusion2",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
+          )
+         )
         ),
         #===============================================
         # ==========  Slide Explorer ==========#
