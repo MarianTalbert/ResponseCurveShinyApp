@@ -9,7 +9,7 @@ calcStat<-function(pred,resp,Split,thresh){
         auc.fit<-roc(resp,pred)
         
             cmx <- cmx(auc.data,threshold=thresh)
-            PCC <- pcc(cmx,st.dev=F)*100
+            PCC <- pcc(cmx,st.dev=F)
             SENS <- sensitivity(cmx,st.dev=F)
             SPEC <- specificity(cmx,st.dev=F)
             KAPPA <- Kappa(cmx,st.dev=F)
@@ -20,7 +20,7 @@ calcStat<-function(pred,resp,Split,thresh){
             
             devResid[is.nan(devResid)] <- NA
         
-            return(list(auc.fit=auc.fit,Cmx=cmx,Pcc=PCC,Sens=SENS,
-                Specf=SPEC,Kappa=KAPPA,Tss=TSS,devResid=devResid))
+            return(list(AUC=auc.fit,Cmx=cmx,ProportionCorrectlyClassified=PCC,Sensitivity=SENS,
+                Specificity=SPEC,Kappa=KAPPA,TrueSkillStatistic=TSS,devResid=devResid))
         
     }

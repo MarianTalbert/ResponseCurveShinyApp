@@ -1,6 +1,8 @@
 
     
-shinyServer(function(input, output) {
+shinyServer(function(input, output,fitLst=fitLst) {
+ browser()
+ print(fitLst)
  XYs <- reactiveValues(
     Xlocs = NULL,
     Ylocs = NULL,
