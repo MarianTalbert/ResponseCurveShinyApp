@@ -34,7 +34,12 @@ cat("Press escape to exit the interactive widget\n")
     names(predictedStk)<-names(fitLst)
     names(messStk)<-names(fitLst)
     names(binaryStk)<-names(fitLst)
-    
+   
+   #I'M ASSUMING FOR NOW CONSISTENT VARIABLES ACROSS MODELS
+   varImpMat<-data.frame(Imp=unlist(varImp),
+                         Var=as.factor(rep(names(dat),times=length(modelLst))),
+                         Model=as.factor(rep(names(fitLst),each=length(varImp))))
+   
     d=data.frame(Name=names(dat),min=apply(dat,2,min,na.rm=TRUE),
    max=apply(dat,2,max,na.rm=TRUE),mean=apply(dat,2,mean,na.rm=TRUE))
   dataLst <- split(d,f=seq(1:nrow(d)))
@@ -139,8 +144,12 @@ app <- shinyApp(
        
         residImage(x=data$lon,y=data$lat,z=Stats[[i]]$devResid,boundary,predictedStk,i,rastColors=Colors)
       })
-      }) 
-      
+      })
+       
+      output$VarImpPlot<-renderPlot({ggplot(varImpMat,aes(x=factor(Var),y=Imp,fill=factor(Model)), color=factor(Model)) +  
+          stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Blues")
+      })
+  
       #==============================================
       # Sliders   
       #============================
@@ -306,11 +315,16 @@ ui=navbarPage("Respones Curve Explorer",
         #===============================================
         # ==========  Model Evaluation ==========#
         tabPanel("Model Evaluation",
-         selectInput("evaluationMetric", label = h3("Model Evaluation Plot"), 
-         choices = list("ROC curve" = 1, "Confusion Matrix" = 2, 
-                        "Calibration Plot" = 3,"Variable Importance"=4,
-                        "Deviance Residuals"=5), 
-         selected = 1),
+         fluidRow(
+          column(4,
+              wellPanel(
+                   selectInput("evaluationMetric", label = h3("Model Evaluation Plot"), 
+                   choices = list("ROC curve" = 1, "Confusion Matrix" = 2, 
+                                  "Calibration Plot" = 3,"Variable Importance"=4,
+                                  "Deviance Residuals"=5), 
+                   selected = 1))),
+           column(6,
+           wellPanel(plotOutput("VarImpPlot", height="350px"),style="padding: 5px;"),style="padding: 5px;")),   
          fluidRow(
           column(4,
           wellPanel(

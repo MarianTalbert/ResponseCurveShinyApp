@@ -4,12 +4,21 @@ library(mgcv)
 library(dismo)
 library(shiny)
 library(earth)
-library(nnet)
-library(kernlab)
+#library(kernlab)
 library(PresenceAbsence)
+library(wesanderson)
+library(ggplot2)
+
+setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
+ShinyCode<-file.path(getwd(),"ResponseCurves\\External")
+sourceList<-list.files(ShinyCode,full.names=TRUE)
+unlist(lapply(as.list(sourceList),source))
+#=====================================================
+# This is almost directly from the dismo vignette 
  files <- list.files(path=paste(system.file(package="dismo"),
  '/ex', sep=''), pattern='grd', full.names=TRUE)
  files<-files[c(1,5,2,7)]
+ files<-files[-c(9)]
  layerStk <- stack(files)
   plot(layerStk)
  data(wrld_simpl)
@@ -28,25 +37,40 @@ presvals <- extract(layerStk, bradypus)
  # setting random seed to always create the same
  # random set of points for this example
  set.seed(0)
- backgr <- randomPoints(layerStk, 500)
+ #setting up an extent around the presence points
+ PresExt <- extent(-104.7,-36,-26,16)
+ backgr <- randomPoints(layerStk,ext=PresExt, 500)
  colnames(backgr)<-c("lon","lat")
  absvals <- extract(layerStk, backgr)
  pb <- c(rep(1, nrow(presvals)), rep(0, nrow(absvals)))
  sdmdata <- data.frame(rbind(bradypus,backgr),cbind(pb, rbind(presvals, absvals)))
  sdmdata[,"biome"] = as.factor(sdmdata[,"biome"])
  head(sdmdata)
+ 
+correlationViewer(data=sdmdata)
 
+#put the desired models in a list
 
 fitLst<-list(
  GLM_Model = glm(pb ~ bio1 + bio5 + bio12+ bio7, data=sdmdata,family=binomial),
  MARS_Model = earth(pb~ bio1 + bio5 + bio12 + bio7, data=sdmdata,glm=list(family=binomial)),
  RF_Model=randomForest(pb~ bio1 + bio5 + bio12 + bio7,data=sdmdata),
- GAM_Model<-gam(pb ~ s(bio1) + s(bio5) + s(bio12) + s(bio7), data=sdmdata)
+ GAM_Model=gam(pb ~ s(bio1) + s(bio5) + s(bio12) + s(bio7), data=sdmdata,family=binomial)
  )
+ #check my deviance residuals with this
+  res <- residuals(fitLst$GLM_Model, type = "deviance")
+  
+  devResid <- sign(resp-pred)*sqrt(2*abs((resp * log(pred)) + ((1 - resp) * 
+            log(1 - pred))))
 #This "responseInput" name absolutely can't be changed in the current working version.
 #This is a bit ugly but I'm not sure what do do I'd like to hide the complexity and it's 
 #Generally poor form to assign to the global envt and the runApp needs a consistent input format  
-responseInput<-prepareModels(fitLst,inputLayers=layerStk,data=sdmdata,optimal.thresholds=2)
+#===============================================================
+#    This is where the magic happens
+#
+exploreCurves(fitLst,inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl)
+#
+#===============================================================
 
 Cols<-c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
 max_plots<-5
