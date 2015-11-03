@@ -8,11 +8,12 @@ cat("Press escape to exit the interactive widget\n")
     modelLst<-names(fitLst)
     PresCoords<-data[data[,3]==1,c(1,2)]
     AbsCoords<-data[data[,3]==0,c(1,2)]
+   
     resp<-data[,3]
     dat<-data[,-c(1:3)]
     Variables<-names(dat)
     Split<-seq(1:length(resp))
-    
+     
     for(i in 1:length(fitLst)){
         predictedStk[[i]]<-predict(inputLayers,fitLst[[i]],type='response')
         predictedVals[[i]]<-predict(fitLst[[i]],dat,type='response')
@@ -26,6 +27,12 @@ cat("Press escape to exit the interactive widget\n")
       varIncluded[[i]]<-Permuted$varIncluded  
       varImp[[i]]<-AUCVal-Permuted$AUC
     }
+    
+    pre<-cbind(seq(1:length(resp)),resp,matrix(unlist(predictedVals),ncol=4))
+    
+    auc.roc.plot(pre,col=c("red","blue","green","purple"),opt.thresholds=TRUE,
+      opt.methods=2,model.names=names(fitLst),legend.cex=1.4,opt.legend.cex = 1.4)
+
     
     messStk<-stack(messStk)  
     predictedStk<-stack(predictedStk)
@@ -100,17 +107,23 @@ app <- shinyApp(
       lapply(1:length(modelLst),function(i){
       output[[paste("map",i,sep="")]] <- renderPlot({       
         #Plot the Map
-            if(input$showResid){ 
-                  residImage(x=data$lon,y=data$lat,z=Stats[[i]]$devResid,boundary,predictedStk,i,rastColors=Colors)
+            if(input$showResid){
+            Legend=FALSE 
+            alpha=.2
+                 
             }else{
+             Legend=TRUE 
+             alpha=1
+            
+            }
                 par(oma=c(0,0,0,0),mar=c(0,0,2,0),xpd=FALSE) 
                  
-                  if(input$mapType=="mprob") plot(predictedStk,i,maxpixels=60000,col=Colors,xaxt="n",yaxt="n",bty="n")
-                  if(input$mapType=="mbinary") plot(binaryStk,i,maxpixels=60000,xaxt="n",yaxt="n",bty="n")
+                  if(input$mapType=="mprob") plot(predictedStk,i,maxpixels=60000,col=Colors,xaxt="n",yaxt="n",bty="n",legend=Legend,alpha=alpha)
+                  if(input$mapType=="mbinary") plot(binaryStk,i,maxpixels=60000,xaxt="n",yaxt="n",bty="n",legend=Legend,alpha=alpha)
                   if(input$mapType=="mess") plot(messStk,i,maxpixels=60000,col=colorRampPalette(c("magenta","white","green"))(21),
-                  breaks=pretty(c(-100,100),22),xaxt="n",yaxt="n",bty="n")
+                  breaks=pretty(c(-100,100),22),xaxt="n",yaxt="n",bty="n",legend=Legend,alpha=alpha)
                   if(class(boundary)=="SpatialPolygonsDataFrame") plot(boundary,add=TRUE)
-            }
+                  if(input$showResid) residImage(x=data$lon,y=data$lat,z=Stats[[i]]$devResid,boundary,predictedStk,i,rastColors=Colors)
             XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
             if(!is.null(input$showTrain)){
            
@@ -152,7 +165,11 @@ app <- shinyApp(
       output$StatsBar<-renderPlot({ggplot(StatsFrame,aes(x=Stat,y=Value,fill=Model,facets=Stat), color=factor(Model)) +
           stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Blues")  
       })
-           
+      output$ROCCurve<-renderPlot({
+          Colors<-c("red","blue","green","purple","orange","goldenrod1","navy")
+          auc.roc.plot(pre,col=Colors[1:length(fitLst)],opt.thresholds=TRUE,
+          opt.methods=2,model.names=names(fitLst),legend.cex=1.4,opt.legend.cex = 1.4)
+      })     
       output$VarImpPlot<-renderPlot({ggplot(varImpMat,aes(x=Variable,y=VariableImportance,fill=Model), color=Model) +  
           stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Blues")
       })
@@ -327,25 +344,15 @@ ui=navbarPage("Respones Curve Explorer",
                 wellPanel(
                        plotOutput("StatsBar", height="350px"),style="padding: 5px;"),
                        style="padding: 5px;"),
+              column(5,
+                wellPanel(
+                       plotOutput("ROCCurve", height="350px"),style="padding: 5px;"),
+                       style="padding: 5px;")         
+              ),
+            fluidRow(           
              column(5,
              wellPanel(plotOutput("VarImpPlot", height="350px"),style="padding: 5px;"),style="padding: 5px;")
-           ),   
-         fluidRow(
-          column(4,
-          wellPanel(
-          plotOutput("resid1", height="350px"),style="padding: 5px;"),style="padding: 5px;"),
-          column(6,
-          wellPanel(plotOutput("confusion1",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
-          ),
-        conditionalPanel(length(modelLst)>1,
-         fluidRow(
-          column(4,
-          wellPanel(
-          plotOutput("resid2", height="350px"),style="padding: 5px;"),style="padding: 5px;"),
-          column(6,
-          wellPanel(plotOutput("confusion2",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
-          )
-         )
+           )
         ),
         #===============================================
         # ==========  Slide Explorer ==========#

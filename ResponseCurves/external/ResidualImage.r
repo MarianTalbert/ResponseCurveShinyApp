@@ -20,9 +20,6 @@ residImage<-function(x,y,z,boundary=NA,predictedStk,i,rastColors){
      s1<-seq(from=MinCol,to=MaxCol,length=length(length(Breaks)))
          col.ind<-apply((outer(s1,z,f)),2,which.min)
          colrange<-seq(from=MinCol,to=MaxCol,length=100)
-                 par(oma=c(0,0,0,0),mar=c(0,0,2,0))
-                   plot(predictedStk,i,alpha=.2,maxpixels=5000,col=rastColors,xaxt="n",yaxt="n",bty="n",legend=FALSE)
-                   if(class(boundary)=="SpatialPolygonsDataFrame") plot(boundary,add=TRUE)
                   points(x,y,bg=Colors[cut(z,Breaks)], pch=21,cex=abs(z)*1.5)
                    plot(raster(matrix(data=colrange, ncol=length(colrange),nrow=1)),legend.only=TRUE,col=Colors)
               }
