@@ -1,4 +1,4 @@
-auc.roc.plot<-function (DATA, threshold = 101, find.auc = TRUE, which.model = (1:(ncol(DATA) -
+auc.roc.plot<-function (DATA,Thresh, threshold = 101, find.auc = TRUE, which.model = (1:(ncol(DATA) -
     2)), na.rm = FALSE, xlab = "1-Specificity (false positives)",
     ylab = "Sensitivity (true positives)", main = "ROC Plot",
     model.names = NULL, color = NULL, line.type = NULL, lwd = 1,
@@ -7,7 +7,7 @@ auc.roc.plot<-function (DATA, threshold = 101, find.auc = TRUE, which.model = (1
     smoothing = 1, add.legend = TRUE, legend.text = model.names,
     legend.cex = 0.8, add.opt.legend = TRUE, opt.legend.text = NULL,
     opt.legend.cex = 0.7, counter.diagonal = FALSE, pch = NULL,
-    FPC, FNC, cost.line = FALSE){
+    FPC, FNC, cost.line = FALSE,cexMult=1.5){
 #This function if from the PresenceAbsence library on CRAN but with a few minor
 #modifications to improve the beauty
     if (is.data.frame(DATA) == FALSE) {
@@ -228,7 +228,8 @@ auc.roc.plot<-function (DATA, threshold = 101, find.auc = TRUE, which.model = (1
 
 df <- data.frame()
 AUC<-vector()
-   p<-ggplot(df) + geom_point() + xlim(0, 1) + ylim(0, 1)+xlab(xlab)+ylab(ylab)
+ThreshPoints<-as.data.frame(matrix(nrow=N.dat,ncol=4))
+ 
    
     
     for (dat in 1:N.dat) {
@@ -236,12 +237,27 @@ AUC<-vector()
             which.model = dat)
         Model.dat$specificity<-1-Model.dat$specificity
         AUC[dat]<-round(auc(DATA,,which.model=dat)$AUC,2)
-        if(dat==1){PlotDat<-cbind(Model.dat,Model=rep(paste(model.names[dat],"AUC=",AUC[dat]),times=nrow(Model.dat)))
+        Lab<-paste(model.names[dat]," (AUC = ",AUC[dat],")",sep="")
+        ThreshInd<-which.min((Model.dat$threshold-Thresh[[dat]])^2)
+        ThreshPoints[dat,]<-c(Lab,Thresh[[dat]],Model.dat$sensitivity[ThreshInd],Model.dat$specificity[ThreshInd])
+        if(dat==1){PlotDat<-cbind(Model.dat,Model=rep(Lab,times=nrow(Model.dat)))
         }else{
-          PlotDat<-rbind(PlotDat,cbind(Model.dat,Model=rep(paste(model.names[dat],"AUC=",AUC[dat]),times=nrow(Model.dat))))
+          PlotDat<-rbind(PlotDat,cbind(Model.dat,Model=rep(Lab,times=nrow(Model.dat))))
         }
     }
-    browser()
-    p<-p + geom_line(data=PlotDat, aes(x=specificity, y=sensitivity,colour=Model),size=1.5)
-
+   
+    colnames(ThreshPoints)<-c("Model","Thresh","sensitivity","specificity")
+    ThreshPoints$Model<-as.factor(ThreshPoints$Model)
+    ThreshPoints$sensitivity<-as.numeric(ThreshPoints$sensitivity)
+    ThreshPoints$specificity<-as.numeric(ThreshPoints$specificity)
+    p<-ggplot(df) + geom_point() + xlim(0, 1) + ylim(0, 1)+xlab(xlab)+ylab(ylab)
+    p<-p + geom_line(data=PlotDat, aes(x=specificity, y=sensitivity,colour=Model),size=1.3)+
+           geom_point(data=ThreshPoints,aes(x=specificity,y=sensitivity,colour=Model),size=6)+
+      ggtitle("ROC Plot")+theme(axis.text.y = element_text(size = rel(cexMult))) +
+      theme(axis.title = element_text(size = 1.2*rel(cexMult))) +	
+      theme(plot.title =element_text(size=1.4*rel(cexMult)))+
+      theme(axis.text.x = element_text(size = rel(cexMult)))+
+      theme(legend.title=element_text(size=rel(cexMult)))+
+      theme(legend.text=element_text(size=.9*rel(cexMult)))
+return(p)
 }

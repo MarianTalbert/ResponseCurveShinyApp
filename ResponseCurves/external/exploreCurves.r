@@ -30,9 +30,6 @@ cat("Press escape to exit the interactive widget\n")
     
     pre<-cbind(seq(1:length(resp)),resp,matrix(unlist(predictedVals),ncol=4))
     
-    auc.roc.plot(pre,col=c("red","blue","green","purple"),opt.thresholds=TRUE,
-      opt.methods=2,model.names=names(fitLst),legend.cex=1.4,opt.legend.cex = 1.4)
-
     
     messStk<-stack(messStk)  
     predictedStk<-stack(predictedStk)
@@ -55,17 +52,17 @@ cat("Press escape to exit the interactive widget\n")
   dataLst <- split(d,f=seq(1:nrow(d)))
     #put the mess and binary map calculations here
 
-Cols<-c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
+
 max_plots<-5
 rspHgt<-c("150px","300px","550px","750px")[length(fitLst)]
-
+Cols<-c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget") 
 
 #=========================================
 app <- shinyApp(
   server=function(input, output) {
-      Cols<-c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
+     
        XYs <- reactiveValues(
           Xlocs = NULL,
           Ylocs = NULL,
@@ -131,6 +128,7 @@ app <- shinyApp(
                if("showAbs"%in%input$showTrain) points(x=AbsCoords[,1],y=AbsCoords[,2],pch=21,col="white",bg="blue")
             } 
             if((any(!is.na(XYdat)))){
+            
             points(x=XYdat$X,y=XYdat$Y,pch=21,col="black",bg=Cols[1:nrow(XYdat)],cex=2.5)  
         }
         })
@@ -142,7 +140,7 @@ app <- shinyApp(
       output[[paste("curves",i,sep="")]] <- renderPlot({        
         #Plot the Curves
           responseCurves(list(f=fitLst[[i]]),list(m=modelLst[[i]]),vals=XYs$vals,varIncluded=list(varIncluded[[i]]),varImp=list(varImp[[i]]),addImp=input$addMImp,
-              dat=dat,resp=resp)
+              dat=dat,resp=resp,Cols=Cols)
         })
         })
       
@@ -166,9 +164,10 @@ app <- shinyApp(
           stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Blues")  
       })
       output$ROCCurve<-renderPlot({
-          Colors<-c("red","blue","green","purple","orange","goldenrod1","navy")
-          auc.roc.plot(pre,col=Colors[1:length(fitLst)],opt.thresholds=TRUE,
-          opt.methods=2,model.names=names(fitLst),legend.cex=1.4,opt.legend.cex = 1.4)
+          
+          auc.roc.plot(pre,Thresh,col=c("red","blue","green","purple"),opt.thresholds=TRUE,
+                       opt.methods=2,model.names=names(fitLst),legend.cex=1.4,opt.legend.cex = 1.4)
+          
       })     
       output$VarImpPlot<-renderPlot({ggplot(varImpMat,aes(x=Variable,y=VariableImportance,fill=Model), color=Model) +  
           stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Blues")
@@ -186,7 +185,8 @@ app <- shinyApp(
       
       lapply(1:length(dataLst),IntractVals=IntractVals,function(i,IntractVals){
       output[[paste("slideRsp",i,sep="")]]<-renderPlot({
-        responseCurves(fitLst,modelLst,vals=IntractVals$Vals,i,varIncluded=varIncluded,varImp=varImp,addImp=input$addImp,dat=dat,resp=resp)
+        responseCurves(fitLst,modelLst,vals=IntractVals$Vals,i,varIncluded=varIncluded,varImp=varImp,
+                       addImp=input$addImp,dat=dat,resp=resp,Cols=Cols)
         })
       })
         
