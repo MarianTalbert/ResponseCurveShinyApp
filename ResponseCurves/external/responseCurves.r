@@ -1,4 +1,4 @@
-responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,dat,resp,Cols){
+responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,dat,resp,Cols,Ensemble){
     
         myPredict <- function (x, y, ...) { 
           out <- predict(x, y, type='response', args=c("outputformat=logistic"), ...);
@@ -30,6 +30,10 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
              #set up what we're cycling over
               modelCycle<-1:length(fitLst)
               predCycle<-1:ncol(dat)
+              if(Ensemble) {
+                RespLst<-list() #list is a list of predictors
+                RespMat<-matrix(ncol=nrow(vals),nrow=n) 
+              }
               if(byVar) predCycle <- pIdx
               
                for(j in modelCycle){
@@ -49,7 +53,9 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
                               colnames(test)<-names(means)
                                Response<-predict(fitLst[[j]], test,type='response')
                                lR<-length(Response)
-                                if(v==1){
+                               if(Ensemble) RespMat[,v]<-Response[1:(lR-1)]
+                               
+                                if(v==1 & !Ensemble){
                                 
                                    plot(test[1:(lR-1),pIdx],Response[1:(lR-1)], ylim = y.lim, xlab = "",
                                     type = ifelse(plotR,"l","n"), lwd=2,cex=3,cex.main=3,cex.axis=1.2,yaxt=ifelse(pIdx==1 & !byVar,"s","n"),
@@ -63,7 +69,7 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
                                     
                                     if(!plotR) box(col="grey82")
                                  }
-                                 if(plotR){
+                                 if(plotR & !Ensemble){
                                     lines(test[1:(lR-1),pIdx],Response[1:(lR-1)], ylim = y.lim, xlab = "",
                                       ylab = "", type = "l", lwd=2,cex=3,cex.main=3,cex.axis=1.2,yaxt=ifelse(!byVar,"s","n"),
                                       xaxt="n",main="",col=Colors[v])
@@ -75,7 +81,8 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
                                if(byVar & pIdx==1) mtext(model[[j]],line=1,side=2,cex=2)  
                                if(!byVar) mtext(Names[pIdx],line=1,side=3,cex=1.2,col=ifelse(plotR,"black","grey74"))
                                # if(pIdx==1) mtext(model,side=2,outer=TRUE,at=seq(from=1/(2*nRow),to=(1-1/(2*nRow)),length=nRow)[j+1],line=3,cex=1.2)
-                        }
+                     }
+                     if(Ensemble) RespLst[[pIdx]]<-RespMat
                     } 
                }
                if(byVar){
@@ -94,7 +101,8 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
                       segments(x0=vals[v,pIdx],y0=0,y1=25,x1=vals[v,pIdx],col=Cols[v-1],lty=2,cex=2)
                     }
                     if(pIdx==1) mtext("Density",side=2,cex=1.2)
-                }    
+               } 
+              if(Ensemble) return(RespLst)
   }         
                 
                 

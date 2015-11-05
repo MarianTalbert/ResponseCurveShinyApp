@@ -66,7 +66,7 @@ fitLst<-list(
 #===============================================================
 #    This is where the magic happens
 #
-exploreCurves(fitLst,inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl)
+exploreCurves(fitLst,inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl,Ensemble=TRUE)
 #
 #===============================================================
 
@@ -91,18 +91,12 @@ Sys.time()-rastTm
 rastTm<-Sys.time()
 my.filled.contour(a, plot.axes = {},col=Colors,nlevels = 26)
 Sys.time()-rastTm
-
-vals<-rbind(c(.2,.1,50,-10,.2,.06,.5,2),
-c(.9,-.6,50,-10,.2,.06,.5,2),
-c(.2,.1,50,-10,.2,0,.17,2),
-c(.2,.1,50,-10,.2,.06,.5,0))
-
-vals<-rbind(c(0.683187430, 0.683187421, 0.69550804, 0.3144333),
-            c(0.001984252, 0.001984253, 0.03192426, 0.0035000),
-            c(0.948119431, 0.948119426, 0.96974946, 0.6888333))
-
-
-responseCurves(f=list(fitLst[[1]]),m=list(modelLst[[2]]),varImp=list(varImpLst[[2]]),addImp=F,vals,dat=responseInput$dat,resp=responseInput$resp)
+Cols<-c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
+vals<-apply(sdmdata[,c(4:ncol(sdmdata))],2,FUN=sample,size=4)
+modelLst<-names(fitLst)
+varImpLst<-NA
+responseCurves(f=list(fitLst[[1]]),m=list(modelLst[[1]]),varImp=list(c(1,2,3,4)),addImp=F,vals,
+               dat=sdmdata[,c(4:ncol(sdmdata))],resp=sdmdata[,3],Cols=Cols)
 interactionPlot(fitLst[[1]],modelLst[[1]],vals=NULL,theta=30,phi=25,x="bio1",y="bio5",dat=responseInput$dat,resp=responseInput$resp)
 densityPlot(fitLst[[3]])
 
