@@ -8,7 +8,7 @@ auc.roc.plot<-function (DATA,Thresh, threshold = 101, find.auc = TRUE, which.mod
     legend.cex = 0.8, add.opt.legend = TRUE, opt.legend.text = NULL,
     opt.legend.cex = 0.7, counter.diagonal = FALSE, pch = NULL,
     FPC, FNC, cost.line = FALSE,cexMult=1.5){
-#This function if from the PresenceAbsence library on CRAN but with a few minor
+#This function was from the PresenceAbsence library on CRAN but with a few minor
 #modifications to improve the beauty
     if (is.data.frame(DATA) == FALSE) {
         if (is.matrix(DATA) == TRUE) {
@@ -251,11 +251,11 @@ ThreshPoints<-as.data.frame(matrix(nrow=N.dat,ncol=4))
     ThreshPoints$sensitivity<-as.numeric(ThreshPoints$sensitivity)
     ThreshPoints$specificity<-as.numeric(ThreshPoints$specificity)
     p<-ggplot(df) + geom_point() + xlim(0, 1) + ylim(0, 1)+xlab(xlab)+ylab(ylab)
-    p<-p + geom_line(data=PlotDat, aes(x=specificity, y=sensitivity,colour=Model),size=1.3)+
+    p<-p + geom_line(data=PlotDat, aes(x=specificity, y=sensitivity,colour=Model),size=1.2)+
            geom_point(data=ThreshPoints,aes(x=specificity,y=sensitivity,colour=Model),size=6)+
       ggtitle("ROC Plot")+theme(axis.text.y = element_text(size = rel(cexMult))) +
-      theme(axis.title = element_text(size = 1.2*rel(cexMult))) +	
-      theme(plot.title =element_text(size=1.4*rel(cexMult)))+
+      theme(axis.title = element_text(size = rel(cexMult))) +	
+      theme(plot.title =element_text(size=1.2*rel(cexMult)))+
       theme(axis.text.x = element_text(size = rel(cexMult)))+
       theme(legend.title=element_text(size=rel(cexMult)))+
       theme(legend.text=element_text(size=.9*rel(cexMult)))
