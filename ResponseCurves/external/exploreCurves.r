@@ -48,7 +48,12 @@ cat("Press escape to exit the interactive widget\n")
         else Mdat<-rbind(Mdat,M)
     }
     
-    if(Ensemble){
+    densityFrame<-data.frame(predicted=unlist(predictedVals),Response=rep(resp,times=length(fitLst)),
+                             Model=rep(names(fitLst),each=length(resp)))
+    densityFrame$Model<-as.factor(densityFrame$Model)
+    densityFrame$Response<-as.factor(densityFrame$Response)
+    
+       if(Ensemble){
       EnsemblePred<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean)
       EnsembleBin<-stackApply(binaryStk,indices=rep(1,times=length(fitLst)),fun=sum)
       names(EnsemblePred)<-"Ensemble (Mean) of probability maps"
@@ -151,14 +156,9 @@ app <- shinyApp(
       #============================
       # Evaluation Plot
       #============================
-      lapply(1:length(modelLst),function(i){
-      output[[paste("confusion",i,sep="")]]<-renderPlot({
-        confusionMatrix(list(Stats=Stats[[i]]),"none")
-      })
-      }) 
-      
     
-      output$StatsBar<-renderPlot({ggplot(StatsFrame,aes(x=Stat,y=Value,fill=Model,facets=Stat), color=factor(Model)) +
+      output$StatsBar<-renderPlot({
+        ggplot(StatsFrame,aes(x=Stat,y=Value,fill=Model,facets=Stat), color=factor(Model)) +
           stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Blues")+
           xlab("Model Evaluation Metrics")+
           theme(axis.text.y = element_text(size = rel(cexMult))) +
@@ -188,7 +188,8 @@ app <- shinyApp(
         })
       
       
-      output$VarImpPlot<-renderPlot({ggplot(varImpMat,aes(x=Variable,y=VariableImportance,fill=Model), color=Model) +  
+      output$VarImpPlot<-renderPlot({
+        ggplot(varImpMat,aes(x=Variable,y=VariableImportance,fill=Model), color=Model) +  
           stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Blues")+
           theme(axis.text.y = element_text(size = rel(cexMult))) +
           theme(axis.title = element_text(size = rel(cexMult))) +	
@@ -197,7 +198,18 @@ app <- shinyApp(
           theme(legend.title=element_text(size=rel(cexMult)))+
           theme(legend.text=element_text(size=.9*rel(cexMult))) 
       })
-  
+      
+      output$DensityPlot<-renderPlot({
+      ggplot(densityFrame,aes(x=predicted,colour=Response,fill=Response))+geom_density(alpha=0.3)+facet_wrap(~ Model)+
+        scale_fill_manual(values=c("blue","red"))+
+        scale_colour_manual(values=c("blue","red"))+theme(axis.text.y = element_text(size = rel(cexMult))) +
+          theme(axis.title = element_text(size = rel(cexMult))) +	
+          theme(plot.title =element_text(size=1.2*rel(cexMult)))+
+          theme(axis.text.x = element_text(size = rel(cexMult)))+
+          theme(legend.title=element_text(size=rel(cexMult)))+
+          theme(legend.text=element_text(size=.9*rel(cexMult)))+
+          theme(strip.text.x = element_text(size = rel(cexMult)))
+      })
       #==============================================
       # Sliders   
       #============================
@@ -403,6 +415,15 @@ ui=navbarPage("Respones Curve Explorer",
                       "is in turn randomly permuted.  A large drop in AUC would indicated an important predictor",
                       "while if the AUC remains unchanged then the variable was les important in the model"), 
              style="padding: 5px;"),
+             fluidRow(           
+               column(5,
+                      wellPanel(
+                        plotOutput("DensityPlot", height="350px"),style="padding: 5px;"),
+                      helpText("Variable importance is determined by calculating the drop in AUC when each variable",
+                               "is in turn randomly permuted.  A large drop in AUC would indicated an important predictor",
+                               "while if the AUC remains unchanged then the variable was les important in the model"), 
+                      style="padding: 5px;")
+             ),
              fluidRow(           
                column(5,
                       wellPanel(
