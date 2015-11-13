@@ -42,16 +42,12 @@ cat("Press escape to exit the interactive widget\n")
         M<-data.frame(Percent=c(100*Stats[[i]]$Cmx[2]/sum(Stats[[i]]$Cmx[1:2]),100*Stats[[i]]$Cmx[4]/sum(Stats[[i]]$Cmx[3:4]),
                                 100*Stats[[i]]$Cmx[1]/sum(Stats[[i]]$Cmx[1:2]),100*Stats[[i]]$Cmx[3]/sum(Stats[[i]]$Cmx[3:4])),
                       Predicted=factor(c("Absence","Absence","Presence","Presence")),
-                      Observed=factor(c("Presence","Absence","Presence","Absence")))
+                      Observed=factor(c("Presence","Absence","Presence","Absence")),Model=rep(names(fitLst)[i],times=4))
         
-        
-        cmxPlot[[i]] <- ggplot(M,aes(x=Observed,y=Predicted))+geom_tile()+geom_tile(aes(fill=Percent))+
-          scale_fill_gradient2(low="white",mid="yellow",high="red3",midpoint=50,limits=c(0,100))+
-          annotate("text",label=paste(round(M$Percent),"%"),x=c(2,1,2,1),y=c(1,1,2,2),size=rel(6))+
-          theme(axis.text.y = element_text(angle = 90, hjust = 1))
-        
+        if(i==1) Mdat <- M
+        else Mdat<-rbind(Mdat,M)
     }
-    browser()
+    
     if(Ensemble){
       EnsemblePred<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean)
       EnsembleBin<-stackApply(binaryStk,indices=rep(1,times=length(fitLst)),fun=sum)
@@ -179,26 +175,16 @@ app <- shinyApp(
       })
       
       output$ConfusionMatrix<-renderPlot({
-        Nrow<-floor(sqrt(length(fitLst)))
-        Ncol<-ceiling(sqrt(length(fitLst)))
-        Layout <- grid.layout(nrow = Nrow+1, ncol = Ncol+1, 
-                              widths = unit(c(rep(5,times=Ncol),.5),
-                                            rep("null",times=(Ncol+1))),
-                              heights = unit(c(.5,rep(5,times=Nrow)), rep("null",times=(Nrow+1))))
-        vplayout <- function(...) {
-          grid.newpage()
-          pushViewport(viewport(layout = Layout))
-        }
-        subplot <- function(x, y) viewport(layout.pos.row = x,
-                                           layout.pos.col = y)
-        vplayout()
-        Main=paste("Confusion Matricies") 
-        grid.text("Confusion Matricies", gp=gpar(fontsize=25),vp = viewport(layout.pos.row = 1, layout.pos.col = 1:(Ncol+1)))
-        for(i in 1:length(cmxPlot)){
-          printRow<- ceiling(i/Nrow)+1
-          printCol<-i%%Nrow+1
-          print(cmxPlot[[i]] + ggtitle(names(fitLst)[i]) + theme(legend.position = 'none'), vp = subplot(printRow, printCol))
-        }
+        ggplot(Mdat,aes(x=Observed,y=Predicted))+geom_tile()+geom_tile(aes(fill=Percent))+
+          scale_fill_gradient2(low="white",mid="yellow",high="red3",midpoint=50,limits=c(0,100))+
+          annotate("text",label=paste(round(M$Percent),"%"),x=c(2,1,2,1),y=c(1,1,2,2),size=rel(6))+
+          facet_wrap(~ Model)+theme(axis.text.y = element_text(size = rel(cexMult))) +
+          theme(axis.title = element_text(size = rel(cexMult))) +	
+          theme(plot.title =element_text(size=1.2*rel(cexMult)))+
+          theme(axis.text.x = element_text(size = rel(cexMult)))+
+          theme(legend.title=element_text(size=rel(cexMult)))+
+          theme(legend.text=element_text(size=.9*rel(cexMult)))+
+          theme(strip.text.x = element_text(size = rel(cexMult)))
         })
       
       
