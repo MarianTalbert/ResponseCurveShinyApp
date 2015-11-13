@@ -3,7 +3,7 @@ exploreCurves<-function(fitLst,inputLayers,data,threshold=2,boundary=NA,Ensemble
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget\n") 
     #putting together all of the global input needed by both the server and ui fcts
-    predictedStk<-varImp<-predictedVals<-binaryVals<-varIncluded<-Thresh<-binaryStk<-Stats<-list()
+    predictedStk<-varImp<-predictedVals<-binaryVals<-varIncluded<-Thresh<-binaryStk<-Stats<-cmxPlot<-list()
     
     modelLst<-names(fitLst)
     PresCoords<-data[data[,3]==1,c(1,2)]
@@ -36,10 +36,22 @@ cat("Press escape to exit the interactive widget\n")
              predictedStk<-addLayer(predictedStk,predict(inputLayers,fitLst[[i]],type='response'))
              binaryStk<-addLayer(binaryStk,createBinary(predictedStk[[i]],Thresh[[i]]))
            }
-        Permuted<-PermutePredict(dat,fitLst[[i]],resp)
+        Permuted<-permutePredict(dat,fitLst[[i]],resp)
         varIncluded[[i]]<-Permuted$varIncluded  
         varImp[[i]]<-AUCVal-Permuted$AUC
+        M<-data.frame(Percent=c(100*Stats[[i]]$Cmx[2]/sum(Stats[[i]]$Cmx[1:2]),100*Stats[[i]]$Cmx[4]/sum(Stats[[i]]$Cmx[3:4]),
+                                100*Stats[[i]]$Cmx[1]/sum(Stats[[i]]$Cmx[1:2]),100*Stats[[i]]$Cmx[3]/sum(Stats[[i]]$Cmx[3:4])),
+                      Predicted=factor(c("Absence","Absence","Presence","Presence")),
+                      Observed=factor(c("Presence","Absence","Presence","Absence")))
+        
+        
+        cmxPlot[[i]] <- ggplot(M,aes(x=Observed,y=Predicted))+geom_tile()+geom_tile(aes(fill=Percent))+
+          scale_fill_gradient2(low="white",mid="yellow",high="red3",midpoint=50,limits=c(0,100))+
+          annotate("text",label=paste(round(M$Percent),"%"),x=c(2,1,2,1),y=c(1,1,2,2),size=rel(6))+
+          theme(axis.text.y = element_text(angle = 90, hjust = 1))
+        
     }
+    browser()
     if(Ensemble){
       EnsemblePred<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean)
       EnsembleBin<-stackApply(binaryStk,indices=rep(1,times=length(fitLst)),fun=sum)
@@ -164,7 +176,32 @@ app <- shinyApp(
           auc.roc.plot(pre,Thresh,col=c("red","blue","green","purple"),opt.thresholds=TRUE,
                        opt.methods=2,model.names=names(fitLst),legend.cex=1.4,opt.legend.cex = 1.4)
           
-      })     
+      })
+      
+      output$ConfusionMatrix<-renderPlot({
+        Nrow<-floor(sqrt(length(fitLst)))
+        Ncol<-ceiling(sqrt(length(fitLst)))
+        Layout <- grid.layout(nrow = Nrow+1, ncol = Ncol+1, 
+                              widths = unit(c(rep(5,times=Ncol),.5),
+                                            rep("null",times=(Ncol+1))),
+                              heights = unit(c(.5,rep(5,times=Nrow)), rep("null",times=(Nrow+1))))
+        vplayout <- function(...) {
+          grid.newpage()
+          pushViewport(viewport(layout = Layout))
+        }
+        subplot <- function(x, y) viewport(layout.pos.row = x,
+                                           layout.pos.col = y)
+        vplayout()
+        Main=paste("Confusion Matricies") 
+        grid.text("Confusion Matricies", gp=gpar(fontsize=25),vp = viewport(layout.pos.row = 1, layout.pos.col = 1:(Ncol+1)))
+        for(i in 1:length(cmxPlot)){
+          printRow<- ceiling(i/Nrow)+1
+          printCol<-i%%Nrow+1
+          print(cmxPlot[[i]] + ggtitle(names(fitLst)[i]) + theme(legend.position = 'none'), vp = subplot(printRow, printCol))
+        }
+        })
+      
+      
       output$VarImpPlot<-renderPlot({ggplot(varImpMat,aes(x=Variable,y=VariableImportance,fill=Model), color=Model) +  
           stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Blues")+
           theme(axis.text.y = element_text(size = rel(cexMult))) +
@@ -375,12 +412,21 @@ ui=navbarPage("Respones Curve Explorer",
             fluidRow(           
              column(5,
              wellPanel(
+               plotOutput("ConfusionMatrix", height="350px"),style="padding: 5px;"),
+             helpText("Variable importance is determined by calculating the drop in AUC when each variable",
+                      "is in turn randomly permuted.  A large drop in AUC would indicated an important predictor",
+                      "while if the AUC remains unchanged then the variable was les important in the model"), 
+             style="padding: 5px;"),
+             fluidRow(           
+               column(5,
+                      wellPanel(
                plotOutput("VarImpPlot", height="350px"),style="padding: 5px;"),
                helpText("Variable importance is determined by calculating the drop in AUC when each variable",
                         "is in turn randomly permuted.  A large drop in AUC would indicated an important predictor",
                         "while if the AUC remains unchanged then the variable was les important in the model"), 
                style="padding: 5px;")
            )
+        )
         ),
         #===============================================
         # ==========  Slide Explorer ==========#
@@ -445,25 +491,7 @@ ui=navbarPage("Respones Curve Explorer",
 runApp(app)
 }
 
-PermutePredict<-function(dat,modelFit,resp){
-    AUC<-matrix(NA,nrow=ncol(dat),ncol=5)
-    varIncluded<-vector(length=ncol(dat))
-     for(j in 1:5){ #do the permutation 5 times to remove some of the random chance component
-     for (i in 1:ncol(dat)){
-           Dat<-dat
-           Dat[,i]<-Dat[sample(1:dim(dat)[1]),i]
-           options(warn=-1)
-           new.pred<-as.vector(predict(modelFit,Dat,type="response"))
-           #have to use ROC here because auc in presence absence incorrectly assumes auc will be greater than .5
-           AUC[i,j]<-roc(resp,new.pred)
-           options(warn=0)
-        } }
-        #assuming here if the AUC doesn't change as the variable is permuted it wasn't in the model
-       
-        varIncluded<-(!apply(AUC,1,var)==0)
-        AUC<-apply(AUC,1,mean)
-      return(list(AUC=AUC,varIncluded=varIncluded))
-}
+
 
 "roc" <-
 function (obsdat, preddat)

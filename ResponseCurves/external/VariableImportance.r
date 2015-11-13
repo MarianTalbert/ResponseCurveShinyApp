@@ -65,22 +65,3 @@ VariableImportance<-function(Model,out,auc){
     title(ylab="Variables",line=14,cex.lab=3,font.lab=2)
 } 
 
-PermutePredict<-function(pred.names,dat,pred,modelFit,Model,resp){
-
-    AUC<-matrix(NA,nrow=length(pred.names),ncol=5) 
-    
-     for(j in 1:5){ #do the permutation 5 times to remove some of the random chance component
-     for (i in 1:length(pred.names)){
-           indx<-match(pred.names[i],names(dat))
-           Dat<-dat
-           Dat[,indx]<-Dat[sample(1:dim(dat)[1]),indx]
-           options(warn=-1)
-           new.pred<-as.vector(pred.fct(model=modelFit,x=Dat,Model=Model))
-           #have to use ROC here because auc in presence absence incorrectly assumes auc will be greater than .5
-           AUC[i,j]<-roc(resp,new.pred)
-           options(warn=0)
-           
-        } }
-        AUC<-apply(AUC,1,mean)
-      return(AUC)
-}   

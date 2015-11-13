@@ -1,9 +1,11 @@
 confusionMatrix<-function(Stats,split.type){
 
      #par(oma=c(4,3,5,3),mar=c(20,6,5,2))
+  browser()
   if(split.type=="none") lo<-layout(matrix(data=c(1,2), nrow=1, ncol=2), c(4.5,1), 1)
    else {lo<-layout(matrix(data=c(1,2,3), nrow=1, ncol=3), c(4.5,4.5,1), 1)
-         
+         lo<-layout(matrix(data=c(1:(length(Stats)+1)), nrow=ceiling(sqrt(length(Stats))), 
+                           ncol=floor(sqrt(length(Stats)))), c(4.5,4.5,1), 1)
        if(split.type=="crossValidation"){
                                  a<-lapply(Stats[names(Stats)!="train"],function(lst){lst$Cmx})
                                   cmx<-a[[1]]
