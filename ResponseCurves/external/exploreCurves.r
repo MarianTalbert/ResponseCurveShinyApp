@@ -48,7 +48,7 @@ cat("Press escape to exit the interactive widget\n")
         else Mdat<-rbind(Mdat,M)
     }
     
-    densityFrame<-data.frame(predicted=unlist(predictedVals),Response=rep(resp,times=length(fitLst)),
+    densityFrame<-data.frame(Predicted=unlist(predictedVals),Response=rep(resp,times=length(fitLst)),
                              Model=rep(names(fitLst),each=length(resp)))
     densityFrame$Model<-as.factor(densityFrame$Model)
     densityFrame$Response<-as.factor(densityFrame$Response)
@@ -85,7 +85,10 @@ Cols <- c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("C
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget") 
 cexMult <- 1.5
-#=========================================
+nEvalPlots=4
+modelNames<-names(fitLst)
+#======================================================
+#======================================================
 app <- shinyApp(
   server=function(input, output) {
      
@@ -97,15 +100,20 @@ app <- shinyApp(
       
       IntractVals<-reactiveValues(
       #start with the means
-      Vals = vector()
+      Vals = vector(),
+      nEvalPlots=4
       )
       
       observeEvent(input$resetVals,{
            IntractVals$Vals=vector()
       })
-      #==============================================
-      # Maps 
-      #==========================
+      
+      observeEvent(input$evalPlotGroup,{IntractVals$nEvalPlots = length(input$evalPlotGroup)
+      browser()})
+      
+  #==============================================
+  # Maps 
+  #==========================
       # Handle clicks on the plot
       observeEvent(input$plot_click, {
           if (is.null(XYs$Xlocs)) {
@@ -139,9 +147,10 @@ app <- shinyApp(
                        PresCoords,AbseCoords,Ensemble=TRUE)
        
       })
-      #============================    
-      #Response Curve Generation for Map
-      #============================ 
+   #============================    
+   #Response Curve Generation for Map
+   #============================ 
+     
       lapply(1:length(modelLst),function(i){
       output[[paste("curves",i,sep="")]] <- renderPlot({        
         #Plot the Curves
@@ -153,66 +162,29 @@ app <- shinyApp(
       output$EnsemblePlot<-renderPlot({
         ensemebleCurves(fitLst,modelLst,dat=dat,Cols=Cols,XYs=XYs,varIncluded=varIncluded,varImp=varImp)
       })
-      #============================
-      # Evaluation Plot
-      #============================
-    
-      output$StatsBar<-renderPlot({
-        ggplot(StatsFrame,aes(x=Stat,y=Value,fill=Model,facets=Stat), color=factor(Model)) +
-          stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Blues")+
-          xlab("Model Evaluation Metrics")+
-          theme(axis.text.y = element_text(size = rel(cexMult))) +
-          theme(axis.title = element_text(size = rel(cexMult))) +	
-          theme(plot.title =element_text(size=1.2*rel(cexMult)))+
-          theme(legend.title=element_text(size=rel(cexMult)))+
-          theme(legend.text=element_text(size=.9*rel(cexMult)))  
-      })
-      output$ROCCurve<-renderPlot({
-          
-          auc.roc.plot(pre,Thresh,col=c("red","blue","green","purple"),opt.thresholds=TRUE,
-                       opt.methods=2,model.names=names(fitLst),legend.cex=1.4,opt.legend.cex = 1.4)
-          
-      })
+ #============================
+ # Evaluation Plot
+ #============================
+     #eventually this should only use the plots selected but for now get rid of the check box
+      nEvalPlots<-reactive({ifelse(is.na(length(input$evalPlotGroup)),4,length(input$evalPlotGroup))})
+       # IntractVals$nEvalPlots
       
-      output$ConfusionMatrix<-renderPlot({
-        ggplot(Mdat,aes(x=Observed,y=Predicted))+geom_tile()+geom_tile(aes(fill=Percent))+
-          scale_fill_gradient2(low="white",mid="yellow",high="red3",midpoint=50,limits=c(0,100))+
-          annotate("text",label=paste(round(M$Percent),"%"),x=c(2,1,2,1),y=c(1,1,2,2),size=rel(6))+
-          facet_wrap(~ Model)+theme(axis.text.y = element_text(size = rel(cexMult))) +
-          theme(axis.title = element_text(size = rel(cexMult))) +	
-          theme(plot.title =element_text(size=1.2*rel(cexMult)))+
-          theme(axis.text.x = element_text(size = rel(cexMult)))+
-          theme(legend.title=element_text(size=rel(cexMult)))+
-          theme(legend.text=element_text(size=.9*rel(cexMult)))+
-          theme(strip.text.x = element_text(size = rel(cexMult)))
+        browser()
+      lapply(1:5,function(i){
+        output[[paste("EvalPlot",i,sep="")]] <- renderPlot({ 
+           switchEvalPlots(PlotType=input$evalPlotGroup[i],StatsFrame,pre,Thresh,
+                          Mdat,varImpMat,densityFrame,modelNames,cexMult)
         })
-      
-      
-      output$VarImpPlot<-renderPlot({
-        ggplot(varImpMat,aes(x=Variable,y=VariableImportance,fill=Model), color=Model) +  
-          stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Blues")+
-          theme(axis.text.y = element_text(size = rel(cexMult))) +
-          theme(axis.title = element_text(size = rel(cexMult))) +	
-          theme(plot.title =element_text(size=1.2*rel(cexMult)))+
-          theme(axis.text.x = element_text(size = rel(cexMult)))+
-          theme(legend.title=element_text(size=rel(cexMult)))+
-          theme(legend.text=element_text(size=.9*rel(cexMult))) 
       })
       
-      output$DensityPlot<-renderPlot({
-      ggplot(densityFrame,aes(x=predicted,colour=Response,fill=Response))+geom_density(alpha=0.3)+facet_wrap(~ Model)+
-        scale_fill_manual(values=c("blue","red"))+
-        scale_colour_manual(values=c("blue","red"))+theme(axis.text.y = element_text(size = rel(cexMult))) +
-          theme(axis.title = element_text(size = rel(cexMult))) +	
-          theme(plot.title =element_text(size=1.2*rel(cexMult)))+
-          theme(axis.text.x = element_text(size = rel(cexMult)))+
-          theme(legend.title=element_text(size=rel(cexMult)))+
-          theme(legend.text=element_text(size=.9*rel(cexMult)))+
-          theme(strip.text.x = element_text(size = rel(cexMult)))
-      })
-      #==============================================
-      # Sliders   
-      #============================
+        lapply(1:5,function(i){
+          output[[paste("EvalTxt",i,sep="")]] <- renderText({ 
+            switchEvalText(PlotType=input$evalPlotGroup[i])
+                      })
+                  })
+  #==============================================
+  # Sliders   
+  #============================
       #Response curves for sliders
       
       observeEvent(input$addVals,{
@@ -304,6 +276,8 @@ app <- shinyApp(
       
       },      
 ui=navbarPage("Respones Curve Explorer",
+#=====================================
+#===========UI========================
         #===============================================
         # ==========  Map Explorer ==========#
         tabPanel("Response Map Explorer",
@@ -386,51 +360,47 @@ ui=navbarPage("Respones Curve Explorer",
         )
         
         ),
-        #===============================================
-        # ==========  Model Evaluation ==========#
+  #===============================================
+  # ==========  Model Evaluation ==========#
         tabPanel("Model Evaluation",
+                 checkboxGroupInput("evalPlotGroup",inline=TRUE, label = h3("Select Evaluation Plots"), 
+                                    choices = list("Evaluation Metrics" = "EvaluationMetrics", 
+                                                   "ROC Curve" = "ROC", 
+                                                   "Confusion Matrix" = "ConfusionMatrix",
+                                                   "Variable Importance"= "VariableImportance",
+                                                   "Density Plot" = "Density"),
+                                    selected = c("EvaluationMetrics","ROC","ConfusionMatrix",
+                                                 "VariableImportance","Density")),        
          fluidRow(
             column(5,
                 wellPanel(
-                       plotOutput("StatsBar"),style="padding: 5px;", height="400px"),
-                helpText("This plot shows evaluation metrics for the training data for all models.,
-                           Eventually we hope to add Cross-Validation options, and the ability to click on points",
-                         "on the plot to obtaion aditional information "),
+                       plotOutput("EvalPlot1"),style="padding: 5px;", height="400px"),
+                textOutput("EvalTxt1"),
                        style="padding: 5px;"),
               column(5,
                 wellPanel(
-                       plotOutput("ROCCurve"),style="padding: 5px;", height="400px"),
-                helpText("The Area under the Reciver Operating Characteristic Cuves",
-                         "tells us how well we can descrimiate between a randomly chosen",
-                         "presence and a randomly chosen absence point",
-                         "values of .5 indicate that the model has no ability to discrimiate",
-                         "while 1 indicates perfect discrimiation."), 
+                       plotOutput("EvalPlot2"),style="padding: 5px;", height="400px"),
+                       textOutput("EvalTxt2"), 
                        style="padding: 5px;")         
               ),
             fluidRow(           
              column(5,
              wellPanel(
-               plotOutput("ConfusionMatrix", height="350px"),style="padding: 5px;"),
-             helpText("Variable importance is determined by calculating the drop in AUC when each variable",
-                      "is in turn randomly permuted.  A large drop in AUC would indicated an important predictor",
-                      "while if the AUC remains unchanged then the variable was les important in the model"), 
+               plotOutput("EvalPlot3", height="350px"),style="padding: 5px;"),
+             textOutput("EvalTxt3"), 
              style="padding: 5px;"),
              fluidRow(           
                column(5,
                       wellPanel(
-                        plotOutput("DensityPlot", height="350px"),style="padding: 5px;"),
-                      helpText("Variable importance is determined by calculating the drop in AUC when each variable",
-                               "is in turn randomly permuted.  A large drop in AUC would indicated an important predictor",
-                               "while if the AUC remains unchanged then the variable was les important in the model"), 
+                        plotOutput("EvalPlot4", height="350px"),style="padding: 5px;"),
+                      textOutput("EvalTxt4"), 
                       style="padding: 5px;")
              ),
              fluidRow(           
                column(5,
                       wellPanel(
-               plotOutput("VarImpPlot", height="350px"),style="padding: 5px;"),
-               helpText("Variable importance is determined by calculating the drop in AUC when each variable",
-                        "is in turn randomly permuted.  A large drop in AUC would indicated an important predictor",
-                        "while if the AUC remains unchanged then the variable was les important in the model"), 
+               plotOutput("EvalPlot5", height="350px"),style="padding: 5px;"),
+               textOutput("EvalTxt5"), 
                style="padding: 5px;")
            )
         )
