@@ -80,12 +80,12 @@ cat("Press escape to exit the interactive widget\n")
   dataLst <- split(d,f=seq(1:nrow(d)))
    
 max_plots <- 5
-rspHgt <- c("150px","300px","550px","750px")[length(fitLst)]
+rspHgt <- c("150px","300px","450px","650px")[length(fitLst)]
 Cols <- c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget") 
 cexMult <- 1.5
-nEvalPlots=4
+evalPlotGroup=c("EvaluationMetrics","ROC","ConfusionMatrix","VariableImportance","Density")
 modelNames<-names(fitLst)
 #======================================================
 #======================================================
@@ -100,17 +100,14 @@ app <- shinyApp(
       
       IntractVals<-reactiveValues(
       #start with the means
-      Vals = vector(),
-      nEvalPlots=4
-      )
+      Vals = vector()
+           )
       
       observeEvent(input$resetVals,{
            IntractVals$Vals=vector()
       })
       
-      observeEvent(input$evalPlotGroup,{IntractVals$nEvalPlots = length(input$evalPlotGroup)
-      browser()})
-      
+     
   #==============================================
   # Maps 
   #==========================
@@ -166,20 +163,19 @@ app <- shinyApp(
  # Evaluation Plot
  #============================
      #eventually this should only use the plots selected but for now get rid of the check box
-      nEvalPlots<-reactive({ifelse(is.na(length(input$evalPlotGroup)),4,length(input$evalPlotGroup))})
+      #nEvalPlots<-reactive({ifelse(is.na(length(input$evalPlotGroup)),4,length(input$evalPlotGroup))})
        # IntractVals$nEvalPlots
-      
-        browser()
+   
       lapply(1:5,function(i){
-        output[[paste("EvalPlot",i,sep="")]] <- renderPlot({ 
-           switchEvalPlots(PlotType=input$evalPlotGroup[i],StatsFrame,pre,Thresh,
+        output[[paste("EvalPlot",i,sep="")]] <- renderPlot({
+           switchEvalPlots(PlotType=evalPlotGroup[i],StatsFrame,pre,Thresh,
                           Mdat,varImpMat,densityFrame,modelNames,cexMult)
         })
       })
       
         lapply(1:5,function(i){
           output[[paste("EvalTxt",i,sep="")]] <- renderText({ 
-            switchEvalText(PlotType=input$evalPlotGroup[i])
+            switchEvalText(PlotType=evalPlotGroup[i])
                       })
                   })
   #==============================================
@@ -363,14 +359,7 @@ ui=navbarPage("Respones Curve Explorer",
   #===============================================
   # ==========  Model Evaluation ==========#
         tabPanel("Model Evaluation",
-                 checkboxGroupInput("evalPlotGroup",inline=TRUE, label = h3("Select Evaluation Plots"), 
-                                    choices = list("Evaluation Metrics" = "EvaluationMetrics", 
-                                                   "ROC Curve" = "ROC", 
-                                                   "Confusion Matrix" = "ConfusionMatrix",
-                                                   "Variable Importance"= "VariableImportance",
-                                                   "Density Plot" = "Density"),
-                                    selected = c("EvaluationMetrics","ROC","ConfusionMatrix",
-                                                 "VariableImportance","Density")),        
+                 
          fluidRow(
             column(5,
                 wellPanel(

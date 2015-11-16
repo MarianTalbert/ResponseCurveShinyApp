@@ -96,7 +96,7 @@ vals<-apply(sdmdata[,c(4:ncol(sdmdata))],2,FUN=sample,size=4)
 modelLst<-names(fitLst)
 varImpLst<-NA
 responseCurves(f=list(fitLst[[1]]),m=list(modelLst[[1]]),varImp=list(c(1,2,3,4)),addImp=F,vals,
-               dat=sdmdata[,c(4:ncol(sdmdata))],resp=sdmdata[,3],Cols=Cols)
+               dat=sdmdata[,c(4:ncol(sdmdata))],resp=sdmdata[,3],Cols=Cols,Ensemble=FALSE)
 interactionPlot(fitLst[[1]],modelLst[[1]],vals=NULL,theta=30,phi=25,x="bio1",y="bio5",dat=responseInput$dat,resp=responseInput$resp)
 densityPlot(fitLst[[3]])
 

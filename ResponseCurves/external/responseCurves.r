@@ -20,7 +20,7 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
          byVar<-ifelse(missing(pIdx),FALSE,TRUE)
         
               
-            if(byVar) par(mfrow=c((length(fitLst)+1),1),mar=c(0,2,0,0),oma=c(0,1,0,0),xpd=TRUE) 
+            if(byVar) par(mfrow=c((length(fitLst)+1),1),mar=c(0,2,0,0),oma=c(3,1,0,0),xpd=TRUE) 
             else { par(mfrow=c(1,ncol(dat)),mar=c(0,0,6,0),oma=c(0,5,0,0),xpd=TRUE)
                   if(ncol(dat)>9) par(mfrow=c(2,ceiling(ncol(dat)/2)))
             }
@@ -94,7 +94,7 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
                     presDens<-density(dat[resp==1,pIdx])
                     absDens<-density(dat[resp==0,pIdx])
                     plot(x=c(mins[pIdx],maxs[pIdx]),y=c(0,max(absDens$y,presDens$y)),type="n",
-                    ylab="",xlab=names(dat)[pIdx],yaxt="n",bty="n")
+                    ylab="",xlab=names(dat)[pIdx],yaxt="n",bty="n",cex.axis=1.5)
                     polygon(absDens,col=cols[1],border="blue")
                     polygon(presDens,col=cols[2],border="red")
                     for(v in 1:nrow(vals)){
