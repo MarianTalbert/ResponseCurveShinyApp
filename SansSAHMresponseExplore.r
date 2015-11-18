@@ -66,7 +66,7 @@ fitLst<-list(
 #===============================================================
 #    This is where the magic happens
 #
-exploreCurves(fitLst,inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl,Ensemble=TRUE)
+exploreCurves(fitLst,inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl)
 #
 #===============================================================
 

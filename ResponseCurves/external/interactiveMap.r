@@ -1,5 +1,5 @@
 interactiveMap<-function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,boundary,data,Stats,XYs,
-                         PresCoords,AbseCoords,Ensemble=FALSE){
+                         PresCoords,AbsCoords,Ensemble=FALSE){
     #Plot the Map
     if(input$showResid){
       Legend=FALSE 
@@ -11,17 +11,16 @@ interactiveMap<-function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,bou
       
     }
 
-    Titlep<-ifelse(Ensemble,"Ensemble (Mean) of Probability Maps",names(predictedStk)[i])
-    Titleb<-ifelse(Ensemble,"Ensemble (Sum) of Binary Maps",names(binaryStk)[i])
     par(oma=c(0,0,0,0),mar=c(0,0,2,0),xpd=FALSE) 
     
     if(input$mapType=="mprob") plot(predictedStk,i,maxpixels=60000,col=Colors,xaxt="n",yaxt="n",bty="n",legend=Legend,
-                                    alpha=alpha,main=Titlep)
+                                    alpha=alpha,cex.main=1.7)
     if(input$mapType=="mbinary") plot(binaryStk,i,maxpixels=60000,xaxt="n",yaxt="n",bty="n",legend=Legend,
-                                      alpha=alpha,main=Titleb)
-    if(input$mapType=="mess") plot(messRast,maxpixels=60000,col=colorRampPalette(c("magenta","white","green"))(21),
+                                      alpha=alpha)
+    if(input$mapType=="mess"){ plot(messRast,maxpixels=60000,col=colorRampPalette(c("magenta","white","green"))(21),
                                    breaks=pretty(c(-100,100),22),xaxt="n",yaxt="n",bty="n",legend=Legend,alpha=alpha,
-                                   main="Multivariate Environmental Similarity Surface")
+                                   cex.main=1.7)
+    }
     if(class(boundary)=="SpatialPolygonsDataFrame") plot(boundary,add=TRUE)
     if(input$showResid & !Ensemble) residImage(x=data$lon,y=data$lat,z=Stats[[i]]$devResid,boundary,predictedStk,i,rastColors=Colors)
     XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))

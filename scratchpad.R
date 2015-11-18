@@ -50,8 +50,15 @@ myBiomodModelOut <- BIOMOD_Modeling( myBiomodData,
 # 4. Loading some models built
 ModelNames<-substr(myBiomodModelOut@models.computed,nchar(myBiomodModelOut@models.computed)-2,
                    nchar(myBiomodModelOut@models.computed))
-ModelNames<-unique(gsub("_","",ModelNames))
-ModelNames<-gsub("ARS","MARS",ModelNames)
+#figure out the load models here
+ModelNames<-for (mtl in models.to.load) {
+  fitLst[[mtl]]<-load(file = file.path(bm.out@sp.name, "models", bm.out@modeling.id, 
+                                       mtl))
+}
+
+
+myLoadedModels <-loadBiomodModels(myBiomodModelOut, models=ModelNames)
+
 myLoadedModels <- BIOMOD_LoadModels(myBiomodModelOut, models=ModelNames)
 
 ModelNames<-myBiomodModelOut@models.computed

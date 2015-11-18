@@ -1,4 +1,4 @@
-exploreCurves<-function(fitLst,inputLayers,data,threshold=2,boundary=NA,Ensemble=FALSE){
+exploreCurves<-function(fitLst,inputLayers,data,threshold=2,boundary=NA){
 
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget\n") 
@@ -53,17 +53,18 @@ cat("Press escape to exit the interactive widget\n")
     densityFrame$Model<-as.factor(densityFrame$Model)
     densityFrame$Response<-as.factor(densityFrame$Response)
     
-       if(Ensemble){
+   
+    
+       
       EnsemblePred<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean)
       EnsembleBin<-stackApply(binaryStk,indices=rep(1,times=length(fitLst)),fun=sum)
-          }
-    
+      predictedStk<-addLayer(predictedStk,EnsemblePred)
+      binaryStk<-addLayer(binaryStk,EnsembleBin)
+         
+      names(predictedStk)<-c(names(fitLst),"Ensemble_Mean_of_Probability_Maps")
+      names(binaryStk)<-c(names(fitLst),"Ensemble_Sum_of_Binary_Maps")
+ 
     pre<-cbind(seq(1:length(resp)),resp,matrix(unlist(predictedVals),ncol=4))
-    
-   browser()
-    
-    names(predictedStk)<-names(fitLst)
-    names(binaryStk)<-names(fitLst)
     
    #I'M ASSUMING FOR NOW CONSISTENT VARIABLES ACROSS MODELS
    varImpMat<-data.frame(VariableImportance=unlist(varImp),
@@ -133,13 +134,19 @@ app <- shinyApp(
       lapply(1:length(modelLst),function(i){
       output[[paste("map",i,sep="")]] <- renderPlot({       
         interactiveMap(predictedStk,binaryStk,messRast,Colors,Cols,input,i,boundary,data,Stats,XYs,
-                       PresCoords,AbseCoords)
+                       PresCoords,AbsCoords)
+        })
+      })
+      
+      lapply(1:length(predictedStk),function(i){
+        output[[paste("MapTxt",i,sep="")]] <- renderText({ 
+          names(predictedStk)[i]
         })
       })
       
       output$EnsembleMap <- renderPlot({
-        interactiveMap(EnsemblePred,EnsembleBin,messRast,Colors,Cols,input,1,boundary,data,Stats,XYs,
-                       PresCoords,AbseCoords,Ensemble=TRUE)
+        interactiveMap(predictedStk,binaryStk,messRast,Colors,Cols,input,(length(modelLst)+1),boundary,data,Stats,XYs,
+                       PresCoords,AbsCoords,Ensemble=TRUE)
        
       })
    #============================    
@@ -306,7 +313,7 @@ ui=navbarPage("Respones Curve Explorer",
               )
         ),
        
-        conditionalPanel(Ensemble,
+        conditionalPanel(TRUE,#eventually add an option to show ensemble
                          fluidRow(
                            column(4,
                                   wellPanel(
@@ -318,6 +325,7 @@ ui=navbarPage("Respones Curve Explorer",
         ),
         # Insert the right number of plot output objects into the web page
         fluidRow(
+          h3(textOutput("MapTxt1")),
           column(4,
           wellPanel(
           plotOutput("map1", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
@@ -326,6 +334,7 @@ ui=navbarPage("Respones Curve Explorer",
           ),
         conditionalPanel(length(modelLst)>1,
          fluidRow(
+           h3(textOutput("MapTxt2")),
           column(4,
           wellPanel(
           plotOutput("map2", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
@@ -335,6 +344,7 @@ ui=navbarPage("Respones Curve Explorer",
          ),
          conditionalPanel(length(modelLst)>2,
          fluidRow(
+           h3(textOutput("MapTxt3")),
           column(4,
           wellPanel(
           plotOutput("map3", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),

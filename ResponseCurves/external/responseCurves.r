@@ -21,7 +21,7 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
         
               
             if(byVar) par(mfrow=c((length(fitLst)+1),1),mar=c(0,2,0,0),oma=c(3,1,0,0),xpd=TRUE) 
-            else { par(mfrow=c(1,ncol(dat)),mar=c(0,0,6,0),oma=c(0,5,0,0),xpd=TRUE)
+            else { par(mfrow=c(1,ncol(dat)),mar=c(0,0,3,0),oma=c(0,5,0,0),xpd=TRUE)
                   if(ncol(dat)>9) par(mfrow=c(2,ceiling(ncol(dat)/2)))
             }
            
@@ -79,7 +79,7 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
                                  Names<-names(dat)
                                  Names<-paste(substr(Names,start=1,stop=12),c("\n","")[1+(nchar(Names)<=12)],substr(Names,start=13,stop=nchar(Names)),sep="")
                                if(byVar & pIdx==1) mtext(model[[j]],line=1,side=2,cex=2)  
-                               if(!byVar) mtext(Names[pIdx],line=1,side=3,cex=1.2,col=ifelse(plotR,"black","grey74"))
+                               if(!byVar) mtext(Names[pIdx],line=1,side=3,cex=1.7,col=ifelse(plotR,"black","grey74"))
                                # if(pIdx==1) mtext(model,side=2,outer=TRUE,at=seq(from=1/(2*nRow),to=(1-1/(2*nRow)),length=nRow)[j+1],line=3,cex=1.2)
                      }
                      if(Ensemble) RespLst[[pIdx]]<-RespMat
