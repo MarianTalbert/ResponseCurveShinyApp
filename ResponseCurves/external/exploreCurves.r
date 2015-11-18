@@ -56,13 +56,11 @@ cat("Press escape to exit the interactive widget\n")
        if(Ensemble){
       EnsemblePred<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean)
       EnsembleBin<-stackApply(binaryStk,indices=rep(1,times=length(fitLst)),fun=sum)
-      names(EnsemblePred)<-"Ensemble (Mean) of probability maps"
-      names(EnsembleBin)<-"Ensemble (Sum) of binary maps"
-    }
+          }
     
     pre<-cbind(seq(1:length(resp)),resp,matrix(unlist(predictedVals),ncol=4))
     
-   
+   browser()
     
     names(predictedStk)<-names(fitLst)
     names(binaryStk)<-names(fitLst)
@@ -307,53 +305,53 @@ ui=navbarPage("Respones Curve Explorer",
               actionButton("resetNVals", label = "Reset explorer")
               )
         ),
-        
+       
+        conditionalPanel(Ensemble,
+                         fluidRow(
+                           column(4,
+                                  wellPanel(
+                                    plotOutput("EnsembleMap", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
+                           column(6,
+                                  wellPanel(plotOutput("EnsemblePlot",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
+                           
+                         )
+        ),
         # Insert the right number of plot output objects into the web page
         fluidRow(
           column(4,
           wellPanel(
-          plotOutput("map1", click = "plot_click",height="350px"),style="padding: 5px;"),style="padding: 5px;"),
+          plotOutput("map1", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
           column(6,
-          wellPanel(plotOutput("curves1",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
+          wellPanel(plotOutput("curves1",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
           ),
         conditionalPanel(length(modelLst)>1,
          fluidRow(
           column(4,
           wellPanel(
-          plotOutput("map2", click = "plot_click",height="350px"),style="padding: 5px;"),style="padding: 5px;"),
+          plotOutput("map2", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
           column(6,
-          wellPanel(plotOutput("curves2",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
+          wellPanel(plotOutput("curves2",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
           )
          ),
          conditionalPanel(length(modelLst)>2,
          fluidRow(
           column(4,
           wellPanel(
-          plotOutput("map3", click = "plot_click",height="350px"),style="padding: 5px;"),style="padding: 5px;"),
+          plotOutput("map3", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
           column(6,
-          wellPanel(plotOutput("curves3",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
+          wellPanel(plotOutput("curves3",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
           )
          ),
          conditionalPanel(length(modelLst)>3,
          fluidRow(
           column(4,
           wellPanel(
-          plotOutput("map4", click = "plot_click",height="350px"),style="padding: 5px;"),style="padding: 5px;"),
+          plotOutput("map4", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
           column(6,
-          wellPanel(plotOutput("curves4",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
+          wellPanel(plotOutput("curves4",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
           
           )
-          ),
-        conditionalPanel(length(modelLst)>3,
-                         fluidRow(
-                           column(4,
-                                  wellPanel(
-                                    plotOutput("EnsembleMap", click = "plot_click",height="350px"),style="padding: 5px;"),style="padding: 5px;"),
-                           column(6,
-                                  wellPanel(plotOutput("EnsemblePlot",height="350px"),style="padding: 5px;"),style="padding: 5px;" )
-                           
-                         )
-        )
+          )
         
         ),
   #===============================================
@@ -363,37 +361,37 @@ ui=navbarPage("Respones Curve Explorer",
          fluidRow(
             column(5,
                 wellPanel(
-                       plotOutput("EvalPlot1"),style="padding: 5px;", height="400px"),
+                       plotOutput("EvalPlot1"),style="padding: 5px;", height="350px"),
                 textOutput("EvalTxt1"),
                        style="padding: 5px;"),
               column(5,
                 wellPanel(
-                       plotOutput("EvalPlot2"),style="padding: 5px;", height="400px"),
+                       plotOutput("EvalPlot2"),style="padding: 5px;", height="350px"),
                        textOutput("EvalTxt2"), 
-                       style="padding: 5px;")         
+                       style="padding: 5px;")
               ),
-            fluidRow(           
-             column(5,
-             wellPanel(
-               plotOutput("EvalPlot3", height="350px"),style="padding: 5px;"),
-             textOutput("EvalTxt3"), 
-             style="padding: 5px;"),
-             fluidRow(           
+                   
+             
+             fluidRow(
+               column(5,
+                      wellPanel(
+                        plotOutput("EvalPlot3", height="350px"),style="padding: 5px;"),
+                      textOutput("EvalTxt3"), 
+                      style="padding: 5px;"),
                column(5,
                       wellPanel(
                         plotOutput("EvalPlot4", height="350px"),style="padding: 5px;"),
                       textOutput("EvalTxt4"), 
-                      style="padding: 5px;")
-             ),
-             fluidRow(           
+                      style="padding: 5px;")),
+            fluidRow(
                column(5,
                       wellPanel(
-               plotOutput("EvalPlot5", height="350px"),style="padding: 5px;"),
-               textOutput("EvalTxt5"), 
-               style="padding: 5px;")
-           )
-        )
-        ),
+                        plotOutput("EvalPlot5", height="350px"),style="padding: 5px;"),
+                      textOutput("EvalTxt5"), 
+                      style="padding: 5px;")
+               
+             )
+                ),
         #===============================================
         # ==========  Slide Explorer ==========#
         tabPanel("Slide Explorer",
