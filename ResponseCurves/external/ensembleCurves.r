@@ -1,4 +1,4 @@
-ensemebleCurves <- function(fitLst,modelLst,dat,Cols,XYs,varIncluded,varImp){
+ensemebleCurves <- function(fitLst,modelLst,dat,Cols,XYs,varIncluded,varImp,mapType="none"){
     respLst<-list()
    
     for(i in 1:length(fitLst)){
@@ -21,12 +21,13 @@ ensemebleCurves <- function(fitLst,modelLst,dat,Cols,XYs,varIncluded,varImp){
       mtext(names(dat)[v],line=1,side=3,cex=1.7)
       pts<-1
       for(pts in 1:ncol(respSum))
-      # lines(seq(mins[v],maxs[v],length=nrow(respLst[[1]][[1]])),respSum[pts],col=Cols[pts])
-      lines(seq(mins[v],maxs[v],length=nrow(respLst[[1]][[1]])),respSum[,pts],col=Cols[pts],lwd=2,cex=3,
+         lines(seq(mins[v],maxs[v],length=nrow(respLst[[1]][[1]])),
+            respSum[,pts],col=Cols[pts],lwd=2,cex=3,
             cex.main=3,cex.axis=1.2)
       #add points to the curves...
       #segments(x0=vals[v,pIdx],y0=0,y1=Response[lR],x1=vals[v,pIdx],col=Colors[v],lty=2,cex=2)
       #points(x=vals[v,pIdx],y=Response[lR],col=Colors[v],pch=16,cex=2)
     
-      }
+    }
+    if(mapType=="mess") mtext("Ensemble",side=2,cex=1.7,outer=TRUE,line=2)
 }

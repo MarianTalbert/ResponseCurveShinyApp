@@ -1,22 +1,3 @@
-###############################################################################
-##
-## Copyright (C) 2010-2012, USGS Fort Collins Science Center. 
-## All rights reserved.
-## Contact: talbertc@usgs.gov
-##
-## This file is part of the Software for Assisted Habitat Modeling package
-## for VisTrails.
-##
-## "Redistribution and use in source and binary forms, with or without 
-## modification, are permitted provided that the following conditions are met:
-##
-##  - Redistributions of source code must retain the above copyright notice, 
-##    this list of conditions and the following disclaimer.
-##  - Redistributions in binary form must reproduce the above copyright 
-##    notice, this list of conditions and the following disclaimer in the 
-##    documentation and/or other materials provided with the distribution.
-##  - Neither the name of the University of Utah nor the names of its 
-
 ChkLibs <- function(libs){
 #Checks libraries and installs any that are missing
 #documentation on all libraries required by SAHM 

@@ -6,6 +6,7 @@ standardGeneric("createBinary"))
 
 setMethod('createBinary', signature(Predicted='RasterLayer'),
 function(Predicted,thresh, filename='', ...) {
+#based on recommendation from the raster package vignette
   out <- raster(Predicted)
    big <- ! canProcessInMemory(out, 3)
    filename <- trim(filename)

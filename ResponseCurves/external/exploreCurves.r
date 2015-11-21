@@ -138,12 +138,6 @@ app <- shinyApp(
         })
       })
       
-      lapply(1:length(predictedStk),function(i){
-        output[[paste("MapTxt",i,sep="")]] <- renderText({ 
-          names(predictedStk)[i]
-        })
-      })
-      
       output$EnsembleMap <- renderPlot({
         interactiveMap(predictedStk,binaryStk,messRast,Colors,Cols,input,(length(modelLst)+1),boundary,data,Stats,XYs,
                        PresCoords,AbsCoords,Ensemble=TRUE)
@@ -157,12 +151,12 @@ app <- shinyApp(
       output[[paste("curves",i,sep="")]] <- renderPlot({        
         #Plot the Curves
           responseCurves(list(f=fitLst[[i]]),list(m=modelLst[[i]]),vals=XYs$vals,varIncluded=list(varIncluded[[i]]),varImp=list(varImp[[i]]),addImp=input$addMImp,
-              dat=dat,resp=resp,Cols=Cols,Ensemble=FALSE)
+              dat=dat,resp=resp,Cols=Cols,Ensemble=FALSE,mapType=input$mapType)
         })
         })
       
       output$EnsemblePlot<-renderPlot({
-        ensemebleCurves(fitLst,modelLst,dat=dat,Cols=Cols,XYs=XYs,varIncluded=varIncluded,varImp=varImp)
+        ensemebleCurves(fitLst,modelLst,dat=dat,Cols=Cols,XYs=XYs,varIncluded=varIncluded,varImp=varImp,mapType=input$mapType)
       })
  #============================
  # Evaluation Plot
@@ -312,8 +306,8 @@ ui=navbarPage("Respones Curve Explorer",
               actionButton("resetNVals", label = "Reset explorer")
               )
         ),
-       
-        conditionalPanel(TRUE,#eventually add an option to show ensemble
+        #eventually add an option to show ensemble
+        conditionalPanel(TRUE,
                          fluidRow(
                            column(4,
                                   wellPanel(
@@ -325,7 +319,6 @@ ui=navbarPage("Respones Curve Explorer",
         ),
         # Insert the right number of plot output objects into the web page
         fluidRow(
-          h3(textOutput("MapTxt1")),
           column(4,
           wellPanel(
           plotOutput("map1", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
@@ -334,7 +327,6 @@ ui=navbarPage("Respones Curve Explorer",
           ),
         conditionalPanel(length(modelLst)>1,
          fluidRow(
-           h3(textOutput("MapTxt2")),
           column(4,
           wellPanel(
           plotOutput("map2", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
@@ -344,7 +336,6 @@ ui=navbarPage("Respones Curve Explorer",
          ),
          conditionalPanel(length(modelLst)>2,
          fluidRow(
-           h3(textOutput("MapTxt3")),
           column(4,
           wellPanel(
           plotOutput("map3", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),

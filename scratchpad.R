@@ -59,8 +59,8 @@ ModelNames<-for (mtl in models.to.load) {
 
 myLoadedModels <-loadBiomodModels(myBiomodModelOut, models=ModelNames)
 
-myLoadedModels <- BIOMOD_LoadModels(myBiomodModelOut, models=ModelNames)
-
+myLoadedModels <- BIOMOD_LoadModels(myBiomodModelOut, models="GAM")
+get_formal_model(GuloGulo_AllData_RUN1_GAM)
 ModelNames<-myBiomodModelOut@models.computed
 FitLst<-lapply(ModelNames,get_formal_model)
 eval("GuloGulo_AllData_RUN1_GBM")

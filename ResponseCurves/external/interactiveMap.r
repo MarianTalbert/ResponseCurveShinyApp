@@ -1,4 +1,4 @@
-interactiveMap<-function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,boundary,data,Stats,XYs,
+interactiveMap <- function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,boundary,data,Stats,XYs,
                          PresCoords,AbsCoords,Ensemble=FALSE){
     #Plot the Map
     if(input$showResid){
@@ -16,14 +16,15 @@ interactiveMap<-function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,bou
     if(input$mapType=="mprob") plot(predictedStk,i,maxpixels=60000,col=Colors,xaxt="n",yaxt="n",bty="n",legend=Legend,
                                     alpha=alpha,cex.main=1.7)
     if(input$mapType=="mbinary") plot(binaryStk,i,maxpixels=60000,xaxt="n",yaxt="n",bty="n",legend=Legend,
-                                      alpha=alpha)
+                                      alpha=alpha,
+                                      cex.main=1.7)
     if(input$mapType=="mess"){ plot(messRast,maxpixels=60000,col=colorRampPalette(c("magenta","white","green"))(21),
                                    breaks=pretty(c(-100,100),22),xaxt="n",yaxt="n",bty="n",legend=Legend,alpha=alpha,
-                                   cex.main=1.7)
+                                   cex.main=1.7,main="Multivariate Environmental Similary Surface")
     }
     if(class(boundary)=="SpatialPolygonsDataFrame") plot(boundary,add=TRUE)
     if(input$showResid & !Ensemble) residImage(x=data$lon,y=data$lat,z=Stats[[i]]$devResid,boundary,predictedStk,i,rastColors=Colors)
-    XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
+    XYdat <- as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
     if(!is.null(input$showTrain)){
       
       if("showPres"%in%input$showTrain) points(x=PresCoords[,1],y=PresCoords[,2],pch=21,col="white",bg="red")

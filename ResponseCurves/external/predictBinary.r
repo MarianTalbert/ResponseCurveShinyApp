@@ -13,6 +13,10 @@ predictBinary<-function(model,x){
                       y[y<=0] <- .00000000000000001
     return(y)
   }
+   if(inherits(model,"gbm")){
+       y <- predict(model,type="response",n.trees=model$n.trees)
+       return(y)
+   }
   #default to standard predict
   y<-predict(model,x,type='response')
 return(y)

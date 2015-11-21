@@ -1,9 +1,7 @@
 
-calcStat<-function(pred,resp,Split,thresh){
-    #For now only binomial response
-    family="binomial"
-#Written by Marian Talbert 2011
-    auc.data<-data.frame(ID=1:length(pred),pres.abs=resp,pred=pred)
+calcStat <- function(pred,resp,Split,thresh){
+
+    auc.data <-data.frame(ID=1:length(pred),pres.abs=resp,pred=pred)
         #have to use roc here because auc in the PresenceAbsence package incorretly assumes that the value must be greater than .5
         #this isn't necessarily true for an independent evaluation set
         auc.fit<-roc(resp,pred)

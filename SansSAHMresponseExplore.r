@@ -1,20 +1,10 @@
-library(rgeos)
-library(maptools)
-library(randomForest)
-library(mgcv)
-library(dismo)
-library(shiny)
-library(earth)
-#library(kernlab)
-library(PresenceAbsence)
-library(wesanderson)
-library(ggplot2)
-library(raster)
-
 setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
 ShinyCode<-file.path(getwd(),"ResponseCurves\\External")
 sourceList<-list.files(ShinyCode,full.names=TRUE)
 unlist(lapply(as.list(sourceList),source))
+
+ChkLibs(list("rgeos","maptools","randomForest","mgcv","dismo","shiny","earth","PresenceAbsence",
+             "wesanderson","ggplot2","raster"))
 #=====================================================
 # This is almost directly from the dismo vignette 
  files <- list.files(path=paste(system.file(package="dismo"),
@@ -56,17 +46,20 @@ correlationViewer(data=sdmdata)
 fitLst<-list(
  GLM_Model = glm(pb ~ bio1 + bio5 + bio12+ bio7, data=sdmdata,family=binomial),
  MARS_Model = earth(pb~ bio1 + bio5 + bio12 + bio7, data=sdmdata,glm=list(family=binomial)),
- RF_Model=randomForest(pb~ bio1 + bio5 + bio12 + bio7,data=sdmdata),
- GAM_Model=gam(pb ~ s(bio1) + s(bio5) + s(bio12) + s(bio7), data=sdmdata,family=binomial)
+ RF_Model=randomForest(pb~ bio1 + bio5 + bio12 + bio7,data=sdmdata, norm.votes = TRUE, strata = factor(c(0,1)), 
+                       nodesize = 30),
+ GAM_Model=gam(pb ~ 1+s(bio1,k=-1) + s(bio5,k=-1) + s(bio12,k=-1) + s(bio7,k=2), data=sdmdata,family=binomial)
  )
  
+
+#
 #This "responseInput" name absolutely can't be changed in the current working version.
 #This is a bit ugly but I'm not sure what do do I'd like to hide the complexity and it's 
 #Generally poor form to assign to the global envt and the runApp needs a consistent input format  
 #===============================================================
 #    This is where the magic happens
 #
-exploreCurves(fitLst,inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl)
+exploreCurves(fitLst[[1:3]],inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl)
 #
 #===============================================================
 
