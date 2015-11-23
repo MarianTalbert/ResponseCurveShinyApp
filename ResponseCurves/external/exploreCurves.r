@@ -4,15 +4,28 @@ cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget\n") 
     #putting together all of the global input needed by both the server and ui fcts
     predictedStk<-varImp<-predictedVals<-binaryVals<-varIncluded<-Thresh<-binaryStk<-Stats<-cmxPlot<-list()
-    
-    modelLst<-names(fitLst)
-    PresCoords<-data[data[,3]==1,c(1,2)]
-    AbsCoords<-data[data[,3]==0,c(1,2)]
    
-    resp<-data[,3]
-    dat<-data[,-c(1:3)]
-    Variables<-names(dat)
-    Split<-seq(1:length(resp))
+    if(inherits(fitLst,"list")){
+        modelLst<-names(fitLst)
+        PresCoords<-data[data[,3]==1,c(1,2)]
+        AbsCoords<-data[data[,3]==0,c(1,2)]
+       
+        resp<-data[,3]
+        dat<-data[,-c(1:3)]
+        Variables<-names(dat)
+        Split<-seq(1:length(resp))
+    } 
+    
+    if(inherits(fitLst,"BIOMOD.models.out")){
+        modelLst<-names(fitLst)
+        PresCoords<-data[data[,3]==1,c(1,2)]
+        AbsCoords<-data[data[,3]==0,c(1,2)]
+        
+        resp<-data[,3]
+        dat<-data[,-c(1:3)]
+        Variables<-names(dat)
+        Split<-seq(1:length(resp))
+    }
     
     for(i in 1:length(fitLst)){
           predictedVals[[i]]<-predictBinary(fitLst[[i]],dat)

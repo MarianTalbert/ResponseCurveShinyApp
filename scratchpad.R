@@ -1,4 +1,8 @@
 library(biomod2)
+
+#BiomodCode<-"C:\\Users\\mtalbert\\Downloads\\biomod2\\R"
+#sourceList<-list.files(BiomodCode,full.names=TRUE)
+#unlist(lapply(as.list(sourceList),source))
 DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
                                     package="biomod2"), row.names = 1)
 head(DataSpecies)
@@ -47,20 +51,47 @@ myBiomodModelOut <- BIOMOD_Modeling( myBiomodData,
                                      SaveObj = TRUE,
                                      do.full.models = FALSE)
 
-# 4. Loading some models built
-ModelNames<-substr(myBiomodModelOut@models.computed,nchar(myBiomodModelOut@models.computed)-2,
-                   nchar(myBiomodModelOut@models.computed))
-#figure out the load models here
-ModelNames<-for (mtl in models.to.load) {
-  fitLst[[mtl]]<-load(file = file.path(bm.out@sp.name, "models", bm.out@modeling.id, 
-                                       mtl))
-}
+myBiomodProjection <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
+                                        new.env = myExpl,
+                                        proj.name = 'current',
+                                        selected.models = 'all',
+                                        binary.meth = 'TSS',
+                                        compress = FALSE,
+                                        build.clamping.mask = FALSE,keep.in.memory=TRUE,on_0_1000=FALSE)
 
+exploreCurves(myBiomodModelOut,inputLayers=myExpl,data=myBiomodData,threshold=2,boundary=wrld_simpl)
+
+plot(myBiomodProjection@proj@val)
+#===============================
+#project to points extracted from the raster
+newData<-data.frame(bio3=c(10,20,30),bio4=c(100,200,400),bio7=c(59,69,79),bio11=c(0,100,200),bio12=c(100,200,300))
+pro<-BIOMOD_Projection(myBiomodModelOut,newData,proj.name="new",selected.models="all",keep.in.memory=TRUE,on_0_1000=FALSE)
+pro@Proj
+
+
+# 4. Loading some models built should be a strsplit if I need this
+#ModelNames<-substr(myBiomodModelOut@models.computed,nchar(myBiomodModelOut@models.computed)-2,
+#                   nchar(myBiomodModelOut@models.computed))
+getMethod('predict',"ANN_biomod2_model")
+availableModels<-bm.out@models.computed
+
+#Biomod would need a seperate interface where you select the models computed to load
+#figure out the load models here can I assume the working directory hasn't changed?
+#Can require models to be saved in memory predict methods are in biomod2_models-class.R
+#looks like they don't use a special function for raster predict 
+fitLst<-list()
+ModelNames<-for (mtl in 1:length(availableModels)) {
+  fitLst[[mtl]]<-rdx.file.contents(file.path(bm.out@sp.name, "models", bm.out@modeling.id, 
+                                       availableModels[mlt]))
+}
+#I need to use get_formal_model and figure their predict methods
+#start with BIOMOD_Projection and see what I can get from there
+"C:\Users\mtalbert\Documents\GuloGulo\models\1448114986\GuloGulo_AllData_RUN1_ANN"
 
 myLoadedModels <-loadBiomodModels(myBiomodModelOut, models=ModelNames)
 
-myLoadedModels <- BIOMOD_LoadModels(myBiomodModelOut, models="GAM")
-get_formal_model(GuloGulo_AllData_RUN1_GAM)
+myLoadedModels <- BIOMOD_LoadModels(myBiomodModelOut, models="GBM")
+get_formal_model(GuloGulo_AllData_RUN1_GBM)
 ModelNames<-myBiomodModelOut@models.computed
 FitLst<-lapply(ModelNames,get_formal_model)
 eval("GuloGulo_AllData_RUN1_GBM")

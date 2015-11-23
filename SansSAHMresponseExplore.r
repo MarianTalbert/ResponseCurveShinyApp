@@ -2,7 +2,7 @@ setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
 ShinyCode<-file.path(getwd(),"ResponseCurves\\External")
 sourceList<-list.files(ShinyCode,full.names=TRUE)
 unlist(lapply(as.list(sourceList),source))
-
+#13H
 ChkLibs(list("rgeos","maptools","randomForest","mgcv","dismo","shiny","earth","PresenceAbsence",
              "wesanderson","ggplot2","raster"))
 #=====================================================
@@ -59,7 +59,7 @@ fitLst<-list(
 #===============================================================
 #    This is where the magic happens
 #
-exploreCurves(fitLst[[1:3]],inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl)
+exploreCurves(fitLst,inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl)
 #
 #===============================================================
 
