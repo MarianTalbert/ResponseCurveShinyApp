@@ -2,7 +2,7 @@ setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
 ShinyCode<-file.path(getwd(),"ResponseCurves\\External")
 sourceList<-list.files(ShinyCode,full.names=TRUE)
 unlist(lapply(as.list(sourceList),source))
-#13H
+#17.5H -(6 for monday and x for Wednesday)
 ChkLibs(list("rgeos","maptools","randomForest","mgcv","dismo","shiny","earth","PresenceAbsence",
              "wesanderson","ggplot2","raster"))
 #=====================================================
@@ -62,6 +62,17 @@ fitLst<-list(
 exploreCurves(fitLst,inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl)
 #
 #===============================================================
+#Debugging helper functions
+vals<-apply(sdmdata[,c(4:ncol(sdmdata))],2,FUN=sample,size=4)
+varI<-as.data.frame(matrix(runif(16,0,1),nrow=4,ncol=4))
+varIncl<-varI>.25
+
+responseCurves(f=fitLst,model=modelLst,vals=vals,
+               varImp=as.list(varI),varIncluded=as.list(varIncl),addImp=F,pIdx=1,
+               dat=sdmdata[,c(4:ncol(sdmdata))],resp=sdmdata[,3],Cols=Cols,Ensemble=FALSE)
+
+interactionPlot(fitLst[[1]],model=modelLst[[1]],vals=NULL,theta=30,phi=25,x=names(sdmdata)[4],y=names(sdmdata)[5],
+                dat=sdmdata[,c(4:ncol(sdmdata))],resp=sdmdata[,3])
 
 Cols<-c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
 max_plots<-5
@@ -88,8 +99,6 @@ Cols<-c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cav
 vals<-apply(sdmdata[,c(4:ncol(sdmdata))],2,FUN=sample,size=4)
 modelLst<-names(fitLst)
 varImpLst<-NA
-responseCurves(f=list(fitLst[[1]]),m=list(modelLst[[1]]),varImp=list(c(1,2,3,4)),addImp=F,vals,
-               dat=sdmdata[,c(4:ncol(sdmdata))],resp=sdmdata[,3],Cols=Cols,Ensemble=FALSE)
-interactionPlot(fitLst[[1]],modelLst[[1]],vals=NULL,theta=30,phi=25,x="bio1",y="bio5",dat=responseInput$dat,resp=responseInput$resp)
-densityPlot(fitLst[[3]])
+
+
 

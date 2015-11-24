@@ -1,12 +1,8 @@
-responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,dat,resp,Cols,Ensemble,mapType="none"){
+responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,dat,resp,Cols,Ensemble,
+                         mapType="none",modelIdx=NA){
 
-        myPredict <- function (x, y, ...) {
-          out <- predict(x, y, type='response', args=c("outputformat=logistic"), ...);
-          return (out)
-        }
-        #response(m_me,  at=mean, expand=0, fun=myPredict)
-        #response(m_glm, at=mean, expand=0, fun=myPredict)
-
+  biomd=inherits(fitLst,"BIOMOD.models.out") 
+       
          mins  <- sapply(dat, min,  na.rm=TRUE)
          maxs  <- sapply(dat, max,  na.rm=TRUE)
          means <- sapply(dat, mean, na.rm=TRUE)
@@ -18,9 +14,10 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
          else vals<-rbind(means,vals)
 
          byVar<-ifelse(missing(pIdx),FALSE,TRUE)
+         if(!byVar & !biomd) fitLst <- list(f=fitLst[[modelIdx]])
 
 
-            if(byVar) par(mfrow=c((length(fitLst)+1),1),mar=c(0,2,0,0),oma=c(3,1,0,0),xpd=TRUE)
+            if(byVar) par(mfrow=c((length(model)+1),1),mar=c(0,2,0,0),oma=c(3,1,0,0),xpd=TRUE)
             else { par(mfrow=c(1,ncol(dat)),mar=c(0,0,3,0),oma=c(0,5,0,0),xpd=TRUE)
                   if(ncol(dat)>9) par(mfrow=c(2,ceiling(ncol(dat)/2)))
             }
@@ -28,7 +25,7 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
               y.lim=c(0,1)
               nRow<-1
              #set up what we're cycling over
-              modelCycle<-1:length(fitLst)
+              modelCycle<-1:length(model)
               predCycle<-1:ncol(dat)
               if(Ensemble) {
                 RespLst<-list() #list is a list of predictors
@@ -51,7 +48,9 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
                               test<-as.data.frame(test)
                               test<-rbind(test,vals[v,])
                               colnames(test)<-names(means)
-                               Response<-predict(fitLst[[j]], test,type='response')
+                              if(biomd) Response<-predict(fitLst, test,model[[j]])
+                              else Response<-predict(fitLst[[j]], test,type='response')
+                              
                                lR<-length(Response)
                                if(Ensemble) RespMat[,v]<-Response[1:(lR-1)]
 

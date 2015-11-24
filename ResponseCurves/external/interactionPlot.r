@@ -1,7 +1,8 @@
-interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y,dat,resp){
+interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y,dat,resp,modelIndx=NA){
     
         VarNames<-names(dat)
-
+        biomd=inherits(fitLst,"BIOMOD.models.out") 
+        if(!biomd) fitLst=fitLst[[modelIndx]]
         Col=Colors
 
         myPredict <- function (x, y, ...) { 
@@ -18,11 +19,14 @@ interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y,dat,resp){
          test <- do.call("rbind", replicate(n^2, vals, simplify=FALSE))
          yCol <- match(y,names(dat))
          xCol <-match(x,names(dat))
+         
          test[, yCol] <- rep(seq(mins[yCol], maxs[yCol], length.out=n),each=n)
          test[, xCol] <- rep(seq(mins[xCol], maxs[xCol], length.out=n),times=n)
          test <- as.data.frame(test)
          colnames(test) <- names(means)
-         Response <- predict(fitLst, test,type='response')
+         
+         if(biomd) Response<-predict(fitLst, test,model)
+         else Response<-predict(fitLst, test,type='response')
          z <- matrix(Response,ncol=n)
          nrz <- nrow(z)
          ncz <- ncol(z)

@@ -6,10 +6,10 @@ cat("Press escape to exit the interactive widget\n")
     predictedStk<-varImp<-predictedVals<-binaryVals<-varIncluded<-Thresh<-binaryStk<-Stats<-cmxPlot<-list()
    
     if(inherits(fitLst,"list")){
+      Biomd<-FALSE
         modelLst<-names(fitLst)
         PresCoords<-data[data[,3]==1,c(1,2)]
         AbsCoords<-data[data[,3]==0,c(1,2)]
-       
         resp<-data[,3]
         dat<-data[,-c(1:3)]
         Variables<-names(dat)
@@ -17,19 +17,33 @@ cat("Press escape to exit the interactive widget\n")
     } 
     
     if(inherits(fitLst,"BIOMOD.models.out")){
-        modelLst<-names(fitLst)
-        PresCoords<-data[data[,3]==1,c(1,2)]
-        AbsCoords<-data[data[,3]==0,c(1,2)]
-        
-        resp<-data[,3]
-        dat<-data[,-c(1:3)]
+      Biomd<-TRUE
+        modelLst<-fitLst@models.computed
+        resp<-data@data.species
+        PresCoords<-data@coord[resp==1,]
+        AbsCoords<-data@coord[resp==0,]
+        preds<-get_predictions(fitLst,as.data.frame=TRUE)
+        #evalPreds<-get_predictions(myBiomodModelOut,as.data.frame=TRUE,evaluation=TRUE)
+        #should be able to look at evaluation data as well
+        predictedVals<-as.list(preds)
+        vi<-as.data.frame(get_variables_importance(myBiomodModelOut))
+        varImp<-as.list(vi)
+        varIncluded<-as.list(vi>0)
+        dat<-data@data.env.var
         Variables<-names(dat)
         Split<-seq(1:length(resp))
+        myBiomodProjection <- BIOMOD_Projection(modeling.output = fitLst,
+                                  new.env = inputLayers,
+                                  proj.name = 'current',
+                                  selected.models = 'all',
+                                  compress = FALSE,
+                                  build.clamping.mask = FALSE,keep.in.memory=TRUE,on_0_1000=FALSE)
+        predictedStk <- myBiomodProjection@proj@val 
     }
     
-    for(i in 1:length(fitLst)){
-          predictedVals[[i]]<-predictBinary(fitLst[[i]],dat)
-          if(inherits(fitLst[[i]],"randomForest")){
+    for(i in 1:length(modelLst)){
+      if(!Biomd){ predictedVals[[i]]<-predictBinary(fitLst[[i]],dat)
+            if(inherits(fitLst[[i]],"randomForest")){
             #because of the distinction between oob prediction and in bag prediction
             #we end up with two sets of predicted vals for rf 
             inBagResp<-predict(fitLst[[i]],dat,type='response')
@@ -37,21 +51,24 @@ cat("Press escape to exit the interactive widget\n")
           }else{
             AUCVal<-roc(resp,predictedVals[[i]])
           }
+      }else AUCVal<- roc(resp,predictedVals[[i]])
           Thresh[[i]]<-optimal.thresholds(DATA=cbind(seq(1:nrow(dat)),resp,predictedVals[[i]]))[2,threshold]
           binaryVals<-as.numeric(predictedVals[[i]]>=Thresh[[i]])
           
            Stats[[i]]<-calcStat(predictedVals[[i]],resp,Split,Thresh[[i]])
            if(i==1){ 
-             predictedStk<-predict(inputLayers,fitLst[[i]],type='response')
+             if(!Biomd) predictedStk<-predict(inputLayers,fitLst[[i]],type='response')
              binaryStk<-createBinary(predictedStk[[i]],Thresh[[i]])
              messRast<-mess(inputLayers,dat,full=FALSE) 
            }else{ 
-             predictedStk<-addLayer(predictedStk,predict(inputLayers,fitLst[[i]],type='response'))
+             if(!Biomd) predictedStk<-addLayer(predictedStk,predict(inputLayers,fitLst[[i]],type='response'))
              binaryStk<-addLayer(binaryStk,createBinary(predictedStk[[i]],Thresh[[i]]))
            }
-        Permuted<-permutePredict(dat,fitLst[[i]],resp)
-        varIncluded[[i]]<-Permuted$varIncluded  
-        varImp[[i]]<-AUCVal-Permuted$AUC
+         
+        if(!Biomd){
+            Permuted<-permutePredict(dat,fitLst[[i]],resp)
+            varIncluded[[i]]<-Permuted$varIncluded  
+            varImp[[i]]<-AUCVal-Permuted$AUC}
         M<-data.frame(Percent=c(100*Stats[[i]]$Cmx[2]/sum(Stats[[i]]$Cmx[1:2]),100*Stats[[i]]$Cmx[4]/sum(Stats[[i]]$Cmx[3:4]),
                                 100*Stats[[i]]$Cmx[1]/sum(Stats[[i]]$Cmx[1:2]),100*Stats[[i]]$Cmx[3]/sum(Stats[[i]]$Cmx[3:4])),
                       Predicted=factor(c("Absence","Absence","Presence","Presence")),
@@ -98,7 +115,7 @@ cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget") 
 cexMult <- 1.5
 evalPlotGroup=c("EvaluationMetrics","ROC","ConfusionMatrix","VariableImportance","Density")
-modelNames<-names(fitLst)
+
 #======================================================
 #======================================================
 app <- shinyApp(
@@ -162,9 +179,9 @@ app <- shinyApp(
      
       lapply(1:length(modelLst),function(i){
       output[[paste("curves",i,sep="")]] <- renderPlot({        
-        #Plot the Curves
-          responseCurves(list(f=fitLst[[i]]),list(m=modelLst[[i]]),vals=XYs$vals,varIncluded=list(varIncluded[[i]]),varImp=list(varImp[[i]]),addImp=input$addMImp,
-              dat=dat,resp=resp,Cols=Cols,Ensemble=FALSE,mapType=input$mapType)
+        #Plot the Curves BY MODEL
+          responseCurves(fitLst,list(m=modelLst[[i]]),vals=XYs$vals,varIncluded=list(varIncluded[[i]]),varImp=list(varImp[[i]]),addImp=input$addMImp,
+              dat=dat,resp=resp,Cols=Cols,Ensemble=FALSE,mapType=input$mapType,modelIdx=i)
         })
         })
       
@@ -243,11 +260,13 @@ app <- shinyApp(
       }else{if(input$Model=="All"){
         par(mfrow=c(2,2),mar=c(1,1,1,1),oma=c(0,0,0,0))
         for(i in 1:length(fitLst)){
-          interactionPlot(fitLst[[i]],modelLst[[i]],vals=SlideVals,phi=input$phi,theta=input$theta,x=input$FirstPredictor,y=input$SecondPredictor,dat,resp)
+          interactionPlot(fitLst,modelLst[[i]],vals=SlideVals,phi=input$phi,theta=input$theta,
+                          x=input$FirstPredictor,y=input$SecondPredictor,dat,resp,modelIndx=i)
           }
       } else{
          i<-match(input$Model,unlist(modelLst))
-          interactionPlot(fitLst[[i]],modelLst[[i]],vals=Svals,phi=input$phi,theta=input$theta,x=input$FirstPredictor,y=input$SecondPredictor,dat,resp)
+          interactionPlot(fitLst,modelLst[[i]],vals=Svals,phi=input$phi,theta=input$theta,
+                          x=input$FirstPredictor,y=input$SecondPredictor,dat,resp,modelIndx=i)
         }
       }  
       })
