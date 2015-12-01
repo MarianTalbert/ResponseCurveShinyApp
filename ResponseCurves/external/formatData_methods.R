@@ -1,14 +1,15 @@
-if (!isGeneric("formatModels")) {
-  setGeneric("formatModels", function(fitLst,...){
-    standardGeneric("formatModels")
-  })
-}
-
-setMethod("formatModels","ANY", function(x,...){
-            #x is fit list here
+formatModels <- function(fitLst,data,...){
+          
+   if(inherets(fitLst,"BIOMOD.models.out")) out<-formatBiomodModels(fitLst,data)
+   else out<-formatModelLst(fitLst,data) 
+   out$binaryVals<-list()
+   out$Thresh<-list()
+   out$binaryStk<-list()
+   out$Stats<- list()
+   out$cmxPlot<-list()                                                        
             for(i in 1:length(modelLst)){
               AUCVal<- roc(resp,predictedVals[[i]])
-              Thresh[[i]]<-optimal.thresholds(DATA=cbind(seq(1:nrow(dat)),resp,predictedVals[[i]]))[2,threshold]
+              out$Thresh[[i]]<-optimal.thresholds(DATA=cbind(seq(1:nrow(dat)),resp,predictedVals[[i]]))[2,threshold]
               binaryVals<-as.numeric(predictedVals[[i]]>=Thresh[[i]])
               Stats[[i]]<-calcStat(predictedVals[[i]],resp,Split,Thresh[[i]])
               if(i==1){
@@ -31,17 +32,19 @@ setMethod("formatModels","ANY", function(x,...){
                                      Model=rep(names(fitLst),each=length(resp)))
             densityFrame$Model<-as.factor(densityFrame$Model)
             densityFrame$Response<-as.factor(densityFrame$Response)
-            x@AnyMethod<-"inAny"
-            
-})
+            out$denstiyFrame<-densityFrame
+            out$messRast<-messRast
+            out$binaryStk
+}
 
-setMethod("formatModels","list",function(x,...){
+formatModelLst<-function(fitLst,data,...){
            
 #putting together all of the global input needed by both the server and ui fcts
+  
   predictedStk<-varImp<-predictedVals<-binaryVals<-varIncluded<-Thresh<-binaryStk<-Stats<-cmxPlot<-list()
   
     Biomd<-FALSE
-    modelLst<-names(x)
+    modelLst<-names(fitLst)
     PresCoords<-data[data[,3]==1,c(1,2)]
     AbsCoords<-data[data[,3]==0,c(1,2)]
     resp<-data[,3]
@@ -50,11 +53,11 @@ setMethod("formatModels","list",function(x,...){
     Split<-seq(1:length(resp))
  
   for(i in 1:length(modelLst)){
-    predictedVals[[i]]<-predictBinary(x[[i]],dat)
-    if(inherits(x[[i]],"randomForest")){
+    predictedVals[[i]]<-predictBinary(fitLst[[i]],dat)
+    if(inherits(fitLst[[i]],"randomForest")){
       #because of the distinction between oob prediction and in bag prediction
       #we end up with two sets of predicted vals for rf 
-      inBagResp<-predict(x[[i]],dat,type='response')
+      inBagResp<-predict(fitLst[[i]],dat,type='response')
       AUCVal<-roc(resp,inBagResp)
     }else{
       AUCVal<-roc(resp,predictedVals[[i]])
@@ -80,32 +83,28 @@ setMethod("formatModels","list",function(x,...){
     M<-data.frame(Percent=c(100*Stats[[i]]$Cmx[2]/sum(Stats[[i]]$Cmx[1:2]),100*Stats[[i]]$Cmx[4]/sum(Stats[[i]]$Cmx[3:4]),
                             100*Stats[[i]]$Cmx[1]/sum(Stats[[i]]$Cmx[1:2]),100*Stats[[i]]$Cmx[3]/sum(Stats[[i]]$Cmx[3:4])),
                   Predicted=factor(c("Absence","Absence","Presence","Presence")),
-                  Observed=factor(c("Presence","Absence","Presence","Absence")),Model=rep(names(x)[i],times=4))
+                  Observed=factor(c("Presence","Absence","Presence","Absence")),Model=rep(names(fitLst)[i],times=4))
     
     if(i==1) Mdat <- M
     else Mdat<-rbind(Mdat,M)
   }
   
-  densityFrame<-data.frame(Predicted=unlist(predictedVals),Response=rep(resp,times=length(fitLst)),
-                           Model=rep(names(fitLst),each=length(resp)))
-  densityFrame$Model<-as.factor(densityFrame$Model)
-  densityFrame$Response<-as.factor(densityFrame$Response)
-  
   EnsemblePred<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean)
-  EnsembleBin<-stackApply(binaryStk,indices=rep(1,times=length(fitLst)),fun=sum)
+  EnsembleBin<-stackApply(binaryStk,indices=rep(1,times=length(fitLst)),fun=sum) #how to handle the different ensembles for biomod2
   predictedStk<-addLayer(predictedStk,EnsemblePred)
   binaryStk<-addLayer(binaryStk,EnsembleBin)
   
   names(predictedStk)<-c(names(fitLst),"Ensemble_Mean_of_Probability_Maps")
   names(binaryStk)<-c(names(fitLst),"Ensemble_Sum_of_Binary_Maps")
   modelNames<-names(fitLst)
-  x@listMethod<-"inList"
-  callNextMethod()
-})
+  returnLst<-list(predictedStk=predictedStk,varImp=varImp,predictedVals=predictedVals,
+                  varIncluded=varIncluded,binaryStk=binaryStk,densityFrame=densityFrame,modelNames=modelNames)
+  return(returnLst)
+}
 
-setMethod("formatModels","BIOMOD.models.out",
+
           
-          function(x,...){
+formatBiomodModels<- function(fitLst,data,...){
             
               #putting together all of the global input needed by both the server and ui fcts
               predictedStk<-varImp<-predictedVals<-binaryVals<-varIncluded<-Thresh<-binaryStk<-Stats<-cmxPlot<-list()
@@ -133,7 +132,11 @@ setMethod("formatModels","BIOMOD.models.out",
                                                         build.clamping.mask = FALSE,keep.in.memory=TRUE,on_0_1000=FALSE)
                 predictedStk <- myBiomodProjection@proj@val 
               
-                #This isn't right for the biomod ensemble I"ll need to figure it out
+               browser() #still missing several items
+                returnLst<-list(predictedStk=predictedStk,varImp=varImp,predictedVals=predictedVals,binaryVals=binaryVals,
+                                varIncluded=varIncluded,binaryStk=binaryStk,densityFrame=densityFrame,modelNames=modelNames)
+                return(returnLst)
+                 #This isn't right for the biomod ensemble I"ll need to figure it out
               #EnsemblePred<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean)
               #EnsembleBin<-stackApply(binaryStk,indices=rep(1,times=length(fitLst)),fun=sum)
               #predictedStk<-addLayer(predictedStk,EnsemblePred)
@@ -142,4 +145,4 @@ setMethod("formatModels","BIOMOD.models.out",
               #names(predictedStk)<-c(names(fitLst),"Ensemble_Mean_of_Probability_Maps")
               #names(binaryStk)<-c(names(fitLst),"Ensemble_Sum_of_Binary_Maps")
               #modelNames<-names(fitLst)
-            })
+            }
