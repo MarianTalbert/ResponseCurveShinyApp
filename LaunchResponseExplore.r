@@ -2,7 +2,7 @@ setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
 ShinyCode<-file.path(getwd(),"ResponseCurves\\External")
 sourceList<-list.files(ShinyCode,full.names=TRUE)
 unlist(lapply(as.list(sourceList),source))
-#17.5H -(6 for monday and x for Wednesday)
+
 ChkLibs(list("rgeos","maptools","randomForest","mgcv","dismo","shiny","earth","PresenceAbsence",
              "wesanderson","ggplot2","raster"))
 #=====================================================

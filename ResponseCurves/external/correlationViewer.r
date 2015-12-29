@@ -81,7 +81,8 @@ correlationViewer<-function(data,num.plots=5,min.cor=.7,input.file,output.file,r
       else {wdth=4500
       if(num.plots<17) cex.mult=4
                         else cex.mult=3
-            }
+      }
+ 
   #Find a new unique file name (one in the desired directory that hasn't yet been used)
   MyPairs(cbind(response,HighToPlot),cor.range=cor.range,missing.summary=missing.summary,my.labels=(as.vector(High.cor)[1:num.plots]),
         lower.panel=panel.smooth,diag.panel=panel.hist, upper.panel=panel.cor,pch=21,
