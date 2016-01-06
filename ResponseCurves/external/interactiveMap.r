@@ -1,6 +1,9 @@
-interactiveMap <- function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,boundary,data,Stats,XYs,
-                         PresCoords,AbsCoords,Ensemble=FALSE){
-    #Plot the Map
+interactiveMap <- function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,boundary,Coords,Stats,XYs,
+                           resp,Ensemble=FALSE){
+  
+  PresCoords<-Coords[resp==1,]
+  AbsCoords<-Coords[resp==0,]  
+  #Plot the Map
     if(input$showResid){
       Legend=FALSE 
       alpha=.2
@@ -23,7 +26,7 @@ interactiveMap <- function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,b
                                    cex.main=1.7,main="Multivariate Environmental Similary Surface")
     }
     if(class(boundary)=="SpatialPolygonsDataFrame") plot(boundary,add=TRUE)
-    if(input$showResid & !Ensemble) residImage(x=data$lon,y=data$lat,z=Stats[[i]]$devResid,boundary,predictedStk,i,rastColors=Colors)
+    if(input$showResid & !Ensemble) residImage(x=Coords[,1],y=Coords[,2],z=Stats[[i]]$devResid,boundary,predictedStk,i,rastColors=Colors)
     XYdat <- as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
     if(!is.null(input$showTrain)){
       

@@ -250,9 +250,10 @@ ThreshPoints<-as.data.frame(matrix(nrow=N.dat,ncol=4))
     ThreshPoints$Model<-as.factor(ThreshPoints$Model)
     ThreshPoints$sensitivity<-as.numeric(ThreshPoints$sensitivity)
     ThreshPoints$specificity<-as.numeric(ThreshPoints$specificity)
-    p<-ggplot(df) + geom_point() + xlim(0, 1) + ylim(0, 1)+xlab(xlab)+ylab(ylab)
-    p<-p + geom_line(data=PlotDat, aes(x=specificity, y=sensitivity,colour=Model),size=1.2)+
-           geom_point(data=ThreshPoints,aes(x=specificity,y=sensitivity,colour=Model),size=6)+
+    
+    p<-ggplot(PlotDat,aes(x=specificity,y=sensitivity,colour=Model)) + 
+      geom_line(size=.5) + xlim(0, 1) + ylim(0, 1)+xlab(xlab)+ylab(ylab)+
+           geom_point(data=ThreshPoints,aes(x=specificity,y=sensitivity,colour=Model),size=2)+
       ggtitle("ROC Plot")
 return(p)
 }

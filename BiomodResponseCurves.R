@@ -80,11 +80,13 @@ myBiomodEM <- BIOMOD_EnsembleModeling( modeling.output = myBiomodModelOut,
                                        prob.mean.weight.decay = 'proportional' )
 BM <- BIOMOD_EnsembleForecasting( projection.output = myBiomodProjection,
                             EM.output = myBiomodEM)
-#==================================================
+#======================================================
+#======================================================
 #   Magic happens here for Wednesday I'm into the server secion pulling out the maps
 #   Write a method for the initial data prep steps instead of if else everywhere
 exploreCurves(myBiomodModelOut,inputLayers=myExpl,data=myBiomodData,threshold=2,boundary=wrld_simpl)
-#===============
+#====================================================
+#====================================================
 
 vals<-apply(SpDataFrame[,c(4:ncol(SpDataFrame))],2,FUN=sample,size=4)
 varI<-as.data.frame(matrix(runif(5*8,0,1),nrow=5,ncol=8)) #five predictors 8 models

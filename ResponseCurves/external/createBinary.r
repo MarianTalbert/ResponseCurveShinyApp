@@ -1,7 +1,7 @@
-if (!isGeneric("createBinary")) {
+#if (!isGeneric("createBinary")) {
 setGeneric("createBinary", function(Predicted,thresh, ...)
 standardGeneric("createBinary"))
-}
+#}
 
 
 setMethod('createBinary', signature(Predicted='RasterLayer'),

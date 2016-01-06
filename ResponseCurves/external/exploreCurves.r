@@ -4,10 +4,10 @@ cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget\n") 
    
  
-attach(formatModels(fitLst,inputLayers,data,threshold=threshold))
-   
+Out<-formatModels(fitLst,inputLayers,data,threshold=threshold)
+
 max_plots <- 5
-rspHgt <- c("150px","300px","450px","650px","800px")[min(5,length(modelLst))]
+rspHgt <- c("150px","300px","450px","650px","800px")[min(5,length(Out$modelLst))]
 Cols <- c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget") 
@@ -59,37 +59,37 @@ app <- shinyApp(
       })
       #============================  
       #Map Generation
-      lapply(1:length(modelLst),function(i){
+      lapply(1:length(Out$modelLst),function(i){
       output[[paste("map",i,sep="")]] <- renderPlot({       
-        interactiveMap(predictedStk,binaryStk,messRast,Colors,Cols,input,i,boundary,data,
-                       Stats,XYs,
-                       PresCoords,AbsCoords)
+        interactiveMap(Out$predictedStk,Out$binaryStk,Out$messRast,Colors,Cols,input,i,boundary,Out$Coords,
+                       Out$Stats,XYs,resp=Out$resp)
         })
       })
       
       output$EnsembleMap <- renderPlot({
-        interactiveMap(predictedStk,binaryStk,messRast,Colors,Cols,input,
-                       (length(modelLst)+1),boundary,data,Stats,XYs,
-                       PresCoords,AbsCoords,Ensemble=TRUE)
+        interactiveMap(Out$predictedStk,Out$binaryStk,Out$messRast,Colors,Cols,input,
+                       (length(Out$modelLst)+1),boundary,Out$Coords,Out$Stats,XYs,resp=Out$resp,
+                       Ensemble=TRUE)
        
       })
    #============================    
    #Response Curve Generation for Map
    #============================ 
      
-      lapply(1:length(modelLst),function(i){
+      lapply(1:length(Out$modelLst),function(i){
       output[[paste("curves",i,sep="")]] <- renderPlot({        
         #Plot the Curves BY MODEL
-      browser()
-          responseCurves(fitLst,list(m=modelLst[[i]]),vals=XYs$vals,varIncluded=list(varIncluded[[i]]),
-                         varImp=list(varImp[[i]]),addImp=input$addMImp,
-              dat=dat,resp=resp,Cols=Cols,Ensemble=FALSE,mapType=input$mapType,modelIdx=i)
+               responseCurves(fitLst,list(m=Out$modelLst[[i]]),vals=XYs$vals,
+                              varIncluded=list(Out$varIncluded[[i]]),
+                         varImp=list(Out$varImp[[i]]),addImp=input$addMImp,
+              dat=Out$dat,resp=Out$resp,Cols=Cols,Ensemble=FALSE,mapType=input$mapType,modelIdx=i)
         })
         })
       
       output$EnsemblePlot<-renderPlot({
-        ensemebleCurves(fitLst,modelLst,dat=dat,Cols=Cols,XYs=XYs,varIncluded=varIncluded,
-                        varImp=varImp,mapType=input$mapType)
+        ensemebleCurves(fitLst,Out$modelLst,dat=Out$dat,Cols=Cols,XYs=XYs,
+                        varIncluded=Out$varIncluded,
+                        varImp=Out$varImp,mapType=input$mapType)
       })
  #============================
  # Evaluation Plot
@@ -100,10 +100,14 @@ app <- shinyApp(
    
       lapply(1:5,function(i){
         output[[paste("EvalPlot",i,sep="")]] <- renderPlot({
-           switchEvalPlots(PlotType=evalPlotGroup[i],StatsFrame,pre,Thresh,
-                           Mdat,varImpMat,densityFrame,modelLst,cexMult)
+          switchEvalPlots(PlotType=evalPlotGroup[i],Stats=Out$Stats,modelNames=Out$modelLst,
+                          predictedVals=Out$predictedVals,
+                          resp=Out$resp,varImp=Out$varImp,Thresh=Out$Thresh,
+                          datNames=names(Out$dat),cexMult=cexMult)
+
         })
       })
+      
       
         lapply(1:5,function(i){
           output[[paste("EvalTxt",i,sep="")]] <- renderText({ 
@@ -116,14 +120,15 @@ app <- shinyApp(
       #Response curves for sliders
       
       observeEvent(input$addVals,{
-        IntractV<-unlist(lapply(paste(names(dat),"aa",sep=""),FUN=function(l) input[[l]]))
+        IntractV<-unlist(lapply(paste(Out$Variables,"aa",sep=""),FUN=function(l) input[[l]]))
         IntractVals$Vals<-rbind(IntractVals$Vals,IntractV)
        })
       
-      lapply(1:length(dataLst),IntractVals=IntractVals,function(i,IntractVals){
+      lapply(1:length(Out$dataLst),IntractVals=IntractVals,function(i,IntractVals){
       output[[paste("slideRsp",i,sep="")]]<-renderPlot({
-        responseCurves(fitLst,modelLst,vals=IntractVals$Vals,i,varIncluded=varIncluded,varImp=varImp,
-                       addImp=input$addImp,dat=dat,resp=resp,Cols=Cols,Ensemble=FALSE)
+        responseCurves(fitLst,Out$modelLst,vals=IntractVals$Vals,i,varIncluded=Out$varIncluded,
+                       varImp=Out$varImp,
+                       addImp=input$addImp,dat=Out$dat,resp=Out$resp,Cols=Cols,Ensemble=FALSE)
         })
       })
         
@@ -134,27 +139,28 @@ app <- shinyApp(
       output$sliders <- renderUI({
           
           f<-function(l){
-          sliderInput(inputId=as.character(l$Name),label=as.character(l$Name),min=signif(l$min,digits=3),max=signif(l$max,digits=3),value=signif(l$mean,digits=3),round=TRUE)
+          sliderInput(inputId=as.character(l$Name),label=as.character(l$Name),min=signif(l$min,digits=3),
+                      max=signif(l$max,digits=3),value=signif(l$mean,digits=3),round=TRUE)
           }
           getNames<-function(x){as.character(x[[1]])}
           #we're not holding the predictors used in the surface constant so remove them from the
           #input slider list
-          datNames<-unlist(lapply(dataLst,getNames))
-          match(c(input$FirstPredictor,input$SecondPredictor),Variables)
-         datForSliders<-dataLst[-c(match(c(input$FirstPredictor,input$SecondPredictor),Variables))]
+          datNames<-unlist(lapply(Out$dataLst,getNames))
+          match(c(input$FirstPredictor,input$SecondPredictor),Out$Variables)
+         datForSliders<-Out$dataLst[-c(match(c(input$FirstPredictor,input$SecondPredictor),Out$Variables))]
          lapply(datForSliders, f)    
           })
       
       output$interact<-renderPlot({
        
        #get the value from the sliders using their position
-      SlideNames<-names(dat)[-c(which(names(dat)%in%c(input$FirstPredictor,input$SecondPredictor)))]
+      SlideNames<-Out$Variables[-c(which(Out$Variables%in%c(input$FirstPredictor,input$SecondPredictor)))]
       SlideVals<-unlist(lapply(SlideNames,FUN=function(l) input[[l]]))
           if(!is.null(SlideVals)){
               #slider values are missing the values for the indicies of the first and second predictor so put the spaces back in
-              Svals<-vector(length=ncol(dat))
-              toAdd<-sort(match(c(input$FirstPredictor,input$SecondPredictor),names(dat)))
-              datPos<-seq(1:ncol(dat))[-c(toAdd)]
+              Svals<-vector(length=ncol(Out$dat))
+              toAdd<-sort(match(c(input$FirstPredictor,input$SecondPredictor),Out$Variables))
+              datPos<-seq(1:ncol(Out$dat))[-c(toAdd)]
               Svals[datPos]<-SlideVals
               SlideVals<-Svals
           }
@@ -162,36 +168,36 @@ app <- shinyApp(
       if(input$FirstPredictor==input$SecondPredictor){
        plot(0:1,0:1,type="n",xaxt="n",yaxt="n",xlab="",ylab="")   
       }else{if(input$Model=="All"){
-        Dims<-ceiling(sqrt(length(modelLst)))
+        Dims<-ceiling(sqrt(length(Out$modelLst)))
         
         par(mfrow=c(Dims,Dims),mar=c(1,1,1,1),oma=c(0,0,0,0))
        
-        for(i in 1:length(modelLst)){
-          interactionPlot(fitLst,modelLst[[i]],vals=SlideVals,phi=input$phi,theta=input$theta,
-                          x=input$FirstPredictor,y=input$SecondPredictor,dat,resp,modelIndx=i)
+        for(i in 1:length(Out$modelLst)){
+          interactionPlot(fitLst,Out$modelLst[[i]],vals=SlideVals,phi=input$phi,theta=input$theta,
+                          x=input$FirstPredictor,y=input$SecondPredictor,Out$dat,Out$resp,modelIndx=i)
           }
       } else{
        
-         i<-match(input$Model,unlist(modelLst))
-          interactionPlot(fitLst,modelLst[[i]],vals=Svals,phi=input$phi,theta=input$theta,
-                          x=input$FirstPredictor,y=input$SecondPredictor,dat,resp,modelIndx=i)
+         i<-match(input$Model,unlist(Out$modelLst))
+          interactionPlot(fitLst,Out$modelLst[[i]],vals=Svals,phi=input$phi,theta=input$theta,
+                          x=input$FirstPredictor,y=input$SecondPredictor,Out$dat,Out$resp,modelIndx=i)
         }
       }  
       })
       #=====================
       # named sliders
       #creating a named list of sliders so I can put them where I feel like 
-      lapply(1:length(dataLst),function(i){
+      lapply(1:length(Out$dataLst),function(i){
       output[[paste("slide",i,sep="")]] <- renderUI({ 
-          sliderInput(inputId=paste(as.character(dataLst[[i]]$Name),"aa",sep=""),
-          label=as.character(dataLst[[i]]$Name),min=signif(dataLst[[i]]$min,digits=3),
-          max=signif(dataLst[[i]]$max,digits=3),
-          value=signif(dataLst[[i]]$mean,digits=3),round=TRUE)
+          sliderInput(inputId=paste(as.character(Out$dataLst[[i]]$Name),"aa",sep=""),
+          label=as.character(Out$dataLst[[i]]$Name),min=signif(Out$dataLst[[i]]$min,digits=3),
+          max=signif(Out$dataLst[[i]]$max,digits=3),
+          value=signif(Out$dataLst[[i]]$mean,digits=3),round=TRUE)
           })
       })
       #=========================
       #a named list of predictor densities
-      lapply(1:length(dataLst),function(i,dat,resp){
+      lapply(1:length(Out$dataLst),function(i,dat,resp){
       output[[paste("dens",i,sep="")]] <- renderPlot({
                  cols<-c("blue","red")
                 color.box<-col2rgb(cols,alpha=TRUE)
@@ -203,11 +209,11 @@ app <- shinyApp(
                   absDens<-density(dat[resp==0,i])
                   par(mar=c(2,.3,0,.3),oma=c(0,0,0,0))
                   plot(x=range(c(absDens$x,presDens$x)),y=c(0,max(absDens$y,presDens$y)),type="n",
-                  ylab="",xlab=names(dat)[i],yaxt="n")
+                  ylab="",xlab=Out$Variables[i],yaxt="n")
                   polygon(absDens,col=cols[1],border="blue")
                   polygon(presDens,col=cols[2],border="red")
           })
-      },dat=dat,resp=resp)      
+      },dat=Out$dat,resp=Out$resp)      
       
       },      
 ui=navbarPage("Respones Curve Explorer",
@@ -265,7 +271,7 @@ ui=navbarPage("Respones Curve Explorer",
           column(6,
           wellPanel(plotOutput("curves1",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
           ),
-        conditionalPanel(length(modelLst)>1,
+        conditionalPanel(length(Out$modelLst)>1,
          fluidRow(
           column(4,
           wellPanel(
@@ -274,7 +280,7 @@ ui=navbarPage("Respones Curve Explorer",
           wellPanel(plotOutput("curves2",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
           )
          ),
-         conditionalPanel(length(modelLst)>2,
+         conditionalPanel(length(Out$modelLst)>2,
          fluidRow(
           column(4,
           wellPanel(
@@ -283,7 +289,7 @@ ui=navbarPage("Respones Curve Explorer",
           wellPanel(plotOutput("curves3",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
           )
          ),
-         conditionalPanel(length(modelLst)>3,
+         conditionalPanel(length(Out$modelLst)>3,
          fluidRow(
           column(4,
           wellPanel(
@@ -350,11 +356,11 @@ ui=navbarPage("Respones Curve Explorer",
         ),
         
         fluidRow(
-        lapply(1:length(Variables),function(i){
+        lapply(1:length(Out$Variables),function(i){
         column(1,uiOutput(paste0("slide",i)))
         })),
         fluidRow(
-        lapply(1:length(Variables),function(i){
+        lapply(1:length(Out$Variables),function(i){
         column(1,plotOutput(paste0("slideRsp",i),height=rspHgt))
         }))
         
@@ -372,13 +378,13 @@ ui=navbarPage("Respones Curve Explorer",
         mainPanel(
           fluidRow(
             column(3,
-                selectInput("FirstPredictor", choices=Variables,
-                  selected=Variables[1],label=h4("First Predictor"))),
+                selectInput("FirstPredictor", choices=Out$Variables,
+                  selected=Out$Variables[1],label=h4("First Predictor"))),
             column(3,    
-                selectInput("SecondPredictor", choices=Variables,
-                   selected=Variables[max(length(Variables),2)],label=h4("Second Predictor"))),
+                selectInput("SecondPredictor", choices=Out$Variables,
+                   selected=Out$Variables[max(length(Out$Variables),2)],label=h4("Second Predictor"))),
             column(3,    
-                selectInput("Model", choices=c("All",unlist(modelLst)),label=h4("Model")))
+                selectInput("Model", choices=c("All",unlist(Out$modelLst)),label=h4("Model")))
            ),     
           wellPanel(
               plotOutput("interact"),
@@ -398,30 +404,3 @@ runApp(app)
 
 
 
-"roc" <-
-function (obsdat, preddat)
-{
-# code adapted from Ferrier, Pearce and Watson's code, by J.Elith
-#
-# see:
-# Hanley, J.A. & McNeil, B.J. (1982) The meaning and use of the area
-# under a Receiver Operating Characteristic (ROC) curve.
-# Radiology, 143, 29-36
-#
-# Pearce, J. & Ferrier, S. (2000) Evaluating the predictive performance
-# of habitat models developed using logistic regression.
-# Ecological Modelling, 133, 225-245.
-# this is the non-parametric calculation for area under the ROC curve,
-# using the fact that a MannWhitney U statistic is closely related to
-# the area
-#
-    if (length(obsdat) != length(preddat))
-        stop("obs and preds must be equal lengths")
-    n.x <- length(obsdat[obsdat == 0])
-    n.y <- length(obsdat[obsdat == 1])
-    xy <- c(preddat[obsdat == 0], preddat[obsdat == 1])
-    rnk <- rank(xy)
-    wilc <- ((n.x * n.y) + ((n.x * (n.x + 1))/2) - sum(rnk[1:n.x]))/(n.x *
-        n.y)
-    return(round(wilc, 4))
-}

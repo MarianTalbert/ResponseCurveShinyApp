@@ -4,7 +4,7 @@ sourceList<-list.files(ShinyCode,full.names=TRUE)
 unlist(lapply(as.list(sourceList),source))
 
 ChkLibs(list("rgeos","maptools","randomForest","mgcv","dismo","shiny","earth","PresenceAbsence",
-             "wesanderson","ggplot2","raster"))
+             "wesanderson","ggplot2","raster","grid","gridExtra","splines","RColorBrewer","plotly"))
 #=====================================================
 # This is almost directly from the dismo vignette 
  files <- list.files(path=paste(system.file(package="dismo"),
@@ -59,6 +59,7 @@ fitLst<-list(
 #===============================================================
 #    This is where the magic happens
 #
+#just for now returning the output so I can beautify my plots
 exploreCurves(fitLst,inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl)
 #
 #===============================================================
