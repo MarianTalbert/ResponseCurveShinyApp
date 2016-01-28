@@ -1,7 +1,7 @@
-ggpairs<-function(dat,numPlots=5){
+ggpairs<-function(dat,alph,pointSize){
 
   d<-data.frame(x=c(0,1),y=c(0,1))
-  pointSize<-ifelse(nrow(dat)>1000,1,3)
+  
   
   grid.newpage()
   pushViewport(viewport(layout=grid.layout((ncol(dat)-1),(ncol(dat)))))
@@ -10,27 +10,35 @@ ggpairs<-function(dat,numPlots=5){
   
   dat[,ncol(dat)]<-as.numeric(as.character(dat[,ncol(dat)])) 
   for(j in 1:(ncol(dat)-1)){
-    print(ggplot(dat, aes_q(x = as.name(names(dat)[j]), 
-                      y =as.name(names(dat)[ncol(dat)]),
-                      colour=as.name(names(dat)[ncol(dat)]))) + 
-      geom_point(alpha=.2) +
-      stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 2))+
+    respPlt<-ggplot(dat, aes_q(x = as.name(names(dat)[j]), 
+                               y =as.name(names(dat)[ncol(dat)]),
+                               colour=as.name(names(dat)[ncol(dat)]))) + 
+      geom_point(alpha=alph) +
+      stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 3))+
       scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
       theme(panel.grid.minor=element_blank(),
             panel.grid.major=element_blank(),plot.margin=unit(c(0,0,0,0),"mm"))+
-      xlab(names(dat)[j])+ylab("response")+scale_y_continuous(breaks=NULL), 
+      xlab("")+ylab("")+scale_y_continuous(breaks=NULL)
+    
+    if(j==1) respPlt<-respPlt+ggtitle("Response")
+    
+    print(respPlt, 
       vp=vplayout(j,1))
   }
   
   dat[,ncol(dat)]<-as.factor(dat[,ncol(dat)]) 
   for(i in 1:(ncol(dat)-1)){
-  
-  print(qplot(dat[,i],
-              geom="histogram",
-              xlab = names(dat)[i], 
-              ylab = "",  
-              fill=I("blue"))+scale_y_discrete(breaks=NULL)+scale_x_discrete(breaks=NULL)+
-              theme(plot.margin=unit(c(0,0,0,0),"mm")),
+
+    hst<-ggplot(dat,
+                aes_q(x=as.name(names(dat[i]))))+
+                geom_histogram(fill="blue")+theme(plot.margin=unit(c(0,0,0,0),"mm"))+
+     scale_y_discrete(breaks=NULL)+scale_x_continuous(breaks=NULL)
+    if(i!=1) hst<-hst+ylab("")
+    if(i==1) hst<-hst+ylab(names(dat[i]))
+    if(i!=(ncol(dat)-1)) hst<-hst+xlab("")
+     #title(names(dat[i]))              
+     
+  print(hst,
         vp=vplayout(i,i+1))
   #pairs plot below the diagonal
     if(i>1){
@@ -39,10 +47,12 @@ ggpairs<-function(dat,numPlots=5){
     g<-ggplot(dat, 
            aes_q(x = as.name(names(dat)[j]), 
                  y = as.name(names(dat)[i]),
-                 colour=as.name(names(dat)[ncol(dat)])))+ geom_point(size=pointSize, alpha = .2)+
+                 colour=as.name(names(dat)[ncol(dat)])))+ geom_point(size=pointSize, alpha = alph)+
                  scale_color_manual(values=c("blue","red"))+ theme(legend.position = 'none')+
                  theme(panel.grid.minor=element_blank(),panel.grid.major=element_blank(),
-                 plot.margin=unit(c(0,0,0,0),"mm"))+theme(axis.text.y = element_text(angle = 90, hjust = 1))+
+                 plot.margin=unit(c(0,0,0,0),"mm"))+ 
+                 theme(axis.text.y = element_text(angle = 90, hjust = 1,face="bold"))+
+                 theme(axis.text.x = element_text(face="bold"))+  
                  scale_y_discrete(breaks=NULL)
     if(j!=1) g<-g+ylab("")
     if(i!=(ncol(dat)-1)) g<-g+ scale_x_discrete(breaks=NULL)+xlab("")
