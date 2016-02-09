@@ -1,4 +1,4 @@
-ggpairs<-function(dat,numPlots=5){
+ggpairs<-function(dat,alph,pointSize,DevScore){
 
   d<-data.frame(x=c(0,1),y=c(0,1))
   pointSize<-ifelse(nrow(dat)>1000,1,3)
@@ -17,20 +17,23 @@ ggpairs<-function(dat,numPlots=5){
       stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 2))+
       scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
       theme(panel.grid.minor=element_blank(),
-            panel.grid.major=element_blank(),plot.margin=unit(c(0,0,0,0),"mm"))+
-      xlab(names(dat)[j])+ylab("response")+scale_y_continuous(breaks=NULL), 
+            panel.grid.major=element_blank(),plot.margin=unit(c(3,4,4,4),"mm"),
+            axis.text=element_text(size=rel(1.3)),
+            axis.title=element_text(size=rel(1.5)))+
+      xlab(names(dat)[j])+ggtitle(paste(ifelse(DevScore$GamRan[j],"GAM","GLM"), "% Dev Expl",DevScore$devExp[j]))+
+        ylab("Response")+scale_y_continuous(breaks=NULL),
       vp=vplayout(j,1))
   }
   
   dat[,ncol(dat)]<-as.factor(dat[,ncol(dat)]) 
   for(i in 1:(ncol(dat)-1)){
-  
+  #histogram on the diagonal
   print(qplot(dat[,i],
               geom="histogram",
               xlab = names(dat)[i], 
               ylab = "",  
               fill=I("blue"))+scale_y_discrete(breaks=NULL)+scale_x_discrete(breaks=NULL)+
-              theme(plot.margin=unit(c(0,0,0,0),"mm")),
+              theme(plot.margin=unit(c(0,0,0,0),"mm"),axis.title=element_text(size=rel(1.5))),
         vp=vplayout(i,i+1))
   #pairs plot below the diagonal
     if(i>1){
@@ -42,6 +45,7 @@ ggpairs<-function(dat,numPlots=5){
                  colour=as.name(names(dat)[ncol(dat)])))+ geom_point(size=pointSize, alpha = .2)+
                  scale_color_manual(values=c("blue","red"))+ theme(legend.position = 'none')+
                  theme(panel.grid.minor=element_blank(),panel.grid.major=element_blank(),
+                       axis.title=element_text(size=rel(1.5))
                  plot.margin=unit(c(0,0,0,0),"mm"))+theme(axis.text.y = element_text(angle = 90, hjust = 1))+
                  scale_y_discrete(breaks=NULL)
     if(j!=1) g<-g+ylab("")

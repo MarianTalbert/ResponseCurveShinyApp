@@ -31,11 +31,11 @@ ggpairs<-function(dat,alph,pointSize){
 
     hst<-ggplot(dat,
                 aes_q(x=as.name(names(dat[i]))))+
-                geom_histogram(fill="blue")+theme(plot.margin=unit(c(0,0,0,0),"mm"))+
-     scale_y_discrete(breaks=NULL)+scale_x_continuous(breaks=NULL)
+                geom_histogram(fill="blue")+theme(plot.margin=unit(c(0,0,3,0),"mm"))+
+     scale_y_discrete(breaks=NULL)+scale_x_continuous(breaks=NULL)+xlab("")
     if(i!=1) hst<-hst+ylab("")
-    if(i==1) hst<-hst+ylab(names(dat[i]))
-    if(i!=(ncol(dat)-1)) hst<-hst+xlab("")
+    if(i==1) hst<-hst+ylab(names(dat[i]))+ggtitle(names(dat[i]))
+    
      #title(names(dat[i]))              
      
   print(hst,
@@ -50,12 +50,12 @@ ggpairs<-function(dat,alph,pointSize){
                  colour=as.name(names(dat)[ncol(dat)])))+ geom_point(size=pointSize, alpha = alph)+
                  scale_color_manual(values=c("blue","red"))+ theme(legend.position = 'none')+
                  theme(panel.grid.minor=element_blank(),panel.grid.major=element_blank(),
-                 plot.margin=unit(c(0,0,0,0),"mm"))+ 
+                 plot.margin=unit(c(0,0,3,0),"mm"))+ 
                  theme(axis.text.y = element_text(angle = 90, hjust = 1,face="bold"))+
                  theme(axis.text.x = element_text(face="bold"))+  
                  scale_y_discrete(breaks=NULL)
     if(j!=1) g<-g+ylab("")
-    if(i!=(ncol(dat)-1)) g<-g+ scale_x_discrete(breaks=NULL)+xlab("")
+    if(i!=1) g<-g+ scale_x_discrete(breaks=NULL)+xlab("")
     print(g,vp=vplayout(i,j+1))             
     }  
   }
@@ -66,17 +66,18 @@ ggpairs<-function(dat,alph,pointSize){
       for(j in (i+1):(ncol(dat)-1)){
         Cor<-cor(dat[,i],dat[,j])
         ColIndx<-cut(abs(Cor),breaks=c(0,seq(from=.6,to=1,length=length(Cols))))
-        print(
-          ggplot(d,  aes(x = x, y = y))+ geom_blank()+
-                       theme(panel.background = element_rect(fill = Cols[ColIndx]))+
-                       theme(panel.grid.major = element_line(colour = Cols[ColIndx]))+
-                       theme(panel.grid.minor = element_line(colour = Cols[ColIndx]),
-                       plot.margin=unit(c(0,0,0,0),"mm"))+
-                       ylab("")+xlab("")+scale_x_continuous(breaks=NULL)+
-                       scale_y_continuous(breaks=NULL)+
-                       annotate("text", label= round(Cor,digits=2), x=.5, y=.5,
-                                size=15*abs(Cor)),
-            vp=vplayout(i,j+1))
+        colPlot<-ggplot(d,  aes(x = x, y = y))+ geom_blank()+
+          theme(panel.background = element_rect(fill = Cols[ColIndx]))+
+          theme(panel.grid.major = element_line(colour = Cols[ColIndx]))+
+          theme(panel.grid.minor = element_line(colour = Cols[ColIndx]),
+                plot.margin=unit(c(0,0,3,0),"mm"))+
+          ylab("")+xlab("")+scale_x_continuous(breaks=NULL)+
+          scale_y_continuous(breaks=NULL)+
+          annotate("text", label= round(Cor,digits=2), x=.5, y=.5,
+                   size=15*abs(Cor))
+        if(i==1) colPlot<-colPlot+ggtitle(names(dat)[j])
+        
+        print(colPlot,vp=vplayout(i,j+1))
       }  
     }
   }
