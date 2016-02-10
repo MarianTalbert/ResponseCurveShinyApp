@@ -16,21 +16,26 @@ correlationViewer<-function(sdmdata,layerStk,Threshld=.7){
   TotalCors<-apply(Cors,2,sum)
   dat<-dat[,c(order(TotalCors,decreasing=TRUE),ncol(dat))]
   
-  choices<-names(dat)[-c(ncol(dat))]
+  choices<-paste(names(dat)[-c(ncol(dat))]," (","Percent Deviance Explained ",DevScore$devExp,"%)",sep="")
 #maybe put in app eventually                   
 app <- shinyApp(
     ui = navbarPage("Input Data Explorer",
       tabPanel("Correlation Filtering",
         sidebarLayout(
             sidebarPanel(
-              numericInput("threshld","Threshold for counting correlations" , value=.7,
-                           min=.4,max=1),  
+              radioButtons(inputId="sortBy","Sort by:",c("Total correlations with other variables"="TotCors",
+                                                        "Univariate percent deviance explained"="Dev")),
+              helpText("Variables by default are sorted based on the total correlations",
+                       "with other selected variables that are being considered",
+                       "Selecting Sort by percent deviance explained orders the variables",
+                       "based on the percent deviance explained in a univariate GAM model."),
+              uiOutput("varChoices"),
+              #checkboxGroupInput('chkGrp', 'Variables to include', choices=choices,selected=choices),
               numericInput("numPlts","Number of variables to display" , 5),
-              helpText("Variables are sorted based on the total correlations",
-                       "with other selected variables that are being considered"),
-              checkboxGroupInput('chkGrp', 'Variables to include', choices=choices,selected=choices),
               sliderInput("pointSize","Scatterplot point size",min=.05,max=6,value=1),
-              sliderInput("alpha","Scatterplot point transparency",min=.05,max=1,value=.7)
+              sliderInput("alpha","Scatterplot point transparency",min=.05,max=1,value=.7),
+              numericInput("threshld","Threshold for counting correlations" , value=.7,
+                           min=.4,max=1)
           ),
           mainPanel(
             plotOutput("parisPlot",height=1000,width=1000)
@@ -61,17 +66,43 @@ app <- shinyApp(
      ))  
     ),
     server = function(input, output) {
-     
+      values<-reactiveValues(orderVar=TotalCors,
+                             dat=dat,
+                             devExp=DevScore$devExp,
+                             TotCors=TotalCors)
+      
+      observeEvent(input$sortBy,{
+        
+        if(input$sortBy=="TotCors") o<-order(values$TotCors,decreasing=TRUE)
+        else o<-order(values$devExp,decreasing=TRUE)
+          values$dat<-dat[,c(o,ncol(dat))]
+          values$devExp<-values$devExp[o]
+          values$TotCors<-values$TotCors[o]
+      }) 
+      
+      output$varChoices <- renderUI({
+        choices<-paste(names(values$dat)[-c(ncol(values$dat))],
+                               " (","Percent Deviance Explained ",values$devExp,"%)",sep="")
+        checkboxGroupInput('chkGrp', 'Variables to include', choices=choices,selected=choices)
+ 
+      })
+  
       output$parisPlot <- renderPlot({
-          varsToUse<-input$chkGrp
-          d<-dat[,c(match(varsToUse,names(dat)))]
+          #split off the percent deviance explained
+          spltDat<-strsplit(input$chkGrp," ")
+          varsToUse<-unlist(lapply(spltDat,"[",1))
+          d<-values$dat[,c(match(varsToUse,names(values$dat)))]
+          
           if(input$numPlts<(ncol(d))) d<-d[,(1:input$numPlts)]
-          d<-cbind(d,resp=dat[,ncol(dat)])
+          d<-cbind(d,resp=values$dat[,ncol(values$dat)])
         ggpairs(dat=d,alph=input$alpha,pointSize=input$pointSize,DevScore=DevScore)
        })
+      
+      isolate(InputVar<-strsplit(input$InptVar," ")[[1]][1])
+      
       output$VarMap<-renderPlot({
         par(oma=c(0,0,0,0),mar=c(2,2,2,2))
-        plot(layerStk, match(input$InptVar,names(layerStk)))
+        plot(layerStk, match(InputVar,names(layerStk)))
         #probably use a choice of maps here
         plot(wrld_simpl, add=TRUE,cex.main=3)
         if(!is.null(input$showTrain)){
@@ -85,11 +116,13 @@ app <- shinyApp(
                                                   col="dodgerblue", bg="blue",pch=21,cex=input$mpPtSz)
         }      
       })
+      
+                              
     output$Gam<-renderPlot({
-      varNum<-match(input$InptVar,names(dat))
-      respPlt<-ggplot(dat, aes_q(x = as.name(input$InptVar), 
+      varNum<-match(InputVar,names(values$dat))
+      respPlt<-ggplot(values$dat, aes_q(x = as.name(InputVar), 
                                  y =as.name("resp"),
-                                 colour=as.name(input$InptVar))) + 
+                                 colour=as.name(InputVar))) + 
         geom_point(alpha=.4) +
         stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 2))+
         scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
@@ -102,8 +135,8 @@ app <- shinyApp(
     })
     output$Hist<-renderPlot({
       
-      ggplot(dat, aes_q(x=as.name(input$InptVar),
-                        fill=as.factor(dat$resp)))+
+      ggplot(values$dat, aes_q(x=as.name(InputVar),
+                        fill=as.factor(values$dat$resp)))+
         geom_histogram()+theme(plot.margin=unit(c(0,0,0,0),"mm"))+
         scale_fill_manual(values=c("blue","red"),name="Response")+
         scale_y_discrete(breaks=NULL)+scale_x_continuous(breaks=NULL)
