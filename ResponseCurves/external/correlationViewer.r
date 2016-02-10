@@ -23,19 +23,13 @@ app <- shinyApp(
       tabPanel("Correlation Filtering",
         sidebarLayout(
             sidebarPanel(
-              radioButtons(inputId="sortBy","Sort by:",c("Total correlations with other variables"="TotCors",
-                                                        "Univariate percent deviance explained"="Dev")),
-              helpText("Variables by default are sorted based on the total correlations",
-                       "with other selected variables that are being considered",
-                       "Selecting Sort by percent deviance explained orders the variables",
-                       "based on the percent deviance explained in a univariate GAM model."),
+              radioButtons(inputId="sortBy","Sort by:",c("Total high correlations with other variables being considered"="TotCors",
+                                                        "Percent deviance explained in a univariate GAM model"="Dev")),
               uiOutput("varChoices"),
-              #checkboxGroupInput('chkGrp', 'Variables to include', choices=choices,selected=choices),
+              checkboxInput("showRespGam","Show GAM fit each predictor with the Response",value=FALSE),
               numericInput("numPlts","Number of variables to display" , 5),
               sliderInput("pointSize","Scatterplot point size",min=.05,max=6,value=1),
-              sliderInput("alpha","Scatterplot point transparency",min=.05,max=1,value=.7),
-              numericInput("threshld","Threshold for counting correlations" , value=.7,
-                           min=.4,max=1)
+              sliderInput("alpha","Scatterplot point transparency",min=.05,max=1,value=.7)
           ),
           mainPanel(
             plotOutput("parisPlot",height=1000,width=1000)
@@ -45,7 +39,7 @@ app <- shinyApp(
      tabPanel("Variable Plot",
         sidebarLayout(
           sidebarPanel(
-            radioButtons('InptVar', 'Variable', choices=choices),
+            uiOutput("oneVarChoice"),
             checkboxGroupInput("showTrain","Show Calibrarion Data",
                                c("add presence points"="showPres",
                                  "add absence/background points"="showAbs")),
@@ -73,11 +67,11 @@ app <- shinyApp(
       
       observeEvent(input$sortBy,{
         
-        if(input$sortBy=="TotCors") o<-order(values$TotCors,decreasing=TRUE)
-        else o<-order(values$devExp,decreasing=TRUE)
+        if(input$sortBy=="TotCors") o<-order(TotalCors,decreasing=TRUE)
+        else o<-order(DevScore$devExp,decreasing=TRUE)
           values$dat<-dat[,c(o,ncol(dat))]
-          values$devExp<-values$devExp[o]
-          values$TotCors<-values$TotCors[o]
+          values$devExp<-DevScore$devExp[o]
+          values$TotCors<-TotalCors[o]
       }) 
       
       output$varChoices <- renderUI({
@@ -85,6 +79,12 @@ app <- shinyApp(
                                " (","Percent Deviance Explained ",values$devExp,"%)",sep="")
         checkboxGroupInput('chkGrp', 'Variables to include', choices=choices,selected=choices)
  
+      })
+      
+      output$oneVarChoice <- renderUI({
+        choices<-paste(names(values$dat)[-c(ncol(values$dat))],
+                       " (","Percent Deviance Explained ",values$devExp,"%)",sep="")
+       radioButtons('InptVar', 'Variable', choices=choices)
       })
   
       output$parisPlot <- renderPlot({
@@ -95,12 +95,13 @@ app <- shinyApp(
           
           if(input$numPlts<(ncol(d))) d<-d[,(1:input$numPlts)]
           d<-cbind(d,resp=values$dat[,ncol(values$dat)])
-        ggpairs(dat=d,alph=input$alpha,pointSize=input$pointSize,DevScore=DevScore)
+        ggpairs(dat=d,alph=input$alpha,pointSize=input$pointSize,DevScore=DevScore,showResp=input$showRespGam)
        })
       
-      isolate(InputVar<-strsplit(input$InptVar," ")[[1]][1])
+      
       
       output$VarMap<-renderPlot({
+        InputVar<-strsplit(input$InptVar," ")[[1]][1]
         par(oma=c(0,0,0,0),mar=c(2,2,2,2))
         plot(layerStk, match(InputVar,names(layerStk)))
         #probably use a choice of maps here
@@ -119,6 +120,7 @@ app <- shinyApp(
       
                               
     output$Gam<-renderPlot({
+      InputVar<-strsplit(input$InptVar," ")[[1]][1]
       varNum<-match(InputVar,names(values$dat))
       respPlt<-ggplot(values$dat, aes_q(x = as.name(InputVar), 
                                  y =as.name("resp"),
@@ -134,7 +136,7 @@ app <- shinyApp(
       respPlt
     })
     output$Hist<-renderPlot({
-      
+      InputVar<-strsplit(input$InptVar," ")[[1]][1]
       ggplot(values$dat, aes_q(x=as.name(InputVar),
                         fill=as.factor(values$dat$resp)))+
         geom_histogram()+theme(plot.margin=unit(c(0,0,0,0),"mm"))+

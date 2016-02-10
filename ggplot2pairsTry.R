@@ -1,30 +1,30 @@
-ggpairs<-function(dat,alph,pointSize,DevScore){
+ggpairs<-function(dat,alph,pointSize,DevScore,showResp){
 
   d<-data.frame(x=c(0,1),y=c(0,1))
   pointSize<-ifelse(nrow(dat)>1000,1,3)
-  
+  offset<-ifelse(showResp,1,0)
   grid.newpage()
   pushViewport(viewport(layout=grid.layout((ncol(dat)-1),(ncol(dat)))))
   vplayout<- function(x,y)
     viewport(layout.pos.row=x, layout.pos.col=y)
-  
-  dat[,ncol(dat)]<-as.numeric(as.character(dat[,ncol(dat)])) 
-  for(j in 1:(ncol(dat)-1)){
-    print(ggplot(dat, aes_q(x = as.name(names(dat)[j]), 
-                      y =as.name(names(dat)[ncol(dat)]),
-                      colour=as.name(names(dat)[ncol(dat)]))) + 
-      geom_point(alpha=.2) +
-      stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 2))+
-      scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
-      theme(panel.grid.minor=element_blank(),
-            panel.grid.major=element_blank(),plot.margin=unit(c(3,4,4,4),"mm"),
-            axis.text=element_text(size=rel(1.3)),
-            axis.title=element_text(size=rel(1.5)))+
-      xlab(names(dat)[j])+ggtitle(paste(ifelse(DevScore$GamRan[j],"GAM","GLM"), "% Dev Expl",DevScore$devExp[j]))+
-        ylab("Response")+scale_y_continuous(breaks=NULL),
-      vp=vplayout(j,1))
+  if(showResp){
+      dat[,ncol(dat)]<-as.numeric(as.character(dat[,ncol(dat)])) 
+      for(j in 1:(ncol(dat)-1)){
+        print(ggplot(dat, aes_q(x = as.name(names(dat)[j]), 
+                          y =as.name(names(dat)[ncol(dat)]),
+                          colour=as.name(names(dat)[ncol(dat)]))) + 
+          geom_point(alpha=.2) +
+          stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 2))+
+          scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
+          theme(panel.grid.minor=element_blank(),
+                panel.grid.major=element_blank(),plot.margin=unit(c(3,4,4,4),"mm"),
+                axis.text=element_text(size=rel(1.3)),
+                axis.title=element_text(size=rel(1.5)))+
+          xlab(names(dat)[j])+ggtitle(paste(ifelse(DevScore$GamRan[j],"GAM","GLM"), "% Dev Expl",DevScore$devExp[j]))+
+            ylab("Response")+scale_y_continuous(breaks=NULL),
+          vp=vplayout(j,1))
+      }
   }
-  
   dat[,ncol(dat)]<-as.factor(dat[,ncol(dat)]) 
   for(i in 1:(ncol(dat)-1)){
   #histogram on the diagonal
@@ -34,7 +34,7 @@ ggpairs<-function(dat,alph,pointSize,DevScore){
               ylab = "",  
               fill=I("blue"))+scale_y_discrete(breaks=NULL)+scale_x_discrete(breaks=NULL)+
               theme(plot.margin=unit(c(0,0,0,0),"mm"),axis.title=element_text(size=rel(1.5))),
-        vp=vplayout(i,i+1))
+        vp=vplayout(i,i+offset))
   #pairs plot below the diagonal
     if(i>1){
     for(j in 1:(i-1)){ 
@@ -44,13 +44,15 @@ ggpairs<-function(dat,alph,pointSize,DevScore){
                  y = as.name(names(dat)[i]),
                  colour=as.name(names(dat)[ncol(dat)])))+ geom_point(size=pointSize, alpha = .2)+
                  scale_color_manual(values=c("blue","red"))+ theme(legend.position = 'none')+
-                 theme(panel.grid.minor=element_blank(),panel.grid.major=element_blank(),
-                       axis.title=element_text(size=rel(1.5))
-                 plot.margin=unit(c(0,0,0,0),"mm"))+theme(axis.text.y = element_text(angle = 90, hjust = 1))+
+                 theme(panel.grid.minor=element_blank(),
+                       panel.grid.major=element_blank(),
+                       axis.title=element_text(size=rel(1.5)),
+                       plot.margin=unit(c(0,0,0,0),"mm"),
+                       axis.text.y = element_text(angle = 90, hjust = 1))+
                  scale_y_discrete(breaks=NULL)
     if(j!=1) g<-g+ylab("")
     if(i!=(ncol(dat)-1)) g<-g+ scale_x_discrete(breaks=NULL)+xlab("")
-    print(g,vp=vplayout(i,j+1))             
+    print(g,vp=vplayout(i,j+offset))             
     }  
   }
   #color above the diagonal
@@ -70,7 +72,7 @@ ggpairs<-function(dat,alph,pointSize,DevScore){
                        scale_y_continuous(breaks=NULL)+
                        annotate("text", label= round(Cor,digits=2), x=.5, y=.5,
                                 size=15*abs(Cor)),
-            vp=vplayout(i,j+1))
+            vp=vplayout(i,j+offset))
       }  
     }
   }
