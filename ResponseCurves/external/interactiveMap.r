@@ -16,13 +16,14 @@ interactiveMap <- function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,b
 
     par(oma=c(0,0,0,0),mar=c(0,0,2,0),xpd=FALSE) 
     
-    if(input$mapType=="mprob") plot(predictedStk,i,maxpixels=60000,col=Colors,xaxt="n",yaxt="n",bty="n",legend=Legend,
+    if(input$mapType=="mprob") plot(predictedStk,i,maxpixels=60000,breaks=pretty(c(min(minValue(predictedStk)),max(maxValue(predictedStk))),13),
+                                    col=rev(inferno(12,begin=0,end=1,alpha=.8)),xaxt="n",yaxt="n",bty="n",legend=Legend,
                                     alpha=alpha,cex.main=1.7)
     if(input$mapType=="mbinary") plot(binaryStk,i,maxpixels=60000,xaxt="n",yaxt="n",bty="n",legend=Legend,
-                                      alpha=alpha,
+                                      alpha=alpha,col=rev(magma(12,begin=.4,end=1,alpha=.8)),
                                       cex.main=1.7)
-    if(input$mapType=="mess"){ plot(messRast,maxpixels=60000,col=colorRampPalette(c("magenta","white","green"))(21),
-                                   breaks=pretty(c(-100,100),22),xaxt="n",yaxt="n",bty="n",legend=Legend,alpha=alpha,
+    if(input$mapType=="mess"){ plot(messRast,maxpixels=60000,col=colorRampPalette(c("purple4","white","darkgreen"))(12),
+                                   breaks=pretty(c(-100,100),13),xaxt="n",yaxt="n",bty="n",legend=Legend,alpha=alpha,
                                    cex.main=1.7,main="Multivariate Environmental Similary Surface")
     }
     if(class(boundary)=="SpatialPolygonsDataFrame") plot(boundary,add=TRUE)
@@ -30,8 +31,8 @@ interactiveMap <- function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,b
     XYdat <- as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
     if(!is.null(input$showTrain)){
       
-      if("showPres"%in%input$showTrain) points(x=PresCoords[,1],y=PresCoords[,2],pch=21,col="white",bg="red")
-      if("showAbs"%in%input$showTrain) points(x=AbsCoords[,1],y=AbsCoords[,2],pch=21,col="white",bg="blue")
+      if("showPres"%in%input$showTrain) points(x=PresCoords[,1],y=PresCoords[,2],pch=21,col="red",bg="red4")
+      if("showAbs"%in%input$showTrain) points(x=AbsCoords[,1],y=AbsCoords[,2],pch=21,col="dodgerblue",bg="blue4")
     } 
     if((any(!is.na(XYdat)))){
       

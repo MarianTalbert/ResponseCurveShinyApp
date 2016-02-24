@@ -1,31 +1,32 @@
-ggpairs<-function(dat,alph,pointSize){
+ggpairs<-function(dat,alph,pointSize,DevScore,showResp){
 
   d<-data.frame(x=c(0,1),y=c(0,1))
   
-  
+ colOffset<-ifelse(showResp,1,0) 
   grid.newpage()
-  pushViewport(viewport(layout=grid.layout((ncol(dat)-1),(ncol(dat)))))
+  pushViewport(viewport(layout=grid.layout((ncol(dat)-1),(ncol(dat)-1+colOffset))))
   vplayout<- function(x,y)
     viewport(layout.pos.row=x, layout.pos.col=y)
   
   dat[,ncol(dat)]<-as.numeric(as.character(dat[,ncol(dat)])) 
+  if(showResp){
   for(j in 1:(ncol(dat)-1)){
-    respPlt<-ggplot(dat, aes_q(x = as.name(names(dat)[j]), 
-                               y =as.name(names(dat)[ncol(dat)]),
-                               colour=as.name(names(dat)[ncol(dat)]))) + 
-      geom_point(alpha=alph) +
-      stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 3))+
-      scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
-      theme(panel.grid.minor=element_blank(),
-            panel.grid.major=element_blank(),plot.margin=unit(c(0,0,0,0),"mm"))+
-      xlab("")+ylab("")+scale_y_continuous(breaks=NULL)
-    
-    if(j==1) respPlt<-respPlt+ggtitle("Response")
-    
-    print(respPlt, 
-      vp=vplayout(j,1))
+      respPlt<-ggplot(dat, aes_q(x = as.name(names(dat)[j]), 
+                                 y =as.name(names(dat)[ncol(dat)]),
+                                 colour=as.name(names(dat)[ncol(dat)]))) + 
+        geom_point(alpha=alph) +
+        stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 3))+
+        scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
+        theme(panel.grid.minor=element_blank(),
+              panel.grid.major=element_blank(),plot.margin=unit(c(0,0,0,0),"mm"))+
+        xlab("")+ylab("")+scale_y_continuous(breaks=NULL)
+      
+      if(j==1) respPlt<-respPlt+ggtitle("Response")
+      
+      print(respPlt, 
+        vp=vplayout(j,1))
+    }
   }
-  
   dat[,ncol(dat)]<-as.factor(dat[,ncol(dat)]) 
   for(i in 1:(ncol(dat)-1)){
 
@@ -39,7 +40,7 @@ ggpairs<-function(dat,alph,pointSize){
      #title(names(dat[i]))              
      
   print(hst,
-        vp=vplayout(i,i+1))
+        vp=vplayout(i,i+colOffset))
   #pairs plot below the diagonal
     if(i>1){
     for(j in 1:(i-1)){ 
@@ -56,7 +57,7 @@ ggpairs<-function(dat,alph,pointSize){
                  scale_y_discrete(breaks=NULL)
     if(j!=1) g<-g+ylab("")
     if(i!=1) g<-g+ scale_x_discrete(breaks=NULL)+xlab("")
-    print(g,vp=vplayout(i,j+1))             
+    print(g,vp=vplayout(i,j+colOffset))             
     }  
   }
   #color above the diagonal
@@ -77,7 +78,7 @@ ggpairs<-function(dat,alph,pointSize){
                    size=15*abs(Cor))
         if(i==1) colPlot<-colPlot+ggtitle(names(dat)[j])
         
-        print(colPlot,vp=vplayout(i,j+1))
+        print(colPlot,vp=vplayout(i,j+colOffset))
       }  
     }
   }

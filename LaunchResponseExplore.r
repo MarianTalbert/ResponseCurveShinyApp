@@ -4,7 +4,7 @@ sourceList<-list.files(ShinyCode,full.names=TRUE)
 unlist(lapply(as.list(sourceList),source))
 
 ChkLibs(list("rgeos","maptools","randomForest","mgcv","dismo","shiny","earth","PresenceAbsence",
-             "wesanderson","ggplot2","raster","grid","gridExtra","splines","RColorBrewer","plotly"))
+             "wesanderson","ggplot2","raster","grid","gridExtra","splines","RColorBrewer","plotly","viridis"))
 #=====================================================
 # This is almost directly from the dismo vignette 
  files <- list.files(path=paste(system.file(package="dismo"),
@@ -50,13 +50,11 @@ fitLst<-list(
                        nodesize = 30),
  GAM_Model=gam(pb ~ 1+s(bio1,k=-1) + s(bio5,k=-1) + s(bio12,k=-1) + s(bio7,k=2), data=sdmdata,family=binomial)
  )
- 
-
-#
-#This "responseInput" name absolutely can't be changed in the current working version.
-#This is a bit ugly but I'm not sure what do do I'd like to hide the complexity and it's 
-#Generally poor form to assign to the global envt and the runApp needs a consistent input format  
-#===============================================================
+c('GLM','GBM','GAM','CTA','ANN','SRE','FDA','MARS','RF','MAXENT') 
+nn<-nnet(as.factor(pb)~ bio1 + bio5 + bio12+ bio7, data=sdmdata,size=25)
+predict(nn) #this works but the "response" arg in my predict will break it
+#look at caret package tomorrow for streamlining this sort of thing
+#=============================================================
 #    This is where the magic happens
 #
 #just for now returning the output so I can beautify my plots

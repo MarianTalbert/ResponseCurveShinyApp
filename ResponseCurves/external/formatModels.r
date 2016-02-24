@@ -1,4 +1,4 @@
-formatModels <- function(fitLst,inputLayers,data,threshold,...){
+formatModels <- function(fitLst,inputLayers,data,threshold){
           
   #putting together all of the global input needed by both the server and ui fcts
   predictedStk<-varImp<-predictedVals<-binaryVals<-varIncluded<-Thresh<-binaryStk<-Stats<-cmxPlot<-list()
@@ -75,8 +75,8 @@ formatModels <- function(fitLst,inputLayers,data,threshold,...){
    
   }
 
-  EnsemblePred<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean)
-  EnsembleBin<-stackApply(binaryStk,indices=rep(1,times=length(fitLst)),fun=sum)
+  EnsemblePred<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean,na.rm=FALSE)
+  EnsembleBin<-stackApply(binaryStk,indices=rep(1,times=length(fitLst)),fun=sum,na.rm=FALSE)
   predictedStk<-addLayer(predictedStk,EnsemblePred)
   binaryStk<-addLayer(binaryStk,EnsembleBin)
   

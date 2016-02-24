@@ -18,7 +18,7 @@ calcStat <- function(pred,resp,Split,thresh){
             
             devResid[is.nan(devResid)] <- NA
         
-            return(list(AUC=auc.fit,Cmx=cmx,ProportionCorrectlyClassified=PCC,Sensitivity=SENS,
+            return(list(AUC=auc.fit,Cmx=cmx,PCC=PCC,Sensitivity=SENS,
                 Specificity=SPEC,Kappa=KAPPA,TrueSkillStatistic=TSS,devResid=devResid))
         
     }

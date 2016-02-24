@@ -3,7 +3,7 @@ interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y,dat,resp,mo
         VarNames<-names(dat)
         biomd=inherits(fitLst,"BIOMOD.models.out") 
         if(!biomd) fitLst=fitLst[[modelIndx]]
-        Col=Colors
+        Col=rev(inferno(256,begin=.1,end=1))
 
         myPredict <- function (x, y, ...) { 
           out <- predict(x, y, type='response', args=c("outputformat=logistic"), ...);
