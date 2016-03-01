@@ -45,7 +45,7 @@ formatModels <- function(fitLst,inputLayers,data,threshold){
   }
  
   for(i in 1:length(modelLst)){
-    if(!Biomd){ predictedVals[[i]]<-predictBinary(fitLst[[i]],dat)
+    if(!Biomd){ predictedVals[[i]]<-predictBinary(fitLst[[i]],newdata=dat)
     if(inherits(fitLst[[i]],"randomForest")){
       #because of the distinction between oob prediction and in bag prediction
       #we end up with two sets of predicted vals for rf 
@@ -60,11 +60,12 @@ formatModels <- function(fitLst,inputLayers,data,threshold){
     
     Stats[[i]]<-calcStat(predictedVals[[i]],resp,Split,Thresh[[i]])
     if(i==1){ 
-      if(!Biomd) predictedStk<-predict(inputLayers,fitLst[[i]],type='response')
+      
+      if(!Biomd) predictedStk<-predict(model=fitLst[[i]],object=inputLayers,fun=predictBinary)
       binaryStk<-createBinary(predictedStk[[i]],Thresh[[i]])
       messRast<-mess(inputLayers,dat,full=FALSE) 
     }else{ 
-      if(!Biomd) predictedStk<-addLayer(predictedStk,predict(inputLayers,fitLst[[i]],type='response'))
+      if(!Biomd) predictedStk<-addLayer(predictedStk,predict(object=inputLayers,model=fitLst[[i]],fun=predictBinary))
       binaryStk<-addLayer(binaryStk,createBinary(predictedStk[[i]],Thresh[[i]]))
     }
     

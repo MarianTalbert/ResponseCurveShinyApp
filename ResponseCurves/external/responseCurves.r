@@ -48,8 +48,8 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
                               test<-as.data.frame(test)
                               test<-rbind(test,vals[v,])
                               colnames(test)<-names(means)
-                              if(biomd) Response<-predict(fitLst, test,model[[j]])
-                              else Response<-predict(fitLst[[j]], test,type='response')
+                              if(biomd) Response<-predictBinary(model=fitLst, newdata=test,model[[j]])
+                              else Response<-predictBinary(model=fitLst[[j]], newdata=test)
                               
                                lR<-length(Response)
                                if(Ensemble) RespMat[,v]<-Response[1:(lR-1)]

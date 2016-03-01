@@ -6,7 +6,7 @@ permutePredict<-function(dat,modelFit,resp){
       Dat<-dat
       Dat[,i]<-Dat[sample(1:dim(dat)[1]),i]
       options(warn=-1)
-      new.pred<-as.vector(predict(modelFit,Dat,type="response"))
+      new.pred<-as.vector(predictBinary(modelFit,Dat))
       #have to use ROC here because auc in presence absence incorrectly assumes auc will be greater than .5
       AUC[i,j]<-roc(resp,new.pred)
       options(warn=0)

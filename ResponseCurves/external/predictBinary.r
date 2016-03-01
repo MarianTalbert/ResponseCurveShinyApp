@@ -1,12 +1,15 @@
-predictBinary<-function(model,x){
+predictBinary<-function(model,...){
 #Written by Marian Talbert to predict a binary response
 #as some predict methods need extra args that I can't handle with just 
 #standard predict methods
 # x     = a data frame without the response column obviously
 # Model = one of mars, glm, rf, brt, maxlike at present 
-
  
-
+  if(inherits(model,"train")){
+    y<-predict.train(model,type="prob",...)[,2]
+    return(y)
+  }
+ 
   if(inherits(model,"randomForest")){
                       y <-predict(model,type="response")
                       y[y>=1] <- .99999999999999999
@@ -18,6 +21,7 @@ predictBinary<-function(model,x){
        return(y)
    }
   #default to standard predict
-  y<-predict(model,x,type='response')
+ 
+  y<-predict(model,type='response',...)
 return(y)
 }

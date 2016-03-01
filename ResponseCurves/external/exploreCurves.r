@@ -252,7 +252,7 @@ ui=navbarPage("Respones Curve Explorer",
               actionButton("resetNVals", label = "Reset explorer")
               )
         ),
-        #eventually add an option to show ensemble
+       
         conditionalPanel(TRUE,
                          fluidRow(
                            column(4,

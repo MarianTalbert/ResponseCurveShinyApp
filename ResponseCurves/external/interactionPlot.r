@@ -5,11 +5,6 @@ interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y,dat,resp,mo
         if(!biomd) fitLst=fitLst[[modelIndx]]
         Col=rev(inferno(256,begin=.1,end=1))
 
-        myPredict <- function (x, y, ...) { 
-          out <- predict(x, y, type='response', args=c("outputformat=logistic"), ...);
-          return (out)
-        }
-        
          mins  <- sapply(dat, min,  na.rm=TRUE)
          maxs  <- sapply(dat, max,  na.rm=TRUE)
          means <- sapply(dat, mean, na.rm=TRUE)
@@ -26,7 +21,7 @@ interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y,dat,resp,mo
          colnames(test) <- names(means)
          
          if(biomd) Response<-predict(fitLst, test,model)
-         else Response<-predict(fitLst, test,type='response')
+         else Response<-predictBinary(model=fitLst, newdata=test)
          z <- matrix(Response,ncol=n)
          nrz <- nrow(z)
          ncz <- ncol(z)
