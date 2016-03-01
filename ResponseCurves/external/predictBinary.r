@@ -6,6 +6,7 @@ predictBinary<-function(model,...){
 # Model = one of mars, glm, rf, brt, maxlike at present 
  
   if(inherits(model,"train")){
+    
     y<-predict.train(model,type="prob",...)[,2]
     return(y)
   }

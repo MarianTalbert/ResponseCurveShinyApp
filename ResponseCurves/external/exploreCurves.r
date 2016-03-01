@@ -6,7 +6,7 @@ cat("Press escape to exit the interactive widget\n")
  
 Out<-formatModels(fitLst,inputLayers,data,threshold=threshold)
 
-max_plots <- 5
+
 rspHgt <- c("150px","300px","450px","650px","800px")[min(5,length(Out$modelLst))]
 Cols <- c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
 cat("The interactive widget should come up momentarilly\n")
@@ -90,6 +90,25 @@ app <- shinyApp(
         ensemebleCurves(fitLst,Out$modelLst,dat=Out$dat,Cols=Cols,XYs=XYs,
                         varIncluded=Out$varIncluded,
                         varImp=Out$varImp,mapType=input$mapType)
+      })
+      #Putting the clickable maps together here because the number plots is dynamic
+      # Insert the right number of plot output objects into the web page
+      output$ClickMaps <- renderUI({
+        plot_output_list <- lapply(1:length(fitLst), function(i) {
+          plotMap <- paste("map", i, sep="")
+          plotCurves <- paste("curves", i, sep="")
+          fluidRow(
+            column(4,
+                   wellPanel(
+                     plotOutput(plotMap, click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
+            column(6,
+                   wellPanel(plotOutput(plotCurves,height="300px"),style="padding: 5px;"),style="padding: 5px;" )
+          )
+        })
+        
+        # Convert the list to a tagList - this is necessary for the list of items
+        # to display properly.
+        do.call(tagList, plot_output_list)
       })
  #============================
  # Evaluation Plot
@@ -263,44 +282,7 @@ ui=navbarPage("Respones Curve Explorer",
                            
                          )
         ),
-        # Insert the right number of plot output objects into the web page
-        fluidRow(
-          column(4,
-          wellPanel(
-          plotOutput("map1", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
-          column(6,
-          wellPanel(plotOutput("curves1",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
-          ),
-        conditionalPanel(length(Out$modelLst)>1,
-         fluidRow(
-          column(4,
-          wellPanel(
-          plotOutput("map2", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
-          column(6,
-          wellPanel(plotOutput("curves2",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
-          )
-         ),
-         conditionalPanel(length(Out$modelLst)>2,
-         fluidRow(
-          column(4,
-          wellPanel(
-          plotOutput("map3", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
-          column(6,
-          wellPanel(plotOutput("curves3",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
-          )
-         ),
-         conditionalPanel(length(Out$modelLst)>3,
-         fluidRow(
-          column(4,
-          wellPanel(
-          plotOutput("map4", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
-          column(6,
-          wellPanel(plotOutput("curves4",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
-          
-          )
-          )
-        
-        ),
+        uiOutput("ClickMaps")),
   #===============================================
   # ==========  Model Evaluation ==========#
         tabPanel("Model Evaluation",

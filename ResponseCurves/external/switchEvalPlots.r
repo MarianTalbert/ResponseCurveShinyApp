@@ -1,21 +1,21 @@
 switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Thresh,datNames,cexMult){
 #add calibration plot once it's fixed
-  
+  DiscColors<-c(rev(wes_palette("Cavalcanti")[c(1,2,4,5)]),wes_palette("GrandBudapest"))[1:length(modelNames)]
   if(PlotType == "EvaluationMetrics"){
     Statistics = unlist(lapply(Stats,FUN=function(x){x[c(1,3,4,5,6)]}))
-    StatsFrame = data.frame(Stat=as.factor(names(Statistics)),
+    StatsFrame = data.frame(Stat=factor(names(Statistics)),
                             Value=as.vector(Statistics),
-                            Model=as.factor(rep(modelNames,each=5)))
+                            Model=factor(rep(modelNames,each=5),levels=modelNames,ordered=TRUE))
     
     g<-ggplot(StatsFrame,aes(x=Stat,y=Value,fill=Model,facets=Stat), color=factor(Model)) +
-      stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Set3")+
+      stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_manual(values=DiscColors)+
       ggtitle("Model Evaluation Metrics")+xlab("")
   
   }
   if(PlotType == "ROC"){
       pre<-cbind(seq(1:length(resp)),resp,matrix(unlist(predictedVals),ncol=length(modelNames)))
-      g<-auc.roc.plot(pre,Thresh,col=c("red","blue","green","purple"),opt.thresholds=TRUE,
-         opt.methods=2,model.names=modelNames,legend.cex=1.4,opt.legend.cex = 1.4)+
+      g<-auc.roc.plot(pre,Thresh,col=DiscColors,
+         model.names=modelNames)+
          theme(axis.text.x = element_text(size = rel(cexMult)))
       
   }
@@ -33,6 +33,7 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
         if(i==1) Mdat <- M
         else Mdat<-rbind(Mdat,M)
     }
+    Mdat$Model<-factor(Mdat$Model,levels=modelNames,ordered=TRUE)
     
     BlueScale=brewer.pal(9,"Blues")
     g<-ggplot(Mdat,aes(x=Observed,y=Predicted))+geom_tile()+geom_tile(aes(fill=Percent))+
@@ -52,10 +53,11 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
     #I'M ASSUMING FOR NOW CONSISTENT VARIABLES ACROSS MODELS
     varImpMat<-data.frame(VariableImportance=unlist(varImp),
                           Variable=as.factor(rep(datNames,times=length(modelNames))),
-                          Model=as.factor(rep(modelNames,each=length(datNames))))
+                          Model=factor(rep(modelNames,each=length(datNames)),levels=modelNames,ordered=TRUE))
     
     g<-ggplot(varImpMat,aes(x=Variable,y=VariableImportance,fill=Model), color=Model) +  
-      stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_brewer(palette="Set3")+
+      stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+
+      scale_fill_manual(values=DiscColors)+
         theme(axis.text.x = element_text(size = rel(cexMult)))+ylab("Drop in AUC")+xlab("Predictors")+
         ggtitle("Permutation Variable Importance")
   }
