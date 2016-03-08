@@ -1,6 +1,9 @@
-ggpairs<-function(dat,alph,pointSize,DevScore,showResp){
+ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushLoc){
 
   d<-data.frame(x=c(0,1),y=c(0,1))
+  #browser()
+  #I think they might take up 90% of the grid.page with the image
+  #and 10% with the margins but this can be controlled
   
  colOffset<-ifelse(showResp,1,0) 
   grid.newpage()

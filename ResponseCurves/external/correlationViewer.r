@@ -29,10 +29,11 @@ app <- shinyApp(
               checkboxInput("showRespGam","Show GAM fit each predictor with the Response",value=FALSE),
               numericInput("numPlts","Number of variables to display" , 5),
               sliderInput("pointSize","Scatterplot point size",min=.05,max=6,value=1),
-              sliderInput("alpha","Scatterplot point transparency",min=.05,max=1,value=.7)
+              sliderInput("alpha","Scatterplot point transparency",min=.05,max=1,value=.7),
+              verbatimTextOutput("plot_brushinfo")
           ),
           mainPanel(
-            plotOutput("parisPlot",height=1000,width=1000)
+            plotOutput("parisPlot",brush = brushOpts(id = "plot_brush"),height=1000,width=1000)
           )
         )
       ),
@@ -63,7 +64,8 @@ app <- shinyApp(
       values<-reactiveValues(orderVar=TotalCors,
                              dat=dat,
                              devExp=DevScore$devExp,
-                             TotCors=TotalCors)
+                             TotCors=TotalCors,
+                             paintLoc=NA)
       
       observeEvent(input$sortBy,{
         
@@ -80,7 +82,11 @@ app <- shinyApp(
         checkboxGroupInput('chkGrp', 'Variables to include', choices=choices,selected=choices)
  
       })
-      
+      output$plot_brushinfo <- renderPrint({
+        cat("Brush (debounced):\n")
+        str(input$plot_brush)
+      })
+      observeEvent(input$plot_brush,{paintLoc<-input$plot_brush})
       output$oneVarChoice <- renderUI({
         choices<-paste(names(values$dat)[-c(ncol(values$dat))],
                        " (","Percent Deviance Explained ",values$devExp,"%)",sep="")
@@ -95,7 +101,10 @@ app <- shinyApp(
           
           if(input$numPlts<(ncol(d))) d<-d[,(1:input$numPlts)]
           d<-cbind(d,resp=values$dat[,ncol(values$dat)])
-        ggpairs(dat=d,alph=input$alpha,pointSize=input$pointSize,DevScore=DevScore,showResp=input$showRespGam)
+          print(values$paintLoc)
+         
+        ggpairs(dat=d,alph=input$alpha,pointSize=input$pointSize,DevScore=DevScore,showResp=input$showRespGam,
+                input$plot_brush)
        })
       
       

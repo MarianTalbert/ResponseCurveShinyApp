@@ -39,6 +39,7 @@ presvals <- extract(layerStk, bradypus)
  
  head(sdmdata)
  
+correlationViewer(sdmdata,layerStk) 
 correlationViewer(data=sdmdata)
 
 #put the desired models in a list
