@@ -8,7 +8,7 @@ TrainClasses <- factor(sdmdata[,3])
 createFolds(factor(sdmdata[,3]), 
                     k=5)
 set.seed(1)
-inTrain<-createDataPartition()
+
 knnFit1 <- train(TrainData, TrainClasses,
                  method = "knn",
                  preProcess = c("center", "scale"),
