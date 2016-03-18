@@ -12,7 +12,7 @@ predictBinary<-function(model,...){
   }
  
   if(inherits(model,"randomForest")){
-                      y <-predict(model,type="response")
+                      y <-predict(model,type="response",...)
                       y[y>=1] <- .99999999999999999
                       y[y<=0] <- .00000000000000001
     return(y)

@@ -1,25 +1,31 @@
-formatModels <- function(fitLst,inputLayers,data,threshold){
+formatModels <- function(fitLst,inputLayers,trainData,threshold,testData){
           
   #putting together all of the global input needed by both the server and ui fcts
-  predictedStk<-varImp<-predictedVals<-binaryVals<-varIncluded<-Thresh<-binaryStk<-Stats<-cmxPlot<-list()
- 
+  predictedStk<-varImp<-predictedVals<-binaryVals<-varIncluded<-Thresh<-binaryStk<-Stats<-cmxPlot<-Coords<-list()
+  resp<-dat<-AUCVal<-list()
   #putting t
   if(inherits(fitLst,"list")){
     Biomd<-FALSE
     modelLst<-names(fitLst)
-    Coords<-data[,c(1,2)]
-    resp<-data[,3]
-    dat<-data[,-c(1:3)]
-    Variables<-names(dat)
-    Split<-seq(1:length(resp))
+    Coords$train<-trainData[,c(1,2)]
+    resp$train<-trainData[,3]
+    dat$train<-trainData[,-c(1:3)]
+    if(!missing(testData)){ 
+      Coords$test<-testData[,c(1,2)]
+      dat$test<-testData[,-c(1:3)]
+      resp$test<-testData[,3]
+    }
+    
+    Variables<-names(dat[[1]])
+   
   } 
   
   if(inherits(fitLst,"BIOMOD.models.out")){
    
     Biomd<-TRUE
     modelLst<-fitLst@models.computed
-    resp<-data@data.species
-    Coords<-data@coord
+    resp$train<-trainData@data.species
+    Coords<-trainData@coord
     preds<-get_predictions(fitLst,as.data.frame=TRUE)
     if(any(preds>2)) preds<-preds/1000 #biomod converts to a 0 to 1000 scale
     #evalPreds<-get_predictions(myBiomodModelOut,as.data.frame=TRUE,evaluation=TRUE)
@@ -32,9 +38,9 @@ formatModels <- function(fitLst,inputLayers,data,threshold){
     vi<-as.data.frame(get_variables_importance(myBiomodModelOut))
     varImp<-as.list(vi)
     varIncluded<-as.list(as.data.frame(vi>0))
-    dat<-data@data.env.var
-    Variables<-names(dat)
-    Split<-seq(1:length(resp))
+    traindat<-trainData@data.env.var
+    Variables<-names(traindat)
+    
     myBiomodProjection <- BIOMOD_Projection(modeling.output = fitLst,
                                             new.env = inputLayers,
                                             proj.name = 'current',
@@ -43,37 +49,40 @@ formatModels <- function(fitLst,inputLayers,data,threshold){
                                             build.clamping.mask = FALSE,keep.in.memory=TRUE,on_0_1000=FALSE)
     predictedStk <- myBiomodProjection@proj@val 
   }
- 
+
   for(i in 1:length(modelLst)){
-    if(!Biomd){ predictedVals[[i]]<-predictBinary(fitLst[[i]],newdata=dat)
-    if(inherits(fitLst[[i]],"randomForest")){
-      #because of the distinction between oob prediction and in bag prediction
-      #we end up with two sets of predicted vals for rf 
-      inBagResp<-predict(fitLst[[i]],dat,type='response')
-      AUCVal<-roc(resp,inBagResp)
-    }else{
-      AUCVal<-roc(resp,predictedVals[[i]])
-    }
-    }else AUCVal<- roc(resp,predictedVals[[i]])
-    Thresh[[i]]<-optimal.thresholds(DATA=cbind(seq(1:nrow(dat)),resp,predictedVals[[i]]))[2,threshold]
-    binaryVals<-as.numeric(predictedVals[[i]]>=Thresh[[i]])
-    
-    Stats[[i]]<-calcStat(predictedVals[[i]],resp,Split,Thresh[[i]])
-    if(i==1){ 
+      cat(paste("preparing model", i,"of",length(modelLst),"\n")) 
+      predictedVals[[i]]<-Thresh[[i]]<-Stats[[i]]<-varImp[[i]]<-list()
       
-      if(!Biomd) predictedStk<-predict(model=fitLst[[i]],object=inputLayers,fun=predictBinary)
-      binaryStk<-createBinary(predictedStk[[i]],Thresh[[i]])
-      messRast<-mess(inputLayers,dat,full=FALSE) 
-    }else{ 
-      if(!Biomd) predictedStk<-addLayer(predictedStk,predict(object=inputLayers,model=fitLst[[i]],fun=predictBinary))
-      binaryStk<-addLayer(binaryStk,createBinary(predictedStk[[i]],Thresh[[i]]))
-    }
-    
-    if(!Biomd){
-      Permuted<-permutePredict(dat,fitLst[[i]],resp)
-      varIncluded[[i]]<-Permuted$varIncluded  
-      varImp[[i]]<-AUCVal-Permuted$AUC}
-   
+      for(split in 1:(ifelse(missing(testData),1,2))){
+      
+              if(!Biomd){ 
+                 predictedVals[[i]][[split]]<-predictBinary(fitLst[[i]],
+                                                            newdata=dat[[split]])
+                 AUCVal[[split]]<-roc(resp[[split]],predictedVals[[i]][[split]])
+              }else AUCVal[[split]]<- roc(resp[[split]],predictedVals[[i]][[split]])
+           
+            Thresh[[i]]<-optimal.thresholds(DATA=cbind(seq(1:nrow(dat[[1]])),
+                                                       resp[[1]],predictedVals[[i]][[1]]))[2,threshold]
+            binaryVals<-as.numeric(predictedVals[[i]][[split]]>=Thresh[[i]])
+            
+            Stats[[i]][[split]]<-calcStat(predictedVals[[i]][[split]],resp[[split]],Thresh[[i]])
+            if(!Biomd){
+              Permuted<-permutePredict(dat[[split]],fitLst[[i]],resp[[split]])
+              if(split==1) varIncluded[[i]]<-Permuted$varIncluded  
+              varImp[[i]][[split]]<-AUCVal[[split]]-Permuted$AUC
+            }
+      }
+      if(i==1){ 
+        #all rasters calculated with training data and training thresholds
+        if(!Biomd) predictedStk<-predict(model=fitLst[[i]],object=inputLayers,fun=predictBinary)
+        binaryStk<-createBinary(predictedStk[[i]][[1]],Thresh[[i]])
+        messRast<-mess(inputLayers,dat[[1]],full=FALSE) 
+      }else{ 
+        if(!Biomd) predictedStk<-addLayer(predictedStk,predict(object=inputLayers,model=fitLst[[i]],
+                                                               fun=predictBinary))
+        binaryStk<-addLayer(binaryStk,createBinary(predictedStk[[i]][[1]],Thresh[[i]]))
+      }
   }
 
   EnsemblePred<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean,na.rm=FALSE)
@@ -83,8 +92,10 @@ formatModels <- function(fitLst,inputLayers,data,threshold){
   
   names(predictedStk)<-c(modelLst,"Ensemble_Mean_of_Probability_Maps")
   names(binaryStk)<-c(modelLst,"Ensemble_Sum_of_Binary_Maps")
-  d=data.frame(Name=names(dat),min=apply(dat,2,min,na.rm=TRUE),
-               max <-apply(dat,2,max,na.rm=TRUE),mean=apply(dat,2,mean,na.rm=TRUE))
+ 
+  #return just the range of the calibration data
+  d=data.frame(Name=names(dat[[1]]),min=apply(dat[[1]],2,min,na.rm=TRUE),
+               max <-apply(dat[[1]],2,max,na.rm=TRUE),mean=apply(dat[[1]],2,mean,na.rm=TRUE))
   dataLst <- split(d,f=seq(1:nrow(d)))
   returnLst<-list(binaryStk=binaryStk,Coords=Coords,dat=dat,
                   dataLst=dataLst,EnsembleBin=EnsembleBin,
