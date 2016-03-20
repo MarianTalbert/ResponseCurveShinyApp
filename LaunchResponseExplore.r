@@ -39,7 +39,7 @@ presvals <- extract(layerStk, bradypus)
  
  head(sdmdata)
  
-correlationViewer(data=sdmdata)
+ correlationViewer(sdmdata,layerStk)
 
 #put the desired models in a list
 
@@ -58,7 +58,7 @@ predict(nn) #this works but the "response" arg in my predict will break it
 #    This is where the magic happens
 #
 #just for now returning the output so I can beautify my plots
-exploreCurves(fitLst,inputLayers=layerStk,data=sdmdata,threshold=2,boundary=wrld_simpl)
+exploreCurves(fitLst,inputLayers=layerStk,traindata=sdmdata,threshold=2,boundary=wrld_simpl)
 #
 #===============================================================
 #Debugging helper functions

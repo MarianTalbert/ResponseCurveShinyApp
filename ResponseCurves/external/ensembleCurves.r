@@ -1,15 +1,16 @@
-ensemebleCurves <- function(fitLst,modelLst,dat,Cols,XYs,varIncluded,varImp,mapType="none"){
+ensemebleCurves <- function(fitLst,modelLst,dat,Cols,XYs,varIncluded,varImp,mapType="none",TestTrain){
     respLst<-list()
    
     for(i in 1:length(fitLst)){
       respLst[[i]]<-responseCurves(fitLst,list(m=modelLst[[i]]),vals=XYs$vals,
-                                   varIncluded=list(varIncluded[[i]]),varImp=list(varImp[[i]]),addImp=FALSE,
+                                   varIncluded=list(varIncluded[[i]]),varImp=list(varImp[[i]][[TestTrain]]),addImp=FALSE,
                                    dat=dat,resp=resp,Cols=Cols,Ensemble=TRUE,modelIdx=i)
     }
     Cols  <- c("black",Cols) 
     mins  <- sapply(dat, min,  na.rm=TRUE)
     maxs  <- sapply(dat, max,  na.rm=TRUE)
     means <- sapply(dat, mean, na.rm=TRUE)
+    
     par(mfrow=c(1,ncol(dat)),mar=c(0,0,3,0),oma=c(0,5,0,0),xpd=TRUE)
     
     for(v in 1:length(respLst[[1]])){ #working over the variables within each model

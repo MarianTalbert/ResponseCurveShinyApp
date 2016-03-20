@@ -5,7 +5,7 @@ correlationViewer<-function(sdmdata,layerStk,Threshld=.7){
   
   #dat[,ncol(dat)]<-as.factor(dat[,ncol(dat)])
   names(dat)[ncol(dat)]<-"resp"
-  #browser()
+  
   missing.summary<-1-apply(apply(dat,2,complete.cases),2,sum)/nrow(dat)
   DevScore <- univariateDev(dat)
   
@@ -89,59 +89,69 @@ app <- shinyApp(
   
       output$parisPlot <- renderPlot({
           #split off the percent deviance explained
-          spltDat<-strsplit(input$chkGrp," ")
-          varsToUse<-unlist(lapply(spltDat,"[",1))
-          d<-values$dat[,c(match(varsToUse,names(values$dat)))]
-          
-          if(input$numPlts<(ncol(d))) d<-d[,(1:input$numPlts)]
-          d<-cbind(d,resp=values$dat[,ncol(values$dat)])
-        ggpairs(dat=d,alph=input$alpha,pointSize=input$pointSize,DevScore=DevScore,showResp=input$showRespGam)
+        if(!is.null(input$chkGrp)){
+            spltDat<-strsplit(input$chkGrp," ")
+            varsToUse<-unlist(lapply(spltDat,"[",1))
+            d<-values$dat[,c(match(varsToUse,names(values$dat)))]
+            
+            if(input$numPlts<(ncol(d))) d<-d[,(1:input$numPlts)]
+            d<-cbind(d,resp=values$dat[,ncol(values$dat)])
+        
+          ggpairs(dat=d,alph=input$alpha,pointSize=input$pointSize,DevScore=DevScore,
+                  showResp=input$showRespGam)
+       }
        })
       
       
       
       output$VarMap<-renderPlot({
-        InputVar<-strsplit(input$InptVar," ")[[1]][1]
-        par(oma=c(0,0,0,0),mar=c(2,2,2,2))
-        plot(layerStk, match(InputVar,names(layerStk)))
-        #probably use a choice of maps here
-        plot(wrld_simpl, add=TRUE,cex.main=3)
-        if(!is.null(input$showTrain)){
-          
-          #input$varptSize
-          if("showPres"%in%input$showTrain) points(sdmdata[sdmdata[,3]==1,1],
-                                                   sdmdata[sdmdata[,3]==1,2], 
-                                                   col="deeppink",bg="red",pch=21,cex=input$mpPtSz)
-          if("showAbs"%in%input$showTrain) points(sdmdata[sdmdata[,3]==0,1],
-                                                  sdmdata[sdmdata[,3]==0,2],
-                                                  col="dodgerblue", bg="blue",pch=21,cex=input$mpPtSz)
-        }      
+        if(!is.null(input$InptVar)){
+          InputVar<-strsplit(input$InptVar," ")[[1]][1]
+          par(oma=c(0,0,0,0),mar=c(2,2,2,2))
+          plot(layerStk, match(InputVar,names(layerStk)))
+          #probably use a choice of maps here
+          plot(wrld_simpl, add=TRUE,cex.main=3)
+          if(!is.null(input$showTrain)){
+            
+            #input$varptSize
+            if("showPres"%in%input$showTrain) points(sdmdata[sdmdata[,3]==1,1],
+                                                     sdmdata[sdmdata[,3]==1,2], 
+                                                     col="deeppink",bg="red",pch=21,cex=input$mpPtSz)
+            if("showAbs"%in%input$showTrain) points(sdmdata[sdmdata[,3]==0,1],
+                                                    sdmdata[sdmdata[,3]==0,2],
+                                                    col="dodgerblue", bg="blue",pch=21,cex=input$mpPtSz)
+          } 
+       }
       })
       
                               
     output$Gam<-renderPlot({
-      InputVar<-strsplit(input$InptVar," ")[[1]][1]
-      varNum<-match(InputVar,names(values$dat))
-      respPlt<-ggplot(values$dat, aes_q(x = as.name(InputVar), 
-                                 y =as.name("resp"),
-                                 colour=as.name(InputVar))) + 
-        geom_point(alpha=.4) +
-        stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 2))+
-        scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
-        theme(panel.grid.minor=element_blank(),
-             panel.grid.major=element_blank(),plot.margin=unit(c(3,4,3,2),"mm"))+
-        xlab("")+ylab(paste(ifelse(DevScore$GamRan[varNum],"GAM","GLM"), "% Dev Expl",DevScore$devExp[varNum]))+
-        scale_y_continuous(breaks=NULL)+ggtitle("Response")
-      
-      respPlt
+      if(!is.null(input$InptVar)){
+        InputVar<-strsplit(input$InptVar," ")[[1]][1]
+        varNum<-match(InputVar,names(values$dat))
+        respPlt<-ggplot(values$dat, aes_q(x = as.name(InputVar), 
+                                   y =as.name("resp"),
+                                   colour=as.name(InputVar))) + 
+          geom_point(alpha=.4) +
+          stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 2))+
+          scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
+          theme(panel.grid.minor=element_blank(),
+               panel.grid.major=element_blank(),plot.margin=unit(c(3,4,3,2),"mm"))+
+          xlab("")+ylab(paste(ifelse(DevScore$GamRan[varNum],"GAM","GLM"), "% Dev Expl",DevScore$devExp[varNum]))+
+          scale_y_continuous(breaks=NULL)+ggtitle("Response")
+        
+        respPlt
+      }
     })
     output$Hist<-renderPlot({
-      InputVar<-strsplit(input$InptVar," ")[[1]][1]
-      ggplot(values$dat, aes_q(x=as.name(InputVar),
-                        fill=as.factor(values$dat$resp)))+
-        geom_histogram()+theme(plot.margin=unit(c(0,0,0,0),"mm"))+
-        scale_fill_manual(values=c("blue","red"),name="Response")+
-        scale_y_discrete(breaks=NULL)+scale_x_continuous(breaks=NULL)
+      if(!is.null(input$InptVar)){
+        InputVar<-strsplit(input$InptVar," ")[[1]][1]
+        ggplot(values$dat, aes_q(x=as.name(InputVar),
+                          fill=as.factor(values$dat$resp)))+
+          geom_histogram()+theme(plot.margin=unit(c(0,0,0,0),"mm"))+
+          scale_fill_manual(values=c("blue","red"),name="Response")+
+          scale_y_discrete(breaks=NULL)+scale_x_continuous(breaks=NULL)
+      }
     })
       
     }

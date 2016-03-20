@@ -63,8 +63,9 @@ app <- shinyApp(
       output[[paste("map",i,sep="")]] <- renderPlot({
         interactiveMap(Out$predictedStk,Out$binaryStk,Out$messRast,Colors,Cols,input,i,boundary,
                        Out$Coords[[as.numeric(input$mapTestTrain)]],
-                       Out$Stats[[as.numeric(input$mapTestTrain)]],XYs,
-                       resp=Out$resp[[as.numeric(input$mapTestTrain)]])
+                       Out$Stats,XYs,
+                       resp=Out$resp[[as.numeric(input$mapTestTrain)]],
+                       TestTrain=as.numeric(input$mapTestTrain))
         })
       })
       
@@ -86,7 +87,8 @@ app <- shinyApp(
                responseCurves(fitLst,list(m=Out$modelLst[[i]]),vals=XYs$vals,
                               varIncluded=list(Out$varIncluded[[i]]),
                          varImp=list(Out$varImp[[i]][[as.numeric(input$mapTestTrain)]]),addImp=input$addMImp,
-              dat=Out$dat[[1]],resp=Out$resp[[1]],Cols=Cols,Ensemble=FALSE,mapType=input$mapType,modelIdx=i)
+              dat=Out$dat[[1]],resp=Out$resp[[1]],Cols=Cols,Ensemble=FALSE,mapType=input$mapType,modelIdx=i,
+              TestTrain=as.numeric(input$mapTestTrain))
         })
         })
       
@@ -123,7 +125,7 @@ app <- shinyApp(
    
       lapply(1:5,function(i){
         output[[paste("EvalPlot",i,sep="")]] <- renderPlot({
-          switchEvalPlots(PlotType=evalPlotGroup[i],Stats=Out$Stats[[as.numeric(input$mapTestTrain)]],
+          switchEvalPlots(PlotType=evalPlotGroup[i],Stats=Out$Stats,
                           modelNames=Out$modelLst,
                           predictedVals=Out$predictedVals,
                           resp=Out$resp[[as.numeric(input$mapTestTrain)]],varImp=Out$varImp,
@@ -153,7 +155,8 @@ app <- shinyApp(
       output[[paste("slideRsp",i,sep="")]]<-renderPlot({
         responseCurves(fitLst,Out$modelLst,vals=IntractVals$Vals,i,varIncluded=Out$varIncluded,
                        varImp=Out$varImp,
-                       addImp=input$addImp,dat=Out$dat[[1]],resp=Out$resp[[1]],Cols=Cols,Ensemble=FALSE)
+                       addImp=input$addImp,dat=Out$dat[[1]],resp=Out$resp[[1]],Cols=Cols,
+                       Ensemble=FALSE,TestTrain=as.numeric(input$mapTestTrain))
         })
       })
         
@@ -272,9 +275,8 @@ ui=navbarPage("Respones Curve Explorer",
               checkboxGroupInput("showTrain","Show Training Data",
               c("add presence points"="showPres",
               "add absence/background points"="showAbs")),
-              checkboxInput("showResid","Add deviance residuals",value=FALSE),
-              radioButtons("mapTestTrain","Deviance Residuals for Calibration or evaluation data:",
-                           c("Calibration"="1","Evaluation"="2"))
+              checkboxInput("showResid","Add deviance residuals",value=FALSE)
+              
                 
               ),
               
@@ -299,7 +301,8 @@ ui=navbarPage("Respones Curve Explorer",
   #===============================================
   # ==========  Model Evaluation ==========#
         tabPanel("Model Evaluation",
-                 
+         radioButtons("mapTestTrain","Deviance Residuals for Calibration or evaluation data:",
+                              c("Calibration"="1","Evaluation"="2")),        
          fluidRow(
             column(5,
                 wellPanel(
