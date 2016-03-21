@@ -22,8 +22,8 @@ app <- shinyApp(
        XYs <- reactiveValues(
           Xlocs = NULL,
           Ylocs = NULL,
-          xlim = NULL,
-          ylim =NULL,
+          xlim = c(xmin(layerStk),xmax(layerStk)),
+          ylim = c(ymin(layerStk),ymax(layerStk)),
           vals= NULL
         )
       
@@ -62,8 +62,8 @@ app <- shinyApp(
             XYs$ylim <- c(brush$ymin, brush$ymax)
             
           } else {
-            XYs$xlim <- NULL
-            XYs$ylim <- NULL
+            XYs$xlim <- c(xmin(layerStk),xmax(layerStk))
+            XYs$ylim <- c(ymin(layerStk),ymax(layerStk))
           }
       })
       observeEvent(input$resetNVals,{
@@ -122,7 +122,7 @@ app <- shinyApp(
           fluidRow(
             column(4,
                    wellPanel(
-                     plotOutput(plotMap, click = "plot_click",height="300px",dblclick = "plotdblclick",
+                     plotOutput(plotMap, dblclick = "plotdblclick",height="300px",
                                 brush = brushOpts(
                                   id = "plotbrush",
                                   resetOnNew = TRUE
