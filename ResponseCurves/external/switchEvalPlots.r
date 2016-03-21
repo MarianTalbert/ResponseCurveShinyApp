@@ -1,8 +1,9 @@
-switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Thresh,datNames,cexMult){
+switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Thresh,datNames,cexMult,TestTrain){
 #add calibration plot once it's fixed
   DiscColors<-c(rev(wes_palette("Cavalcanti")[c(1,2,4,5)]),wes_palette("GrandBudapest"))[1:length(modelNames)]
   if(PlotType == "EvaluationMetrics"){
-    Statistics = unlist(lapply(Stats,FUN=function(x){x[c(1,3,4,5,6)]}))
+   
+    Statistics = unlist(lapply(lapply(Stats,"[",TestTrain),FUN=function(x){x[[1]][c(1,3,4,5,6)]}))
     StatsFrame = data.frame(Stat=factor(names(Statistics)),
                             Value=as.vector(Statistics),
                             Model=factor(rep(modelNames,each=5),levels=modelNames,ordered=TRUE))
@@ -13,7 +14,9 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
   
   }
   if(PlotType == "ROC"){
-      pre<-cbind(seq(1:length(resp)),resp,matrix(unlist(predictedVals),ncol=length(modelNames)))
+     
+      pre<-cbind(seq(1:length(resp)),resp,
+                 matrix(unlist(lapply(predictedVals,"[",TestTrain)),ncol=length(modelNames)))
       g<-auc.roc.plot(pre,Thresh,col=DiscColors,
          model.names=modelNames)+
          theme(axis.text.x = element_text(size = rel(cexMult)))
@@ -21,11 +24,12 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
   }
 
   if(PlotType == "ConfusionMatrix"){
+   
     for(i in 1:length(modelNames)){
-        M<-data.frame(Percent=c(100*Stats[[i]]$Cmx[2]/sum(Stats[[i]]$Cmx[1:2]),
-                                100*Stats[[i]]$Cmx[4]/sum(Stats[[i]]$Cmx[3:4]),
-                                100*Stats[[i]]$Cmx[1]/sum(Stats[[i]]$Cmx[1:2]),
-                                100*Stats[[i]]$Cmx[3]/sum(Stats[[i]]$Cmx[3:4])),
+        M<-data.frame(Percent=c(100*Stats[[i]][[TestTrain]]$Cmx[2]/sum(Stats[[i]][[TestTrain]]$Cmx[1:2]),
+                                100*Stats[[i]][[TestTrain]]$Cmx[4]/sum(Stats[[i]][[TestTrain]]$Cmx[3:4]),
+                                100*Stats[[i]][[TestTrain]]$Cmx[1]/sum(Stats[[i]][[TestTrain]]$Cmx[1:2]),
+                                100*Stats[[i]][[TestTrain]]$Cmx[3]/sum(Stats[[i]][[TestTrain]]$Cmx[3:4])),
                       Predicted=factor(c("Absence","Absence","Presence","Presence")),
                       Observed=factor(c("Presence","Absence","Presence","Absence")),
                       Model=rep(modelNames[i],times=4))
@@ -49,9 +53,9 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
  
   }
   if(PlotType=="VariableImportance"){
-   
+  
     #I'M ASSUMING FOR NOW CONSISTENT VARIABLES ACROSS MODELS
-    varImpMat<-data.frame(VariableImportance=unlist(varImp),
+    varImpMat<-data.frame(VariableImportance=unlist(lapply(varImp,"[",TestTrain)),
                           Variable=as.factor(rep(datNames,times=length(modelNames))),
                           Model=factor(rep(modelNames,each=length(datNames)),levels=modelNames,ordered=TRUE))
     
@@ -62,7 +66,8 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
         ggtitle("Permutation Variable Importance")
   }
   if(PlotType=="Density"){
-    densityFrame<-data.frame(Predicted=unlist(predictedVals),
+   
+    densityFrame<-data.frame(Predicted=unlist(lapply(predictedVals,"[",TestTrain)),
                              Response=rep(resp,times=length(modelNames)),
                              Model=rep(modelNames,each=length(resp)))
     densityFrame$Model<-as.factor(densityFrame$Model)

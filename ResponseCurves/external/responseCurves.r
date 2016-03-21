@@ -1,5 +1,5 @@
 responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,dat,resp,Cols,Ensemble,
-                         mapType="none",modelIdx=NA){
+                         mapType="none",modelIdx=NA,TestTrain){
 
   biomd=inherits(fitLst,"BIOMOD.models.out") 
        
@@ -34,11 +34,12 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
               if(byVar) predCycle <- pIdx
 
                for(j in modelCycle){
-
+                 
                     allVarImp<-rep(0,times=ncol(dat))
-                    allVarImp<-as.vector(varImp[[j]][1])
+                    if(!byVar) allVarImp<-unlist(varImp)
+                    if(byVar) allVarImp<-as.vector(varImp[[j]][[TestTrain]])
                     allVarImp[allVarImp<0]<-0 #set the minimum to zero so it shows up white
-                    bgCol<-bgRamp[cut(x=allVarImp,breaks=seq(from=0,to=max(varImp[[j]]),length=11),include.lowest=TRUE)]
+                    bgCol<-bgRamp[cut(x=allVarImp,breaks=seq(from=0,to=max(allVarImp),length=11),include.lowest=TRUE)]
                  for (pIdx in predCycle) {
                      plotR<- varIncluded[[j]][pIdx] #I'm not sure this information is always available
 

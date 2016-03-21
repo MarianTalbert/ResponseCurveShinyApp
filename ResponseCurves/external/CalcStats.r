@@ -1,5 +1,5 @@
 
-calcStat <- function(pred,resp,Split,thresh){
+calcStat <- function(pred,resp,thresh){
 
     auc.data <-data.frame(ID=1:length(pred),pres.abs=resp,pred=pred)
         #have to use roc here because auc in the PresenceAbsence package incorretly assumes that the value must be greater than .5
