@@ -1,10 +1,10 @@
-exploreCurves<-function(fitLst,inputLayers,data,threshold=2,boundary=NA){
+exploreCurves<-function(fitLst,inputLayers,trainData,threshold=2,boundary=NA,testData){
 
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget\n") 
    
  
-Out<-formatModels(fitLst,inputLayers,data,threshold=threshold)
+Out<-formatModels(fitLst,inputLayers,trainData,threshold=threshold,testData)
 
 
 rspHgt <- c("150px","300px","450px","650px","800px")[min(5,length(Out$modelLst))]
@@ -22,6 +22,8 @@ app <- shinyApp(
        XYs <- reactiveValues(
           Xlocs = NULL,
           Ylocs = NULL,
+          xlim = NULL,
+          ylim =NULL,
           vals= NULL
         )
       
@@ -52,6 +54,18 @@ app <- shinyApp(
             XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
             XYs$vals<-extract(layerStk,XYdat)
       })
+      
+      observeEvent(input$plotdblclick,{
+         brush <- input$plotbrush
+          if (!is.null(brush)) {
+            XYs$xlim <- c(brush$xmin, brush$xmax)
+            XYs$ylim <- c(brush$ymin, brush$ymax)
+            
+          } else {
+            XYs$xlim <- NULL
+            XYs$ylim <- NULL
+          }
+      })
       observeEvent(input$resetNVals,{
            XYs$Xlocs=NULL
            XYs$Ylocs=NULL
@@ -60,15 +74,21 @@ app <- shinyApp(
       #============================  
       #Map Generation
       lapply(1:length(Out$modelLst),function(i){
-      output[[paste("map",i,sep="")]] <- renderPlot({       
-        interactiveMap(Out$predictedStk,Out$binaryStk,Out$messRast,Colors,Cols,input,i,boundary,Out$Coords,
-                       Out$Stats,XYs,resp=Out$resp)
+      output[[paste("map",i,sep="")]] <- renderPlot({
+        interactiveMap(Out$predictedStk,Out$binaryStk,Out$messRast,Colors,Cols,input,i,boundary,
+                       Out$Coords[[as.numeric(input$mapTestTrain)]],
+                       Out$Stats,XYs,
+                       resp=Out$resp[[as.numeric(input$mapTestTrain)]],
+                       TestTrain=as.numeric(input$mapTestTrain))
         })
       })
       
+      
       output$EnsembleMap <- renderPlot({
         interactiveMap(Out$predictedStk,Out$binaryStk,Out$messRast,Colors,Cols,input,
-                       (length(Out$modelLst)+1),boundary,Out$Coords,Out$Stats,XYs,resp=Out$resp,
+                       (length(Out$modelLst)+1),boundary,Out$Coords[[as.numeric(input$mapTestTrain)]],
+                       Out$Stats[[as.numeric(input$mapTestTrain)]],XYs,
+                       resp=Out$resp[[as.numeric(input$mapTestTrain)]],
                        Ensemble=TRUE)
        
       })
@@ -81,15 +101,16 @@ app <- shinyApp(
         #Plot the Curves BY MODEL
                responseCurves(fitLst,list(m=Out$modelLst[[i]]),vals=XYs$vals,
                               varIncluded=list(Out$varIncluded[[i]]),
-                         varImp=list(Out$varImp[[i]]),addImp=input$addMImp,
-              dat=Out$dat,resp=Out$resp,Cols=Cols,Ensemble=FALSE,mapType=input$mapType,modelIdx=i)
+                         varImp=list(Out$varImp[[i]][[as.numeric(input$mapTestTrain)]]),addImp=input$addMImp,
+              dat=Out$dat[[1]],resp=Out$resp[[1]],Cols=Cols,Ensemble=FALSE,mapType=input$mapType,modelIdx=i,
+              TestTrain=as.numeric(input$mapTestTrain))
         })
         })
       
       output$EnsemblePlot<-renderPlot({
-        ensemebleCurves(fitLst,Out$modelLst,dat=Out$dat,Cols=Cols,XYs=XYs,
+        ensemebleCurves(fitLst,Out$modelLst,dat=Out$dat[[1]],Cols=Cols,XYs=XYs,
                         varIncluded=Out$varIncluded,
-                        varImp=Out$varImp,mapType=input$mapType)
+                        varImp=Out$varImp,mapType=input$mapType,TestTrain=as.numeric(input$mapTestTrain))
       })
       #Putting the clickable maps together here because the number plots is dynamic
       # Insert the right number of plot output objects into the web page
@@ -97,10 +118,15 @@ app <- shinyApp(
         plot_output_list <- lapply(1:length(fitLst), function(i) {
           plotMap <- paste("map", i, sep="")
           plotCurves <- paste("curves", i, sep="")
+         
           fluidRow(
             column(4,
                    wellPanel(
-                     plotOutput(plotMap, click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
+                     plotOutput(plotMap, click = "plot_click",height="300px",dblclick = "plotdblclick",
+                                brush = brushOpts(
+                                  id = "plotbrush",
+                                  resetOnNew = TRUE
+                                )),style="padding: 5px;"),style="padding: 5px;"),
             column(6,
                    wellPanel(plotOutput(plotCurves,height="300px"),style="padding: 5px;"),style="padding: 5px;" )
           )
@@ -119,10 +145,12 @@ app <- shinyApp(
    
       lapply(1:5,function(i){
         output[[paste("EvalPlot",i,sep="")]] <- renderPlot({
-          switchEvalPlots(PlotType=evalPlotGroup[i],Stats=Out$Stats,modelNames=Out$modelLst,
+          switchEvalPlots(PlotType=evalPlotGroup[i],Stats=Out$Stats,
+                          modelNames=Out$modelLst,
                           predictedVals=Out$predictedVals,
-                          resp=Out$resp,varImp=Out$varImp,Thresh=Out$Thresh,
-                          datNames=names(Out$dat),cexMult=cexMult)
+                          resp=Out$resp[[as.numeric(input$mapTestTrain)]],varImp=Out$varImp,
+                          Thresh=Out$Thresh,
+                          datNames=names(Out$dat[[1]]),cexMult=cexMult,TestTrain=as.numeric(input$mapTestTrain))
 
         })
       })
@@ -147,7 +175,8 @@ app <- shinyApp(
       output[[paste("slideRsp",i,sep="")]]<-renderPlot({
         responseCurves(fitLst,Out$modelLst,vals=IntractVals$Vals,i,varIncluded=Out$varIncluded,
                        varImp=Out$varImp,
-                       addImp=input$addImp,dat=Out$dat,resp=Out$resp,Cols=Cols,Ensemble=FALSE)
+                       addImp=input$addImp,dat=Out$dat[[1]],resp=Out$resp[[1]],Cols=Cols,
+                       Ensemble=FALSE,TestTrain=as.numeric(input$mapTestTrain))
         })
       })
         
@@ -177,9 +206,9 @@ app <- shinyApp(
       SlideVals<-unlist(lapply(SlideNames,FUN=function(l) input[[l]]))
           if(!is.null(SlideVals)){
               #slider values are missing the values for the indicies of the first and second predictor so put the spaces back in
-              Svals<-vector(length=ncol(Out$dat))
+              Svals<-vector(length=ncol(Out$dat[[1]]))
               toAdd<-sort(match(c(input$FirstPredictor,input$SecondPredictor),Out$Variables))
-              datPos<-seq(1:ncol(Out$dat))[-c(toAdd)]
+              datPos<-seq(1:ncol(Out$dat[[1]]))[-c(toAdd)]
               Svals[datPos]<-SlideVals
               SlideVals<-Svals
           }
@@ -193,13 +222,15 @@ app <- shinyApp(
        
         for(i in 1:length(Out$modelLst)){
           interactionPlot(fitLst,Out$modelLst[[i]],vals=SlideVals,phi=input$phi,theta=input$theta,
-                          x=input$FirstPredictor,y=input$SecondPredictor,Out$dat,Out$resp,modelIndx=i)
+                          x=input$FirstPredictor,y=input$SecondPredictor,Out$dat[[1]],Out$resp[[1]],
+                          modelIndx=i)
           }
       } else{
        
          i<-match(input$Model,unlist(Out$modelLst))
           interactionPlot(fitLst,Out$modelLst[[i]],vals=Svals,phi=input$phi,theta=input$theta,
-                          x=input$FirstPredictor,y=input$SecondPredictor,Out$dat,Out$resp,modelIndx=i)
+                          x=input$FirstPredictor,y=input$SecondPredictor,Out$dat[[1]],Out$resp[[1]],
+                          modelIndx=i)
         }
       }  
       })
@@ -232,7 +263,8 @@ app <- shinyApp(
                   polygon(absDens,col=cols[1],border="blue")
                   polygon(presDens,col=cols[2],border="red")
           })
-      },dat=Out$dat,resp=Out$resp)      
+      },dat=Out$dat[[as.numeric(input$mapTestTrain)]],
+        resp=Out$resp[[as.numeric(input$mapTestTrain)]])      
       
       },      
 ui=navbarPage("Respones Curve Explorer",
@@ -263,7 +295,10 @@ ui=navbarPage("Respones Curve Explorer",
               checkboxGroupInput("showTrain","Show Training Data",
               c("add presence points"="showPres",
               "add absence/background points"="showAbs")),
-              checkboxInput("showResid","Add deviance residuals",value=FALSE)),
+              checkboxInput("showResid","Add deviance residuals",value=FALSE)
+              
+                
+              ),
               
             
             column(2,
@@ -286,7 +321,8 @@ ui=navbarPage("Respones Curve Explorer",
   #===============================================
   # ==========  Model Evaluation ==========#
         tabPanel("Model Evaluation",
-                 
+         radioButtons("mapTestTrain","Deviance Residuals for Calibration or evaluation data:",
+                              c("Calibration"="1","Evaluation"="2")),        
          fluidRow(
             column(5,
                 wellPanel(

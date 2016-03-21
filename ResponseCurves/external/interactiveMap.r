@@ -18,13 +18,13 @@ interactiveMap <- function(predictedStk,binaryStk,messRast,Colors,Cols,input,i,b
     
     if(input$mapType=="mprob") plot(predictedStk,i,maxpixels=60000,breaks=pretty(c(min(minValue(predictedStk)),max(maxValue(predictedStk))),13),
                                     col=rev(inferno(12,begin=0,end=1,alpha=.8)),xaxt="n",yaxt="n",bty="n",legend=Legend,
-                                    alpha=alpha,cex.main=1.7)
+                                    alpha=alpha,cex.main=1.7,xlim=XYs$xlim,ylim=XYs$ylim)
     if(input$mapType=="mbinary") plot(binaryStk,i,maxpixels=60000,xaxt="n",yaxt="n",bty="n",legend=Legend,
                                       alpha=alpha,col=rev(magma(12,begin=.4,end=1,alpha=.8)),
-                                      cex.main=1.7)
+                                      cex.main=1.7,xlim=XYs$xlim,ylim=XYs$ylim)
     if(input$mapType=="mess"){ plot(messRast,maxpixels=60000,col=colorRampPalette(c("purple4","white","darkgreen"))(12),
                                    breaks=pretty(c(-100,100),13),xaxt="n",yaxt="n",bty="n",legend=Legend,alpha=alpha,
-                                   cex.main=1.7,main="Multivariate Environmental Similary Surface")
+                                   cex.main=1.7,main="Multivariate Environmental Similary Surface",xlim=XYs$xlim,ylim=XYs$ylim)
     }
     if(class(boundary)=="SpatialPolygonsDataFrame") plot(boundary,add=TRUE)
     if(input$showResid & !Ensemble) residImage(x=Coords[,1],y=Coords[,2],z=Stats[[i]]$devResid,boundary,predictedStk,i,rastColors=Colors)

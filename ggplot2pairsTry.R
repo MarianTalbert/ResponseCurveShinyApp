@@ -33,7 +33,7 @@ ggpairs<-function(dat,alph,pointSize,DevScore,showResp){
               xlab = names(dat)[i], 
               ylab = "",  
               fill=I("blue"))+scale_y_discrete(breaks=NULL)+scale_x_discrete(breaks=NULL)+
-              theme(plot.margin=unit(c(0,0,0,0),"mm"),axis.title=element_text(size=rel(1.5))),
+              theme(plot.margin=unit(c(0,0,1,0),"mm"),axis.title=element_text(size=rel(1.5))),
         vp=vplayout(i,i+offset))
   #pairs plot below the diagonal
     if(i>1){
@@ -47,10 +47,10 @@ ggpairs<-function(dat,alph,pointSize,DevScore,showResp){
                  theme(panel.grid.minor=element_blank(),
                        panel.grid.major=element_blank(),
                        axis.title=element_text(size=rel(1.5)),
-                       plot.margin=unit(c(0,0,0,0),"mm"),
+                       plot.margin=unit(c(0,0,1,1),"mm"),
                        axis.text.y = element_text(angle = 90, hjust = 1))+
                  scale_y_discrete(breaks=NULL)
-    if(j!=1) g<-g+ylab("")
+    if(j!=1) g<-g+ylab("")+scale_y_discrete(breaks=NULL)
     if(i!=(ncol(dat)-1)) g<-g+ scale_x_discrete(breaks=NULL)+xlab("")
     print(g,vp=vplayout(i,j+offset))             
     }  
@@ -67,7 +67,7 @@ ggpairs<-function(dat,alph,pointSize,DevScore,showResp){
                        theme(panel.background = element_rect(fill = Cols[ColIndx]))+
                        theme(panel.grid.major = element_line(colour = Cols[ColIndx]))+
                        theme(panel.grid.minor = element_line(colour = Cols[ColIndx]),
-                       plot.margin=unit(c(0,0,0,0),"mm"))+
+                       plot.margin=unit(c(0,0,1,0),"mm"))+
                        ylab("")+xlab("")+scale_x_continuous(breaks=NULL)+
                        scale_y_continuous(breaks=NULL)+
                        annotate("text", label= round(Cor,digits=2), x=.5, y=.5,
