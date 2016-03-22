@@ -71,6 +71,10 @@ app <- shinyApp(
            XYs$Ylocs=NULL
            XYs$vals=NULL
       })
+      observeEvent(input$resetExtent,{
+        XYs$xlim <- c(xmin(layerStk),xmax(layerStk))
+        XYs$ylim <- c(ymin(layerStk),ymax(layerStk))
+      })
       #============================  
       #Map Generation
       lapply(1:length(Out$modelLst),function(i){
@@ -303,7 +307,8 @@ ui=navbarPage("Respones Curve Explorer",
             
             column(2,
               checkboxInput("addMImp", label = "show variable importance with background color",value=FALSE),
-              actionButton("resetNVals", label = "Reset explorer")
+              actionButton("resetNVals", label = "Reset explorer"),
+              actionButton("resetExtent",label = "Reset spatial extent" )
               )
         ),
        
