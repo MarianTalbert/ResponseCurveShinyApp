@@ -41,21 +41,21 @@ app <- shinyApp(
   # Maps 
   #==========================
       # Handle clicks on the plot
-      observeEvent(input$plot_click, {
+      observeEvent(input$plotdblclick, {
           if (is.null(XYs$Xlocs)) {
             # We don't have a first click, so this is the first click
-            XYs$Xlocs <- input$plot_click$x
-            XYs$Ylocs <-  input$plot_click$y
+            XYs$Xlocs <- input$plotdblclick$x
+            XYs$Ylocs <-  input$plotdblclick$y
           } else {
-          XYs$Xlocs<-append(XYs$Xlocs,input$plot_click$x)
-          XYs$Ylocs<-append(XYs$Ylocs,input$plot_click$y)
+          XYs$Xlocs<-append(XYs$Xlocs,input$plotdblclick$x)
+          XYs$Ylocs<-append(XYs$Ylocs,input$plotdblclick$y)
           }
            
             XYdat<-as.data.frame(cbind(X=XYs$Xlocs,Y=XYs$Ylocs))
             XYs$vals<-extract(layerStk,XYdat)
       })
       
-      observeEvent(input$plotdblclick,{
+      observeEvent(input$plotbrush,{
          brush <- input$plotbrush
           if (!is.null(brush)) {
             XYs$xlim <- c(brush$xmin, brush$xmax)
@@ -311,7 +311,10 @@ ui=navbarPage("Respones Curve Explorer",
                          fluidRow(
                            column(4,
                                   wellPanel(
-                                    plotOutput("EnsembleMap", click = "plot_click",height="300px"),style="padding: 5px;"),style="padding: 5px;"),
+                                    plotOutput("EnsembleMap", dblclick = "plotdblclick",height="300px",brush = brushOpts(
+                                      id = "plotbrush",
+                                      resetOnNew = TRUE
+                                    )),style="padding: 5px;"),style="padding: 5px;"),
                            column(6,
                                   wellPanel(plotOutput("EnsemblePlot",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
                            
