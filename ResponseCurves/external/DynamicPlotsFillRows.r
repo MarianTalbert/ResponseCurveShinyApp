@@ -1,5 +1,8 @@
 Nplots<-10
 n.col<-5
+#now trying to use actual data and ggplot for pairs
+Nplots<-(ncol(dat)-1)^2+(ncol(dat)-1)
+n.col<-ncol(dat)
 ui <- shinyUI(fluidPage(
   actionButton("zoom", label = "Zoom to brushed area"),
   actionButton("resetzoom",label = "return to full extent"),
@@ -22,6 +25,8 @@ server <- shinyServer(function(input, output) {
       plotname <- paste("plot", n , sep="")
       output[[plotname]] <- renderPlot({
         par(mar=c(1,1,1,1))
+        colNum<-i %% (n.col+1)
+        rowNum<-ceiling(i/n.col)
         plot(runif(50),main=sprintf('Plot nr #%d',i),xlim=XYs$xlim,ylim=XYs$ylim) 
       })
     })
