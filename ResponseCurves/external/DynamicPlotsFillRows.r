@@ -1,8 +1,13 @@
 Nplots<-10
 n.col<-5
 #now trying to use actual data and ggplot for pairs
-Nplots<-(ncol(dat)-1)^2+(ncol(dat)-1)
-n.col<-ncol(dat)
+dat<-sdmdata[,c(4:ncol(sdmdata),3)]
+ShowResp<-TRUE
+Nplots<-(ncol(dat)-1)^2+ifelse(ShowResp,(ncol(dat)-1),0)
+n.col<-ncol(dat)-1
+#colNum<-num %% (n.col+1)
+#rowNum<-ceiling(num/n.col)
+
 ui <- shinyUI(fluidPage(
   actionButton("zoom", label = "Zoom to brushed area"),
   actionButton("resetzoom",label = "return to full extent"),
@@ -21,26 +26,25 @@ server <- shinyServer(function(input, output) {
   )
   for (i in 1:Nplots) {
     local({
-      n <- i # Make local variable
-      plotname <- paste("plot", n , sep="")
+      num <- i # Make local variable
+      plotname <- paste("plot", num , sep="")
       output[[plotname]] <- renderPlot({
-        par(mar=c(1,1,1,1))
-        colNum<-i %% (n.col+1)
-        rowNum<-ceiling(i/n.col)
-        plot(runif(50),main=sprintf('Plot nr #%d',i),xlim=XYs$xlim,ylim=XYs$ylim) 
+        colNum<-num %% (n.col+ShowResp)
+        rowNum<-ceiling(num/(n.col+ShowResp))
+        #modular arithmitic doesn't quite map how I need
+        if(colNum==0) colNum<-n.col+1
+        #use the zero column for the relationship bw resp and pred if it is to be used
+        if(ShowResp) colNum<-colNum-1 
+        
+        print(paste("colNum",colNum,"rowNum",rowNum))
+        
+        ggpairs(dat,alph=.5,pointSize=1,DevScore=2,showResp=ShowResp,brushLoc=NULL,
+                rowNum=rowNum,colNum=colNum)
+        #plot(runif(50),main=sprintf('Plot nr #%d',i),xlim=XYs$xlim,ylim=XYs$ylim) 
       })
     })
   }
-#   plots <- lapply(1:Nplots, function(i){
-#     output[[paste("plot",i,sep="")]] <-renderPlot({
-#       browser()
-#     par(mar=c(1,1,1,1))
-#     plot(runif(50),main=sprintf('Plot nr #%d',i),xlim=XYs$xlim,ylim=XYs$ylim) 
-#     p <- recordPlot()
-#     plot.new()
-#     p})
-#   })
-  
+
   
   observeEvent(input$zoom,{
     brush <- input$plotbrush
@@ -67,13 +71,13 @@ server <- shinyServer(function(input, output) {
   })
   
   output$plots <- renderUI({
-    col.width <- round(12/n.col) # Calculate bootstrap column width
-    n.row <- ceiling(Nplots/n.col) # calculate number of rows
+    col.width <- round(12/(n.col+ShowResp)) # Calculate bootstrap column width
+    n.row <- ceiling(Nplots/(n.col+ShowResp)) # calculate number of rows
     cnter <<- 0 # Counter variable
     
     # Create row with columns
     rows  <- lapply(1:n.row,function(row.num){
-        cols  <- lapply(1:n.col, function(i) {
+        cols  <- lapply(1:(n.col+ShowResp), function(i) {
           cnter    <<- cnter + 1
           plotname <- paste("plot", cnter, sep="")
           column(col.width, plotOutput(plotname,height="300px",
