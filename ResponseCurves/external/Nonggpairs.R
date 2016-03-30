@@ -1,6 +1,7 @@
 ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum){
   
-  color.box<-col2rgb(c("#08519C","#CB181D","blue4","deeppink4"),alpha=TRUE)
+  origCols<-c("royalblue1","indianred1","blue4","#CB181D")
+  color.box<-col2rgb(origCols,alpha=TRUE)
   color.box[4,]<-255*alph
   temp.fct<-function(a){return(rgb(red=a[1],green=a[2],blue=a[3],alpha=a[4]))}
   Cols<-apply(color.box/255,2,temp.fct)
@@ -10,22 +11,22 @@ ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum
                                  dat[,ncol(dat)],sep="."),
                                  levels=c("nonbrush.0","nonbrush.1","brush.0","brush.1"))
   respCol<-ncol(dat)-1
- 
+  dat$brush<-as.factor(brushRegion)
   d<-data.frame(x=c(0,1),y=c(0,1))
   colOffset<-ifelse(showResp,1,0) 
   dat[,respCol]<-as.numeric(as.character(dat[,respCol])) 
-  par(mar=c(2,2,0,0))
+  par(mar=c(2,2,2,0))
 #===================
   #response column
   if(colNum==0){
-  
+   
     dat[,respCol]<-as.numeric(dat[,respCol]) 
   
      respPlt<-ggplot(dat, aes_q(x = as.name(names(dat)[rowNum]), 
                                y =as.name(names(dat)[respCol]))) + 
       geom_point(aes_q(x = as.name(names(dat)[rowNum]), 
                        y =as.name(names(dat)[respCol]),
-                       colour=as.name(names(dat)[respCol+1])),alpha=alph) +
+                       colour=as.name(names(dat)[respCol+1])),size=c(1,2)[as.factor(brushRegion)],alpha=alph) +
       stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 3))+
       scale_colour_manual(values = Cols)+theme(legend.position="none")+
       theme(panel.grid.minor=element_blank(),
@@ -39,13 +40,18 @@ ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum
   
   #================================
   #histogram above the diagonal
-  if(rowNum==colNum){ 
-    #might want to think about two colors for pres and absence at some point
-    hist(dat[,2],main=ifelse(rowNum==1,names(dat[rowNum]),""),yaxt="n",col="blue",ylab="",xlab="")
+  if(rowNum==colNum){
+    
+    hst<-hist(dat[,colNum],col=origCols[1],main=ifelse(rowNum==1,names(dat[rowNum]),""),
+              yaxt="n",ylab="",xlab="")
     rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
            "grey89",border="grey89")
-    hist(dat[,2],yaxt="n",col="blue",add=TRUE,ylab="")
-     
+    hst<-hist(dat[,colNum],col=origCols[3],add=TRUE)
+    hist(dat[dat$brushResp!="brush.0",colNum],breaks=hst$breaks,add=TRUE,col=origCols[1])
+    hist(dat[!dat$brushResp %in% c("brush.0","nonbrush.0"),colNum],
+         breaks=hst$breaks,add=TRUE,col=origCols[4])
+    hist(dat[!dat$brushResp %in% c("brush.0","nonbrush.0","brush.1"),colNum],
+         breaks=hst$breaks,add=TRUE,col=origCols[2])
     return()
   }  
   #================================  

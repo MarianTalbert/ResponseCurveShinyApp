@@ -9,8 +9,6 @@ n.col<-ncol(dat)-1
 #rowNum<-ceiling(num/n.col)
 
 ui <- shinyUI(fluidPage(
-  actionButton("zoom", label = "Zoom to brushed area"),
-  actionButton("resetzoom",label = "return to full extent"),
   actionButton("highlight", label = "Highlight points in brushed area"),
   actionButton("resethighlight", label = "remove highlight selection"),
   uiOutput('plots')
@@ -44,37 +42,28 @@ server <- shinyServer(function(input, output) {
     })
   }
 
-  
-  observeEvent(input$zoom,{
-    
-    #I have to figure out which of my plotbrushes was used and
-    #store the number to calculate indicies associated with limits
-    Name<-names(input)[grep("plotbrush",names(input))]
-    brush<-input[[Name]]
-    plotNum<-gsub("plotbrush","",Name)
-    
-    if (!is.null(brush)) {
-      XYs$xlim <- c(brush$xmin, brush$xmax)
-      XYs$ylim <- c(brush$ymin, brush$ymax)
-      XYs$plotNum <-plotNum
-      
-    } else {
-      XYs$xlim <- NULL
-      XYs$ylim <- NULL
-      XYs$plotNum <-NULL
-    }
+  observeEvent(input$resethighlight,{
+    XYs$xlim = NULL
+    XYs$ylim = NULL
+    XYs$xhighlight =NULL
+    XYs$yhighlight = NULL
+    XYs$brushRegion = rep(FALSE,times=nrow(dat))
   })
-  
   observeEvent(input$highlight,{
   
     Name<-names(input)[grep("plotbrush",names(input))]
+    
+    #shiny gets angry if I check for null in an lapply so do a loop over names
+    #to figure out which plotbrush is non-null
+    for(i in 1:length(Name)) if(!is.null(input[[Name[i]]])) indx=i
+    Name<-Name[indx]
     brush<-input[[Name]]
     plotNum<-gsub("plotbrush","",Name)
     
     #I need to make sure this works 
     Xvar<-floor(as.numeric(plotNum)/(n.col+ShowResp))
     Yvar<-as.numeric(plotNum)%%(n.col+ShowResp)
-    browser()
+    
     if (!is.null(brush)) {
       
       XYs$xhighlight <- c(brush$xmin, brush$xmax)
