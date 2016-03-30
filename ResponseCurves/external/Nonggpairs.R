@@ -1,51 +1,41 @@
 ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum){
   
-  color.box<-col2rgb(c("blue","red","gold1"),alpha=TRUE)
+  color.box<-col2rgb(c("#08519C","#CB181D","blue4","deeppink4"),alpha=TRUE)
   color.box[4,]<-255*alph
   temp.fct<-function(a){return(rgb(red=a[1],green=a[2],blue=a[3],alpha=a[4]))}
   Cols<-apply(color.box/255,2,temp.fct)
-  
+ 
+ 
+  dat$brushResp<-factor(paste(c("nonbrush","brush")[as.factor(brushRegion)],
+                                 dat[,ncol(dat)],sep="."),
+                                 levels=c("nonbrush.0","nonbrush.1","brush.0","brush.1"))
+  respCol<-ncol(dat)-1
+ 
   d<-data.frame(x=c(0,1),y=c(0,1))
   colOffset<-ifelse(showResp,1,0) 
-  dat[,ncol(dat)]<-as.numeric(as.character(dat[,ncol(dat)])) 
+  dat[,respCol]<-as.numeric(as.character(dat[,respCol])) 
   par(mar=c(2,2,0,0))
-  #===================
+#===================
   #response column
   if(colNum==0){
-    dat[,ncol(dat)]<-as.numeric(dat[,ncol(dat)]) 
-    plot(dat[,rowNum],dat[,ncol(dat)],type="n",bty="n",yaxt="n",
-         xlab=names(dat)[rowNum],ylab="",main=ifelse(rowNum==1,"Response",""))
-    rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
-                     "grey89",border="grey89")
-    points(dat[,rowNum],dat[,ncol(dat)],col=Cols[factor(dat[,ncol(dat)])],pch=16,cex=pointSize)
-   y<-as.factor(dat[,ncol(dat)])
-   x<-dat[,rowNum]
-    g<-try(gam(y~s(x,2),family=binomial),silent=TRUE)
-    gam.failed=FALSE
   
-    if(inherits(g,"try-error")){
-        gam.failed=TRUE
-        g<-glm(dat[,ncol(dat)]~dat[,rowNum]+(dat[,rowNum])^2,family=binomial)
-    }
-    pctDev<-try((1-g$dev/g$null.deviance)<0,silent=TRUE)
-    y.fit<-predict(g,type="response")
-    lines(x[order(x)],y.fit[order(x)],lwd=2)
-    return()
-#       respPlt<-ggplot(dat, aes_q(x = as.name(names(dat)[rowNum]), 
-#                                  y =as.name(names(dat)[ncol(dat)]),
-#                                  colour=as.name(names(dat)[ncol(dat)]))) + 
-#         geom_point(alpha=alph) +
-#         stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 3))+
-#         scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
-#         theme(panel.grid.minor=element_blank(),
-#               panel.grid.major=element_blank(),plot.margin=unit(c(0,1,1,0),"mm"))+
-#         xlab("")+ylab("")+scale_y_continuous(breaks=NULL)
-#       
-#       if(rowNum==1) respPlt<-respPlt+ggtitle("Response")
-#       return(respPlt)
-    }
+    dat[,respCol]<-as.numeric(dat[,respCol]) 
   
-  dat[,ncol(dat)]<-as.factor(dat[,ncol(dat)]) 
+     respPlt<-ggplot(dat, aes_q(x = as.name(names(dat)[rowNum]), 
+                               y =as.name(names(dat)[respCol]))) + 
+      geom_point(aes_q(x = as.name(names(dat)[rowNum]), 
+                       y =as.name(names(dat)[respCol]),
+                       colour=as.name(names(dat)[respCol+1])),alpha=alph) +
+      stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 3))+
+      scale_colour_manual(values = Cols)+theme(legend.position="none")+
+      theme(panel.grid.minor=element_blank(),
+            panel.grid.major=element_blank(),plot.margin=unit(c(0,1,1,0),"mm"))+
+      xlab("")+ylab("")
+    
+    if(rowNum==1) respPlt<-respPlt+ggtitle("Response")
+    return(respPlt)
+}
+  dat[,respCol]<-as.factor(dat[,respCol]) 
   
   #================================
   #histogram above the diagonal
@@ -60,14 +50,17 @@ ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum
   }  
   #================================  
   #pairs plot below the diagonal
+
   if(rowNum>colNum){
+    
     plot(x=dat[,colNum],y=dat[,rowNum],type="n",
-         xaxt=ifelse(rowNum!=(ncol(dat)-1),"n","s"),
-         ylab=ifelse(rowNum!=(ncol(dat)-1),"",names(dat)[rowNum]),
+         xaxt=ifelse(rowNum!=(respCol-1),"n","s"),
+         ylab=ifelse(rowNum!=(respCol-1),"",names(dat)[rowNum]),
          yaxt=ifelse(colNum!=1,"n","s"),xlab=ifelse(colNum!=1,"",names(dat)[colNum]))
     rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
            "grey89",border="grey89")
-    points(x=dat[,colNum],y=dat[,rowNum],col=Cols[factor(dat[,ncol(dat)])],pch=16,cex=pointSize,bty="n")
+    points(x=dat[,colNum],y=dat[,rowNum],col=Cols[dat$brushResp],pch=16,
+           cex=c(pointSize,1.6*pointSize)[factor(brushRegion)],bty="n")
             return()
     }  
   #=============================

@@ -12,7 +12,7 @@ ui <- shinyUI(fluidPage(
   actionButton("zoom", label = "Zoom to brushed area"),
   actionButton("resetzoom",label = "return to full extent"),
   actionButton("highlight", label = "Highlight points in brushed area"),
-  actionButton("resethighlight", label = "remove hight selection"),
+  actionButton("resethighlight", label = "remove highlight selection"),
   uiOutput('plots')
 ))
 
@@ -23,7 +23,7 @@ server <- shinyServer(function(input, output) {
     ylim = NULL,
     xhighlight =NULL,
     yhighlight = NULL,
-    brushRegion = NULL
+    brushRegion = rep(FALSE,times=nrow(dat))
   )
   for (i in 1:Nplots) {
     local({
@@ -36,7 +36,7 @@ server <- shinyServer(function(input, output) {
         if(colNum==0) colNum<-n.col+1
         #use the zero column for the relationship bw resp and pred if it is to be used
         if(ShowResp) colNum<-colNum-1 
-        if(!is.null(XYs$xlim) | !is.null(XYs$xhighlight)) browser()
+        
         ggpairs(dat,alph=.5,pointSize=1,DevScore=2,showResp=ShowResp,brushRegion=XYs$brushRegion,
                 rowNum=rowNum,colNum=colNum)
         #plot(runif(50),main=sprintf('Plot nr #%d',i),xlim=XYs$xlim,ylim=XYs$ylim) 
@@ -70,11 +70,11 @@ server <- shinyServer(function(input, output) {
     Name<-names(input)[grep("plotbrush",names(input))]
     brush<-input[[Name]]
     plotNum<-gsub("plotbrush","",Name)
-    browser()
+    
     #I need to make sure this works 
-    Yvar<-ceiling(as.numeric(plotNum)/(n.col+ShowResp))
-    Xvar<-as.numeric(plotNum)%%(n.col-ShowResp)+1
-   
+    Xvar<-floor(as.numeric(plotNum)/(n.col+ShowResp))
+    Yvar<-as.numeric(plotNum)%%(n.col+ShowResp)
+    browser()
     if (!is.null(brush)) {
       
       XYs$xhighlight <- c(brush$xmin, brush$xmax)
@@ -87,7 +87,7 @@ server <- shinyServer(function(input, output) {
       XYs$xhighlight <- NULL
       XYs$yhighlight <- NULL
       XYs$plotNum <-NULL
-      XYs$brushRegion <-NULL
+      XYs$brushRegion <-rep(FALSE,times=nrow(dat))
     }
   })
   
