@@ -2,7 +2,7 @@ Nplots<-10
 n.col<-5
 #now trying to use actual data and ggplot for pairs
 dat<-sdmdata[,c(4:ncol(sdmdata),3)]
-ShowResp<-TRUE
+ShowResp<-FALSE
 Nplots<-(ncol(dat)-1)^2+ifelse(ShowResp,(ncol(dat)-1),0)
 n.col<-ncol(dat)-1
 #colNum<-num %% (n.col+1)
@@ -17,10 +17,6 @@ ui <- shinyUI(fluidPage(
 server <- shinyServer(function(input, output) {
 
   XYs <- reactiveValues(
-    xlim = NULL,
-    ylim = NULL,
-    xhighlight =NULL,
-    yhighlight = NULL,
     brushRegion = rep(FALSE,times=nrow(dat))
   )
   for (i in 1:Nplots) {
@@ -31,22 +27,18 @@ server <- shinyServer(function(input, output) {
         colNum<-num %% (n.col+ShowResp)
         rowNum<-ceiling(num/(n.col+ShowResp))
         #modular arithmitic doesn't quite map how I need
-        if(colNum==0) colNum<-n.col+1
+        if(colNum==0) colNum<-n.col+ShowResp
         #use the zero column for the relationship bw resp and pred if it is to be used
         if(ShowResp) colNum<-colNum-1 
-        
+       
         ggpairs(dat,alph=.5,pointSize=1,DevScore=2,showResp=ShowResp,brushRegion=XYs$brushRegion,
                 rowNum=rowNum,colNum=colNum)
-        #plot(runif(50),main=sprintf('Plot nr #%d',i),xlim=XYs$xlim,ylim=XYs$ylim) 
+        
       })
     })
   }
 
   observeEvent(input$resethighlight,{
-    XYs$xlim = NULL
-    XYs$ylim = NULL
-    XYs$xhighlight =NULL
-    XYs$yhighlight = NULL
     XYs$brushRegion = rep(FALSE,times=nrow(dat))
   })
   observeEvent(input$highlight,{
@@ -61,21 +53,21 @@ server <- shinyServer(function(input, output) {
     plotNum<-gsub("plotbrush","",Name)
     
     #I need to make sure this works 
-    Xvar<-floor(as.numeric(plotNum)/(n.col+ShowResp))
-    Yvar<-as.numeric(plotNum)%%(n.col+ShowResp)
-    
+    Yvar<-ceiling(as.numeric(plotNum)/(n.col+ShowResp))
+    Xvar<-as.numeric(plotNum)%%(n.col+ShowResp)-ShowResp
+   
     if (!is.null(brush)) {
+      #three cases for the response look at the X and the correct response
+      #for the hist the Yvar is wrong because it's a count
       
-      XYs$xhighlight <- c(brush$xmin, brush$xmax)
-      XYs$yhighlight <- c(brush$ymin, brush$ymax)
-      XYs$plotNum <-plotNum
-      XYs$brushRegion<-dat[,Xvar]<=brush$xmax & dat[,Xvar]>=brush$xmin &
-                       dat[,Yvar]<=brush$ymax & dat[,Yvar]>=brush$ymin
+       #X and y are actually different for the first column
+        if(Xvar==0) XYs$brushRegion<-dat[,Yvar]<=brush$xmax & dat[,Yvar]>=brush$xmin &
+                                    dat[,ncol(dat)]<=brush$ymax & dat[,ncol(dat)]>=brush$ymin
+        if(Xvar==Yvar) XYs$brushRegion<-dat[,Xvar]<=brush$xmax & dat[,Xvar]>=brush$xmin
+        if(Xvar!=0 & Xvar!=Yvar) XYs$brushRegion<-dat[,Xvar]<=brush$xmax & dat[,Xvar]>=brush$xmin &
+                         dat[,Yvar]<=brush$ymax & dat[,Yvar]>=brush$ymin
       
     } else {
-      XYs$xhighlight <- NULL
-      XYs$yhighlight <- NULL
-      XYs$plotNum <-NULL
       XYs$brushRegion <-rep(FALSE,times=nrow(dat))
     }
   })

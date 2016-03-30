@@ -1,6 +1,7 @@
 ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum){
   
-  origCols<-c("royalblue1","indianred1","blue4","#CB181D")
+  origCols<-c("blue","red","blue","red")
+  if(any(brushRegion)) origCols[c(1,2)]<-c("steelblue","rosybrown1")
   color.box<-col2rgb(origCols,alpha=TRUE)
   color.box[4,]<-255*alph
   temp.fct<-function(a){return(rgb(red=a[1],green=a[2],blue=a[3],alpha=a[4]))}
@@ -15,20 +16,21 @@ ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum
   d<-data.frame(x=c(0,1),y=c(0,1))
   colOffset<-ifelse(showResp,1,0) 
   dat[,respCol]<-as.numeric(as.character(dat[,respCol])) 
-  par(mar=c(2,2,2,0))
+  if(rowNum==1) par(mar=c(2,2,1,0))
+  else par(mar=c(2,2,0,0))
 #===================
   #response column
   if(colNum==0){
    
     dat[,respCol]<-as.numeric(dat[,respCol]) 
-  
+ 
      respPlt<-ggplot(dat, aes_q(x = as.name(names(dat)[rowNum]), 
                                y =as.name(names(dat)[respCol]))) + 
       geom_point(aes_q(x = as.name(names(dat)[rowNum]), 
                        y =as.name(names(dat)[respCol]),
                        colour=as.name(names(dat)[respCol+1])),size=c(1,2)[as.factor(brushRegion)],alpha=alph) +
       stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 3))+
-      scale_colour_manual(values = Cols)+theme(legend.position="none")+
+      scale_colour_manual(values = Cols[which(table(dat[,respCol+1])!=0)])+theme(legend.position="none")+
       theme(panel.grid.minor=element_blank(),
             panel.grid.major=element_blank(),plot.margin=unit(c(0,1,1,0),"mm"))+
       xlab("")+ylab("")
@@ -43,15 +45,15 @@ ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum
   if(rowNum==colNum){
     
     hst<-hist(dat[,colNum],col=origCols[1],main=ifelse(rowNum==1,names(dat[rowNum]),""),
-              yaxt="n",ylab="",xlab="")
+              yaxt="n",ylab="",xlab="",xaxt=ifelse(rowNum!=(respCol-1),"n","s"))
     rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
            "grey89",border="grey89")
-    hst<-hist(dat[,colNum],col=origCols[3],add=TRUE)
-    hist(dat[dat$brushResp!="brush.0",colNum],breaks=hst$breaks,add=TRUE,col=origCols[1])
-    hist(dat[!dat$brushResp %in% c("brush.0","nonbrush.0"),colNum],
+    hst<-hist(dat[,colNum],col=origCols[1],add=TRUE)
+    hist(dat[dat$brushResp!="nonbrush.0",colNum],breaks=hst$breaks,add=TRUE,col=origCols[2])
+    hist(dat[!dat$brushResp %in% c("nonbrush.1","nonbrush.0"),colNum],
+         breaks=hst$breaks,add=TRUE,col=origCols[3])
+    hist(dat[!dat$brushResp %in% c("brush.0","nonbrush.0","nonbrush.1"),colNum],
          breaks=hst$breaks,add=TRUE,col=origCols[4])
-    hist(dat[!dat$brushResp %in% c("brush.0","nonbrush.0","brush.1"),colNum],
-         breaks=hst$breaks,add=TRUE,col=origCols[2])
     return()
   }  
   #================================  
@@ -80,7 +82,7 @@ ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum
           theme(panel.background = element_rect(fill = Cols[ColIndx]))+
           theme(panel.grid.major = element_line(colour = Cols[ColIndx]))+
           theme(panel.grid.minor = element_line(colour = Cols[ColIndx]),
-                plot.margin=unit(c(0,1,1,0),"mm"))+
+                plot.margin=unit(c(0,1,2,0),"mm"))+
           ylab("")+xlab("")+scale_x_continuous(breaks=NULL)+
           scale_y_continuous(breaks=NULL)+theme(axis.title=element_text(size=rel(1.3)))+
           annotate("text", label= round(Cor,digits=2), x=.5, y=.5,
