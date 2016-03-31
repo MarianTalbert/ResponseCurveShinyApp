@@ -26,7 +26,7 @@ app <- shinyApp(
               radioButtons(inputId="sortBy","Sort by:",c("Total high correlations with other variables being considered"="TotCors",
                                                         "Percent deviance explained in a univariate GAM model"="Dev")),
               uiOutput("varChoices"),
-              checkboxInput("showRespGam","Show GAM fit each predictor with the Response",value=FALSE),
+              checkboxInput("showRespGam","Show GAM fit each predictor with the Response",value=TRUE),
               numericInput("numPlts","Number of variables to display" , 5),
               sliderInput("pointSize","Scatterplot point size",min=.05,max=6,value=1),
               sliderInput("alpha","Scatterplot point transparency",min=.05,max=1,value=.7),
@@ -65,6 +65,28 @@ app <- shinyApp(
       XYs <- reactiveValues(
         brushRegion = rep(FALSE,times=nrow(dat))
       )
+      
+      values<-reactiveValues(
+        orderVar=TotalCors,
+        dat=dat,
+        devExp=DevScore$devExp,
+        TotCors=TotalCors
+      )
+      
+      npts=reactive({
+        return((min(input$numPlts,ncol(values$dat))-1)^2+
+                 ifelse(input$showRespGam,(min(input$numPlts,ncol(values$dat))-1),0))
+        })
+      Nplots<-isolate(npts())
+      
+      ncls=reactive({
+        return(min(ncol(values$dat),input$numPlts)-1)
+      })
+      n.cols<-isolate(ncls())
+      
+      
+      #===================================================
+      #Interactive pairs plot
       for (i in 1:Nplots) {
         local({
           num <- i # Make local variable
@@ -77,13 +99,37 @@ app <- shinyApp(
             #use the zero column for the relationship bw resp and pred if it is to be used
             if(ShowResp) colNum<-colNum-1 
             
-            ggpairs(dat,alph=.5,pointSize=1,DevScore=2,showResp=ShowResp,brushRegion=XYs$brushRegion,
+            ggpairs(values$dat,alph=input$alpha,pointSize=input$pointSize,DevScore=2,
+                    showResp=input$showRespGam,brushRegion=XYs$brushRegion,
                     rowNum=rowNum,colNum=colNum)
             
           })
         })
       }
+      output$plots <- renderUI({
+        col.width <- round(12/(n.col+ShowResp)) # Calculate bootstrap column width
+        n.row <- ceiling(Nplots/(n.col+ShowResp)) # calculate number of rows
+        cnter <<- 0 # Counter variable
+        
+        # Create row with columns
+        rows  <- lapply(1:n.row,function(row.num){
+          cols  <- lapply(1:(n.col+ShowResp), function(i) {
+            cnter    <<- cnter + 1
+            brushName<-paste("plotbrush",cnter,sep="")
+            plotname <- paste("plot", cnter, sep="")
+            column(col.width, plotOutput(plotname,height="300px",
+                                         brush = brushOpts(
+                                           id = brushName,
+                                           resetOnNew = TRUE
+                                         )),style="padding: 1px;")
+          }) 
+          fluidRow( do.call(tagList, cols),style="padding: 1px;" )
+        })
+        
+        do.call(tagList, rows)
+      })
       
+      #===========================================
       observeEvent(input$resethighlight,{
         XYs$brushRegion = rep(FALSE,times=nrow(dat))
       })
@@ -118,34 +164,10 @@ app <- shinyApp(
         }
       })
       
-      output$plots <- renderUI({
-        col.width <- round(12/(n.col+ShowResp)) # Calculate bootstrap column width
-        n.row <- ceiling(Nplots/(n.col+ShowResp)) # calculate number of rows
-        cnter <<- 0 # Counter variable
-        
-        # Create row with columns
-        rows  <- lapply(1:n.row,function(row.num){
-          cols  <- lapply(1:(n.col+ShowResp), function(i) {
-            cnter    <<- cnter + 1
-            brushName<-paste("plotbrush",cnter,sep="")
-            plotname <- paste("plot", cnter, sep="")
-            column(col.width, plotOutput(plotname,height="300px",
-                                         brush = brushOpts(
-                                           id = brushName,
-                                           resetOnNew = TRUE
-                                         )),style="padding: 1px;")
-          }) 
-          fluidRow( do.call(tagList, cols),style="padding: 1px;" )
-        })
-        
-        do.call(tagList, rows)
-      })
-      values<-reactiveValues(orderVar=TotalCors,
-                             dat=dat,
-                             devExp=DevScore$devExp,
-                             TotCors=TotalCors)
+     
+     
       
-      observeEvent(input$sortBy,{
+     observeEvent(input$sortBy,{
         
         if(input$sortBy=="TotCors") o<-order(TotalCors,decreasing=TRUE)
         else o<-order(DevScore$devExp,decreasing=TRUE)
@@ -154,21 +176,20 @@ app <- shinyApp(
           values$TotCors<-TotalCors[o]
       }) 
       
-      output$varChoices <- renderUI({
+     output$varChoices <- renderUI({
         choices<-paste(names(values$dat)[-c(ncol(values$dat))],
                                " (","Percent Deviance Explained ",values$devExp,"%)",sep="")
         checkboxGroupInput('chkGrp', 'Variables to include', choices=choices,selected=choices)
  
       })
       
-      output$oneVarChoice <- renderUI({
+     output$oneVarChoice <- renderUI({
         choices<-paste(names(values$dat)[-c(ncol(values$dat))],
                        " (","Percent Deviance Explained ",values$devExp,"%)",sep="")
        radioButtons('InptVar', 'Variable', choices=choices)
       })
   
-     
-      output$VarMap<-renderPlot({
+     output$VarMap<-renderPlot({
         if(!is.null(input$InptVar)){
           InputVar<-strsplit(input$InptVar," ")[[1]][1]
           par(oma=c(0,0,0,0),mar=c(2,2,2,2))
@@ -188,8 +209,7 @@ app <- shinyApp(
        }
       })
       
-                              
-    output$Gam<-renderPlot({
+     output$Gam<-renderPlot({
       if(!is.null(input$InptVar)){
         InputVar<-strsplit(input$InptVar," ")[[1]][1]
         varNum<-match(InputVar,names(values$dat))
@@ -207,7 +227,8 @@ app <- shinyApp(
         respPlt
       }
     })
-    output$Hist<-renderPlot({
+     
+     output$Hist<-renderPlot({
       if(!is.null(input$InptVar)){
         InputVar<-strsplit(input$InptVar," ")[[1]][1]
         ggplot(values$dat, aes_q(x=as.name(InputVar),
