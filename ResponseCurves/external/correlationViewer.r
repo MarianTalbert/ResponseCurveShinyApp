@@ -68,6 +68,9 @@ app <- shinyApp(
       
       values<-reactiveValues(
         orderVar=TotalCors,
+        sortNames = names(dat),
+        sortOrder = seq(1:(ncol(dat)-1)), #column indicies after sorting
+        plotInds =  seq(1:(ncol(dat)-1)), #indicies for plotting              
         dat=dat,
         devExp=DevScore$devExp,
         TotCors=TotalCors
@@ -84,7 +87,17 @@ app <- shinyApp(
       })
       n.cols<-isolate(ncls())
       
-      
+      vtu<-reactive({
+        varsToUse<-names(values$dat)  
+      if(!is.null(input$chkGrp)){
+                    spltDat<-strsplit(input$chkGrp," ")
+                    varsToUse<-unlist(lapply(spltDat,"[",1))
+                    d<-values$dat[,c(match(varsToUse,names(values$dat)))]
+                    if(input$numPlts<(length(varsToUse))) varsToUse<-varsToUse[,(1:input$numPlts)]
+      }
+      return(varsToUse)
+      })
+      varsToUse<-isolate(vtu()) 
       #===================================================
       #Interactive pairs plot
       for (i in 1:Nplots) {
@@ -92,14 +105,14 @@ app <- shinyApp(
           num <- i # Make local variable
           plotname <- paste("plot", num , sep="")
           output[[plotname]] <- renderPlot({
-            colNum<-num %% (n.col+ShowResp)
-            rowNum<-ceiling(num/(n.col+ShowResp))
+            colNum<-num %% (n.col+input$showRespGam)
+            rowNum<-ceiling(num/(n.col+input$showRespGam))
             #modular arithmitic doesn't quite map how I need
-            if(colNum==0) colNum<-n.col+ShowResp
+            if(colNum==0) colNum<-n.col+input$showRespGam
             #use the zero column for the relationship bw resp and pred if it is to be used
-            if(ShowResp) colNum<-colNum-1 
-            
-            ggpairs(values$dat,alph=input$alpha,pointSize=input$pointSize,DevScore=2,
+            if(input$showRespGam) colNum<-colNum-1 
+           
+            ggpairs(values$dat[,c(match(varsToUse,names(values$dat)),ncol(dat))],alph=input$alpha,pointSize=input$pointSize,DevScore=2,
                     showResp=input$showRespGam,brushRegion=XYs$brushRegion,
                     rowNum=rowNum,colNum=colNum)
             
