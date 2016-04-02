@@ -23,15 +23,16 @@ app <- shinyApp(
       tabPanel("Correlation Filtering",
         sidebarLayout(
             sidebarPanel(
-              radioButtons(inputId="sortBy","Sort by:",c("Total high correlations with other variables being considered"="TotCors",
-                                                        "Percent deviance explained in a univariate GAM model"="Dev")),
+              radioButtons(inputId="sortBy","Sort by:",
+                           c("Total high correlations with other variables being considered"="TotCors",
+                              "Percent deviance explained in a univariate GAM model"="Dev")),
               uiOutput("varChoices"),
               checkboxInput("showRespGam","Show GAM fit each predictor with the Response",value=TRUE),
               numericInput("numPlts","Number of variables to display" , 5),
               sliderInput("pointSize","Scatterplot point size",min=.05,max=6,value=1),
               sliderInput("alpha","Scatterplot point transparency",min=.05,max=1,value=.7),
               actionButton("highlight", label = "Highlight points in brushed area"),
-              actionButton("resethighlight", label = "remove highlight selection")
+              actionButton("resethighlight", label = "remove highlight selection"),width=3
           ),
           mainPanel(
             uiOutput('plots')
@@ -46,7 +47,7 @@ app <- shinyApp(
                                c("add presence points"="showPres",
                                  "add absence/background points"="showAbs")),
             sliderInput("mpPtSz", "Map pointsize", 
-                        min=0, max=5, value=.7,step=.1)
+                        min=0, max=5, value=.7,step=.1),width=3
         ),
         mainPanel(
           fluidRow(
@@ -68,12 +69,10 @@ app <- shinyApp(
       
       values<-reactiveValues(
         orderVar=TotalCors,
-        sortNames = names(dat),
-        sortOrder = seq(1:(ncol(dat)-1)), #column indicies after sorting
-        plotInds =  seq(1:(ncol(dat)-1)), #indicies for plotting              
         dat=dat,
         devExp=DevScore$devExp,
-        TotCors=TotalCors
+        TotCors=TotalCors,
+        VarsToUse=names(dat)[1:(ncol(dat)-1)]
       )
       
       npts=reactive({
@@ -83,21 +82,20 @@ app <- shinyApp(
       Nplots<-isolate(npts())
       
       ncls=reactive({
-        return(min(ncol(values$dat),input$numPlts)-1)
+        return(min(ncol(values$dat)-1,input$numPlts))
       })
-      n.cols<-isolate(ncls())
+      n.col<-isolate(ncls())
       
-      vtu<-reactive({
-        varsToUse<-names(values$dat)  
-      if(!is.null(input$chkGrp)){
-                    spltDat<-strsplit(input$chkGrp," ")
-                    varsToUse<-unlist(lapply(spltDat,"[",1))
-                    d<-values$dat[,c(match(varsToUse,names(values$dat)))]
-                    if(input$numPlts<(length(varsToUse))) varsToUse<-varsToUse[,(1:input$numPlts)]
-      }
-      return(varsToUse)
+      
+      observeEvent(input$chkGrp,{
+         values$varsToUse<-names(values$dat)[1:(ncol(values$dat)-1)]  
+          if(!is.null(input$chkGrp)){
+               spltDat<-strsplit(input$chkGrp," ")
+               values$varsToUse<-unlist(lapply(spltDat,"[",1))
+          }
+          
       })
-      varsToUse<-isolate(vtu()) 
+     
       #===================================================
       #Interactive pairs plot
       for (i in 1:Nplots) {
@@ -110,9 +108,14 @@ app <- shinyApp(
             #modular arithmitic doesn't quite map how I need
             if(colNum==0) colNum<-n.col+input$showRespGam
             #use the zero column for the relationship bw resp and pred if it is to be used
+            if(input$numPlts!=5) browser()
+            if(any(!(c(values$varsToUse,"resp")%in%names(values$dat)))) browser()
+            vtu<-c(names(values$dat)[names(values$dat)%in%values$varsToUse],"resp")
+            values$dat<-values$dat[,names(values$dat)%in%vtu]
+          
             if(input$showRespGam) colNum<-colNum-1 
-           
-            ggpairs(values$dat[,c(match(varsToUse,names(values$dat)),ncol(dat))],alph=input$alpha,pointSize=input$pointSize,DevScore=2,
+          
+            ggpairs(values$dat[,c(1:min(input$numPlts,(ncol(dat)-1)),ncol(dat))],alph=input$alpha,pointSize=input$pointSize,DevScore=2,
                     showResp=input$showRespGam,brushRegion=XYs$brushRegion,
                     rowNum=rowNum,colNum=colNum)
             
@@ -120,17 +123,17 @@ app <- shinyApp(
         })
       }
       output$plots <- renderUI({
-        col.width <- round(12/(n.col+ShowResp)) # Calculate bootstrap column width
-        n.row <- ceiling(Nplots/(n.col+ShowResp)) # calculate number of rows
+        col.width <- round(9/(n.col+input$showRespGam)) # Calculate bootstrap column width
+        n.row <- ceiling(Nplots/(n.col+input$showRespGam)) # calculate number of rows
         cnter <<- 0 # Counter variable
         
         # Create row with columns
         rows  <- lapply(1:n.row,function(row.num){
-          cols  <- lapply(1:(n.col+ShowResp), function(i) {
+          cols  <- lapply(1:(n.col+input$showRespGam), function(i) {
             cnter    <<- cnter + 1
             brushName<-paste("plotbrush",cnter,sep="")
             plotname <- paste("plot", cnter, sep="")
-            column(col.width, plotOutput(plotname,height="300px",
+            column(col.width, plotOutput(plotname,
                                          brush = brushOpts(
                                            id = brushName,
                                            resetOnNew = TRUE
@@ -158,8 +161,8 @@ app <- shinyApp(
         plotNum<-gsub("plotbrush","",Name)
         
         #I need to make sure this works 
-        Yvar<-ceiling(as.numeric(plotNum)/(n.col+ShowResp))
-        Xvar<-as.numeric(plotNum)%%(n.col+ShowResp)-ShowResp
+        Yvar<-ceiling(as.numeric(plotNum)/(n.col+input$showRespGam))
+        Xvar<-as.numeric(plotNum)%%(n.col+input$showRespGam)-input$showRespGam
         
         if (!is.null(brush)) {
           #three cases for the response look at the X and the correct response
