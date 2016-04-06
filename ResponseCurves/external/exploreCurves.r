@@ -316,7 +316,8 @@ ui=navbarPage("Respones Curve Explorer",
                          fluidRow(
                            column(4,
                                   wellPanel(
-                                    plotOutput("EnsembleMap", dblclick = "plotdblclick",height="300px",brush = brushOpts(
+                                    plotOutput("EnsembleMap", dblclick = "plotdblclick",height="300px",
+                                      brush = brushOpts(
                                       id = "plotbrush",
                                       resetOnNew = TRUE
                                     )),style="padding: 5px;"),style="padding: 5px;"),

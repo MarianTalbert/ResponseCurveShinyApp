@@ -46,9 +46,13 @@ app <- shinyApp(
             checkboxGroupInput("showTrain","Show Calibrarion Data",
                                c("add presence points"="showPres",
                                  "add absence/background points"="showAbs")),
-            sliderInput("mpPtSz", "Map pointsize", 
+            sliderInput("mpPtSz", "Point size for map points", 
                         min=0, max=5, value=.7,step=.1),
-            actionButton("resetExtent",label = "Reset spatial extent" ),width=3
+            sliderInput("mpPtTr", "Point transparency", 
+                        min=0, max=1, value=.7,step=.1),
+            sliderInput("mpTr", "Map transparency", 
+                        min=0, max=1, value=1,step=.1),
+            actionButton("resetExtent",label = "Reset spatial extent" ),width=2
         ),
         mainPanel(
           fluidRow(
@@ -60,8 +64,8 @@ app <- shinyApp(
           ),
           fluidRow(
             column(5,
-                   plotOutput("Gam",height=400,width=400)),
-          column(5,plotOutput("Hist",height=400,width=400))
+                   plotOutput("Gam",height=300,width=300)),
+          column(5,plotOutput("Hist",height=300,width=300))
           )
         )
      ))  
@@ -179,12 +183,12 @@ app <- shinyApp(
         XYs$brushRegion = rep(FALSE,times=nrow(dat))
       })
       observeEvent(input$highlight,{
-        
         Name<-names(input)[grep("plotbrush",names(input))]
         
         #shiny gets angry if I check for null in an lapply so do a loop over names
         #to figure out which plotbrush is non-null
         for(i in 1:length(Name)) if(!is.null(input[[Name[i]]])) indx=i
+        
         Name<-Name[indx]
         brush<-input[[Name]]
         plotNum<-gsub("plotbrush","",Name)
@@ -198,20 +202,18 @@ app <- shinyApp(
           #for the hist the Yvar is wrong because it's a count
           
           #X and y are actually different for the first column
-          if(Xvar==0) XYs$brushRegion<-dat[,Yvar]<=brush$xmax & dat[,Yvar]>=brush$xmin &
-              dat[,ncol(dat)]<=brush$ymax & dat[,ncol(dat)]>=brush$ymin
-          if(Xvar==Yvar) XYs$brushRegion<-dat[,Xvar]<=brush$xmax & dat[,Xvar]>=brush$xmin
-          if(Xvar!=0 & Xvar!=Yvar) XYs$brushRegion<-dat[,Xvar]<=brush$xmax & dat[,Xvar]>=brush$xmin &
-              dat[,Yvar]<=brush$ymax & dat[,Yvar]>=brush$ymin
+          if(Xvar==0) XYs$brushRegion<-values$dat[,Yvar]<=brush$xmax & values$dat[,Yvar]>=brush$xmin &
+              values$dat[,ncol(values$dat)]<=brush$ymax & values$dat[,ncol(values$dat)]>=brush$ymin
+          if(Xvar==Yvar) XYs$brushRegion<-values$dat[,Xvar]<=brush$xmax & values$dat[,Xvar]>=brush$xmin
+          if(Xvar!=0 & Xvar!=Yvar) XYs$brushRegion<-values$dat[,Xvar]<=brush$xmax & 
+              values$dat[,Xvar]>=brush$xmin &
+              values$dat[,Yvar]<=brush$ymax & values$dat[,Yvar]>=brush$ymin
           
         } else {
           XYs$brushRegion <-rep(FALSE,times=nrow(dat))
         }
       })
-      
      
-     
-      
      observeEvent(input$sortBy,{
         
         if(input$sortBy=="TotCors") o<-order(TotalCors,decreasing=TRUE)
@@ -223,14 +225,14 @@ app <- shinyApp(
       
      output$varChoices <- renderUI({
         choices<-paste(names(dat)[-c(ncol(dat))],
-                               " (","Percent Deviance Explained ",values$devExp,"%)",sep="")
+                               " (",round(values$devExp,digits=3),"%"," deviance explained)",sep="")
         checkboxGroupInput('chkGrp', 'Variables to include', choices=choices,selected=choices)
  
       })
       
      output$oneVarChoice <- renderUI({
         choices<-paste(names(dat)[-c(ncol(dat))],
-                       " (","Percent Deviance Explained ",values$devExp,"%)",sep="")
+                       " (",round(values$devExp,digits=3),"%"," deviance explained)",sep="")
        radioButtons('InptVar', 'Variable', choices=choices)
       })
   
@@ -238,18 +240,24 @@ app <- shinyApp(
         if(!is.null(input$InptVar)){
           InputVar<-strsplit(input$InptVar," ")[[1]][1]
           par(oma=c(0,0,0,0),mar=c(2,2,2,2))
-          plot(layerStk, match(InputVar,names(layerStk)),cex.main=1.7,xlim=XYs$xlim,ylim=XYs$ylim)
-          #probably use a choice of maps here
+          
+          plot(layerStk, match(InputVar,names(layerStk)),cex.main=1.7,xlim=XYs$xlim,ylim=XYs$ylim,
+               col=rev(inferno(25)),alpha=input$mpTr)
+          #probably use a choice of maps here mpPtTr
           plot(wrld_simpl, add=TRUE,cex.main=3)
           if(!is.null(input$showTrain)){
             
             #input$varptSize
-            if("showPres"%in%input$showTrain) points(sdmdata[sdmdata[,3]==1,1],
-                                                     sdmdata[sdmdata[,3]==1,2], 
-                                                     col="deeppink",bg="red",pch=21,cex=input$mpPtSz)
-            if("showAbs"%in%input$showTrain) points(sdmdata[sdmdata[,3]==0,1],
-                                                    sdmdata[sdmdata[,3]==0,2],
-                                                    col="dodgerblue", bg="blue",pch=21,cex=input$mpPtSz)
+            if("showPres"%in%input$showTrain) 
+                 points(sdmdata[sdmdata[,3]==1,1],
+                     sdmdata[sdmdata[,3]==1,2], 
+                     col=changeAlpha("deeppink",alpha=input$mpPtTr),
+                     bg=changeAlpha("red",alpha=input$mpPtTr),pch=21,cex=input$mpPtSz)
+            if("showAbs"%in%input$showTrain) 
+                 points(sdmdata[sdmdata[,3]==0,1],
+                    sdmdata[sdmdata[,3]==0,2],
+                    col=changeAlpha("dodgerblue",alpha=input$mpPtTr), 
+                    bg=changeAlpha("blue",alpha=input$mpPtTr),pch=21,cex=input$mpPtSz)
           } 
        }
       })
@@ -259,8 +267,7 @@ app <- shinyApp(
         InputVar<-strsplit(input$InptVar," ")[[1]][1]
         varNum<-match(InputVar,names(values$dat))
         respPlt<-ggplot(values$dat, aes_q(x = as.name(InputVar), 
-                                   y =as.name("resp"),
-                                   colour=as.name(InputVar))) + 
+                                   y =as.name("resp"))) + 
           geom_point(alpha=.4) +
           stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 2))+
           scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
