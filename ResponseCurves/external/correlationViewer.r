@@ -88,11 +88,6 @@ app <- shinyApp(
                  ifelse(input$showRespGam,min(input$numPlts,(ncol(values$dat)-1)),0)
         })
      
-      
-      #both of these are needed where I can't use reactive
-      Nplots<-isolate(values$Nplots)
-      n.col<-reactive({min(ncol(values$dat)-1,input$numPlts)})
-      
       #setting single predictor brush extent
       observeEvent(input$mapbrush,{
         brush <- input$mapbrush
@@ -119,36 +114,43 @@ app <- shinyApp(
           }
           
       })
-     
+      
+      #both of these are needed where I can't use reactive
+      Nplots<-isolate(values$Nplots)
+      
+      n.col<-reactive({min(ncol(values$dat)-1,input$numPlts)})
       #===================================================
       #Interactive pairs plot
-      for (i in 1:Nplots) {
-        local({
-          num <- i # Make local variable
-          plotname <- paste("plot", num , sep="")
-        
-          output[[plotname]] <- renderPlot({
-            
-            colNum<-num %% (n.col()+input$showRespGam)
-            rowNum<-ceiling(num/(n.col()+input$showRespGam))
-            #modular arithmitic doesn't quite map how I need
-            if(colNum==0) colNum<-n.col()+input$showRespGam
-            #use the zero column for the relationship bw resp and pred if it is to be used
-            
-            vtu<-c(names(values$dat)[names(values$dat)%in%values$varsToUse],"resp")
-            values$dat<-values$dat[,names(values$dat)%in%vtu]
-          
-            if(input$showRespGam) colNum<-colNum-1 
-          
-            ggpairs(values$dat[,c(1:min(input$numPlts,(ncol(values$dat)-1)),ncol(values$dat))],
-                    alph=input$alpha,pointSize=input$pointSize,DevScore=2,
-                    showResp=input$showRespGam,brushRegion=XYs$brushRegion,
-                    rowNum=rowNum,colNum=colNum)
-            
-          })
-        })
-      }
+     
       output$plots <- renderUI({
+        Nplots<-values$Nplots
+        for (i in 1:as.numeric(Nplots)) {
+          
+          local({
+            num <- i # Make local variable
+            plotname <- paste("plot", num , sep="")
+            Nplots<-as.numeric(Nplots)
+            output[[plotname]] <- renderPlot({
+              
+              colNum<-num %% (n.col()+input$showRespGam)
+              rowNum<-ceiling(num/(n.col()+input$showRespGam))
+              #modular arithmitic doesn't quite map how I need
+              if(colNum==0) colNum<-n.col()+input$showRespGam
+              #use the zero column for the relationship bw resp and pred if it is to be used
+              
+              vtu<-c(names(values$dat)[names(values$dat)%in%values$varsToUse],"resp")
+              values$dat<-values$dat[,names(values$dat)%in%vtu]
+              
+              if(input$showRespGam) colNum<-colNum-1 
+              #if(input$numPlts!=5 & num==1) browser()
+              ggpairs(values$dat[,c(1:min(input$numPlts,(ncol(values$dat)-1)),ncol(values$dat))],
+                      alph=input$alpha,pointSize=input$pointSize,DevScore=2,
+                      showResp=input$showRespGam,brushRegion=XYs$brushRegion,
+                      rowNum=rowNum,colNum=colNum)
+              
+            })
+          })
+        }
         col.width <- round(10/(n.col()+input$showRespGam)) # Calculate bootstrap column width
         n.row <- ceiling(values$Nplots/(n.col()+input$showRespGam)) # calculate number of rows
         cnter <<- 0 # Counter variable
