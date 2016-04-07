@@ -8,14 +8,13 @@ correlationViewer<-function(sdmdata,layerStk,Threshld=.7){
   
   missing.summary<-1-apply(apply(dat,2,complete.cases),2,sum)/nrow(dat)
   DevScore <- univariateDev(dat)
-  
+  names(DevScore$devExp)<-names(dat)[1:(ncol(dat)-1)]
   #calculate total correlations above the threshold
   #and order the data accordingly
   Cors<-cor(dat[,-c(ncol(dat))])
   Cors<-abs(Cors)>Threshld
   TotalCors<-apply(Cors,2,sum)
-  dat<-dat[,c(order(TotalCors,decreasing=TRUE),ncol(dat))]
-  
+ 
   choices<-paste(names(dat)[-c(ncol(dat))]," (","Percent Deviance Explained ",DevScore$devExp,"%)",sep="")
 #maybe put in app eventually                   
 app <- shinyApp(
@@ -143,11 +142,11 @@ app <- shinyApp(
               #use the zero column for the relationship bw resp and pred if it is to be used
               
               vtu<-c(names(values$dat)[names(values$dat)%in%values$varsToUse],"resp")
-              values$dat<-values$dat[,names(values$dat)%in%vtu]
+              Usedat<-values$dat[,names(values$dat)%in%vtu]
               
               if(input$showRespGam) colNum<-colNum-1 
-              #if(input$numPlts!=5 & num==1) browser()
-              ggpairs(values$dat[,c(1:min(input$numPlts,(ncol(values$dat)-1)),ncol(values$dat))],
+             
+              ggpairs(Usedat[,c(1:min(input$numPlts,(ncol(Usedat)-1)),ncol(Usedat))],
                       alph=input$alpha,pointSize=input$pointSize,DevScore=2,
                       showResp=input$showRespGam,brushRegion=XYs$brushRegion,
                       rowNum=rowNum,colNum=colNum)
@@ -215,7 +214,6 @@ app <- shinyApp(
       })
      
      observeEvent(input$sortBy,{
-        
         if(input$sortBy=="TotCors") o<-order(TotalCors,decreasing=TRUE)
         else o<-order(DevScore$devExp,decreasing=TRUE)
           values$dat<-dat[,c(o,ncol(dat))]
@@ -224,8 +222,9 @@ app <- shinyApp(
       }) 
       
      output$varChoices <- renderUI({
-        choices<-paste(names(dat)[-c(ncol(dat))],
-                               " (",round(values$devExp,digits=3),"%"," deviance explained)",sep="")
+        o<-order(DevScore$devExp,decreasing=TRUE)
+        choices<-paste(names(dat)[o],
+                               " (",round(DevScore$devExp[o],digits=3),"%"," deviance explained)",sep="")
         checkboxGroupInput('chkGrp', 'Variables to include', choices=choices,selected=choices)
  
       })
