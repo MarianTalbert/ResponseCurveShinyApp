@@ -245,16 +245,17 @@ app <- shinyApp(
           #probably use a choice of maps here mpPtTr
           plot(wrld_simpl, add=TRUE,cex.main=3)
           if(!is.null(input$showTrain)){
-            
+           #if(!is.null(XYs$ylim)) browser() 
+            inBounds<-sdmdata[,2]>=XYs$ylim[1] & sdmdata[,2]<=XYs$ylim[2] & sdmdata[,1]>=XYs$xlim[1] & sdmdata[,1]<=XYs$xlim[2]
             #input$varptSize
             if("showPres"%in%input$showTrain) 
-                 points(sdmdata[sdmdata[,3]==1,1],
-                     sdmdata[sdmdata[,3]==1,2], 
+                 points(sdmdata[(sdmdata[,3]==1 & inBounds),1],
+                     sdmdata[(sdmdata[,3]==1 & inBounds),2], 
                      col=changeAlpha("deeppink",alpha=input$mpPtTr),
                      bg=changeAlpha("red",alpha=input$mpPtTr),pch=21,cex=input$mpPtSz)
             if("showAbs"%in%input$showTrain) 
-                 points(sdmdata[sdmdata[,3]==0,1],
-                    sdmdata[sdmdata[,3]==0,2],
+                 points(sdmdata[(sdmdata[,3]==0 & inBounds),1],
+                    sdmdata[(sdmdata[,3]==0 & inBounds),2],
                     col=changeAlpha("dodgerblue",alpha=input$mpPtTr), 
                     bg=changeAlpha("blue",alpha=input$mpPtTr),pch=21,cex=input$mpPtSz)
           } 
