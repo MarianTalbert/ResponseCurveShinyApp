@@ -55,16 +55,15 @@ app <- shinyApp(
         ),
         mainPanel(
           fluidRow(
-            column(10,
-          plotOutput("VarMap",height=600,width=600,brush = brushOpts(
-            id = "mapbrush",
-            resetOnNew = TRUE
-          )))
-          ),
-          fluidRow(
-            column(5,
-                   plotOutput("Gam",height=300,width=300)),
-          column(5,plotOutput("Hist",height=300,width=300))
+            column(6,
+                plotOutput("VarMap",height=600,width=600,brush = brushOpts(
+                id = "mapbrush",
+                resetOnNew = TRUE
+            ))),
+            column(4,plotOutput("Hist")),
+            column(4,
+                   plotOutput("Gam",height=300,width=300))
+          
           )
         )
      ))  
@@ -148,7 +147,7 @@ app <- shinyApp(
              
               ggpairs(Usedat[,c(1:min(input$numPlts,(ncol(Usedat)-1)),ncol(Usedat))],
                       alph=input$alpha,pointSize=input$pointSize,DevScore=2,
-                      showResp=input$showRespGam,brushRegion=XYs$brushRegion,
+                      brushRegion=XYs$brushRegion,
                       rowNum=rowNum,colNum=colNum)
               
             })
@@ -264,30 +263,33 @@ app <- shinyApp(
       
      output$Gam<-renderPlot({
       if(!is.null(input$InptVar)){
+        #browser()
         InputVar<-strsplit(input$InptVar," ")[[1]][1]
         varNum<-match(InputVar,names(values$dat))
-        respPlt<-ggplot(values$dat, aes_q(x = as.name(InputVar), 
-                                   y =as.name("resp"))) + 
-          geom_point(alpha=.4) +
-          stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 2))+
-          scale_color_gradient(low="blue",high="red")+theme(legend.position="none")+
-          theme(panel.grid.minor=element_blank(),
-               panel.grid.major=element_blank(),plot.margin=unit(c(3,4,3,2),"mm"))+
-          xlab("")+ylab(paste(ifelse(DevScore$GamRan[varNum],"GAM","GLM"), "% Dev Expl",DevScore$devExp[varNum]))+
-          scale_y_continuous(breaks=NULL)+ggtitle("Response")
-        
-        respPlt
+        brushRgn<-sdmdata[,2]>=XYs$ylim[1] & 
+          sdmdata[,2]<=XYs$ylim[2] & 
+          sdmdata[,1]>=XYs$xlim[1] & 
+          sdmdata[,1]<=XYs$xlim[2]
+        ggpairs(values$dat,alph=input$mpPtTr,pointSize=input$mpPtSz,DevScore=1,brushRegion=brushRgn,varNum,colNum=0)
       }
     })
      
      output$Hist<-renderPlot({
       if(!is.null(input$InptVar)){
+        #browser()
+        inBounds<-as.factor(c("Outside Subregion","Within Subregion")[
+          as.factor(sdmdata[,2]>=XYs$ylim[1] & 
+                      sdmdata[,2]<=XYs$ylim[2] & 
+                      sdmdata[,1]>=XYs$xlim[1] & 
+                      sdmdata[,1]<=XYs$xlim[2])])
         InputVar<-strsplit(input$InptVar," ")[[1]][1]
-        ggplot(values$dat, aes_q(x=as.name(InputVar),
+        hst<-ggplot(data.frame(values$dat,inBounds=inBounds), aes_q(x=as.name(InputVar),
                           fill=as.factor(values$dat$resp)))+
           geom_histogram()+theme(plot.margin=unit(c(0,0,0,0),"mm"))+
           scale_fill_manual(values=c("blue","red"),name="Response")+
           scale_y_discrete(breaks=NULL)+scale_x_continuous(breaks=NULL)
+        if(length(unique(table(inBounds)))>1) hst<-hst+facet_grid(. ~ inBounds)
+        return(hst)
       }
     })
       

@@ -1,4 +1,4 @@
-ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum){
+ggpairs<-function(dat,alph,pointSize,DevScore,brushRegion,rowNum,colNum){
   
   origCols<-c("blue","red","blue","red")
   if(any(brushRegion)) origCols[c(1,2)]<-c("lightskyblue3","rosybrown1")
@@ -10,7 +10,6 @@ ggpairs<-function(dat,alph,pointSize,DevScore,showResp,brushRegion,rowNum,colNum
   respCol<-ncol(dat)-1
   dat$brush<-as.factor(brushRegion)
   d<-data.frame(x=c(0,1),y=c(0,1))
-  colOffset<-ifelse(showResp,1,0) 
   dat[,respCol]<-as.numeric(as.character(dat[,respCol])) 
   par(mar=c(2,ifelse(colNum==1,1,0),ifelse(rowNum==1,1,0),0))
  
