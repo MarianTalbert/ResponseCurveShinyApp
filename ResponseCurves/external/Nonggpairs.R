@@ -11,7 +11,7 @@ ggpairs<-function(dat,alph,pointSize,DevScore,brushRegion,rowNum,colNum){
   dat$brush<-as.factor(brushRegion)
   d<-data.frame(x=c(0,1),y=c(0,1))
   dat[,respCol]<-as.numeric(as.character(dat[,respCol])) 
-  par(mar=c(2,ifelse(colNum==1,1,0),ifelse(rowNum==1,1,0),0))
+  par(mar=c(2,ifelse(colNum==1,2,0),ifelse(rowNum==1,1,0),0))
  
 #===================
   #response column
@@ -58,8 +58,8 @@ ggpairs<-function(dat,alph,pointSize,DevScore,brushRegion,rowNum,colNum){
     
     plot(x=dat[,colNum],y=dat[,rowNum],type="n",
          xaxt=ifelse(rowNum!=(respCol-1),"n","s"),
-         ylab=ifelse(rowNum!=(respCol-1),"",names(dat)[rowNum]),
-         yaxt=ifelse(colNum!=1,"n","s"),xlab=ifelse(colNum!=1,"",names(dat)[colNum]),tck=.01,mgp=c(3,.01,0))
+         main="",xlab="",font.lab=2,
+         yaxt=ifelse(colNum!=1,"n","s"),ylab=ifelse(colNum==1,names(dat)[rowNum],""),tck=.01,mgp=c(1,.01,0))
     rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
            "grey89",border="grey89")
     points(x=dat[,colNum],y=dat[,rowNum],col=Cols[dat$brushResp],pch=16,

@@ -88,17 +88,12 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
              
               if(mapType=="mess") mtext(model,side=2,cex=1.7,outer=TRUE,line=2)
                if(byVar){
-                  cols<-c("blue","red")
-                  color.box<-col2rgb(cols,alpha=TRUE)
-                                   color.box[4,]<-60
-                  temp.fct<-function(a){return(rgb(red=a[1],green=a[2],blue=a[3],alpha=a[4]))}
-                  cols<-apply(color.box/255,2,temp.fct)
                     presDens<-density(dat[resp==1,pIdx])
                     absDens<-density(dat[resp==0,pIdx])
                     plot(x=c(mins[pIdx],maxs[pIdx]),y=c(0,max(absDens$y,presDens$y)),type="n",
                     ylab="",xlab=names(dat)[pIdx],yaxt="n",bty="n",cex.axis=1.5)
-                    polygon(absDens,col=cols[1],border="blue")
-                    polygon(presDens,col=cols[2],border="red")
+                    polygon(absDens,col=changeAlpha("blue",alpha=.5),border="blue")
+                    polygon(presDens,col=changeAlpha("red",alpha=.5),border="red")
                     for(v in 1:nrow(vals)){
                       segments(x0=vals[v,pIdx],y0=0,y1=25,x1=vals[v,pIdx],col=Cols[v-1],lty=2,cex=2)
                     }

@@ -56,7 +56,7 @@ app <- shinyApp(
         mainPanel(
           fluidRow(
             column(6,
-                plotOutput("VarMap",height=600,width=600,brush = brushOpts(
+                plotOutput("VarMap",brush = brushOpts(
                 id = "mapbrush",
                 resetOnNew = TRUE
             ))),

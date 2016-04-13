@@ -60,7 +60,7 @@ MARS_Model = earth(pb~ bio1 + bio5 + bio12 + bio7, data=sdmdata[tmp,],glm=list(f
 
 
 fitLst<-list(GLM_Model=GLM_Model,MARS_Model=MARS_Model,glmFit=glmFit,earthFit=earthFit,
-              nneFit=nnetFit,knnFit=knnFit1)
+              nneFit=nnetFit)
 
 
 correlationViewer(sdmdata,layerStk)

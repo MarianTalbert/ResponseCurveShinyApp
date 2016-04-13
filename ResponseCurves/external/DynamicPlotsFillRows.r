@@ -19,6 +19,7 @@ server <- shinyServer(function(input, output) {
   XYs <- reactiveValues(
     brushRegion = rep(FALSE,times=nrow(dat))
   )
+  
   for (i in 1:Nplots) {
     local({
       num <- i # Make local variable
@@ -37,7 +38,29 @@ server <- shinyServer(function(input, output) {
       })
     })
   }
-
+  output$plots <- renderUI({
+    col.width <- round(12/(n.col+ShowResp)) # Calculate bootstrap column width
+    n.row <- ceiling(Nplots/(n.col+ShowResp)) # calculate number of rows
+    cnter <<- 0 # Counter variable
+    
+    # Create row with columns
+    rows  <- lapply(1:n.row,function(row.num){
+      cols  <- lapply(1:(n.col+ShowResp), function(i) {
+        cnter    <<- cnter + 1
+        brushName<-paste("plotbrush",cnter,sep="")
+        plotname <- paste("plot", cnter, sep="")
+        column(col.width, plotOutput(plotname,height="300px",
+                                     brush = brushOpts(
+                                       id = brushName,
+                                       resetOnNew = TRUE
+                                     )),style="padding: 1px;")
+      }) 
+      fluidRow( do.call(tagList, cols),style="padding: 1px;" )
+    })
+    
+    do.call(tagList, rows)
+  })
+  
   observeEvent(input$resethighlight,{
     XYs$brushRegion = rep(FALSE,times=nrow(dat))
   })
@@ -72,28 +95,7 @@ server <- shinyServer(function(input, output) {
     }
   })
   
-  output$plots <- renderUI({
-    col.width <- round(12/(n.col+ShowResp)) # Calculate bootstrap column width
-    n.row <- ceiling(Nplots/(n.col+ShowResp)) # calculate number of rows
-    cnter <<- 0 # Counter variable
-   
-    # Create row with columns
-    rows  <- lapply(1:n.row,function(row.num){
-        cols  <- lapply(1:(n.col+ShowResp), function(i) {
-          cnter    <<- cnter + 1
-          brushName<-paste("plotbrush",cnter,sep="")
-          plotname <- paste("plot", cnter, sep="")
-          column(col.width, plotOutput(plotname,height="300px",
-                                       brush = brushOpts(
-                                         id = brushName,
-                                         resetOnNew = TRUE
-                                       )),style="padding: 1px;")
-        }) 
-        fluidRow( do.call(tagList, cols),style="padding: 1px;" )
-    })
-
-    do.call(tagList, rows)
-  })
+  
 
  
 })

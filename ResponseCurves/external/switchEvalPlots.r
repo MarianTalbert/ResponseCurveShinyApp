@@ -1,22 +1,24 @@
 switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Thresh,datNames,cexMult,TestTrain){
 #add calibration plot once it's fixed
   DiscColors<-c(rev(wes_palette("Cavalcanti")[c(1,2,4,5)]),wes_palette("GrandBudapest"))[1:length(modelNames)]
+  resp<-resp[[TestTrain]]
   if(PlotType == "EvaluationMetrics"){
    
-    Statistics = unlist(lapply(lapply(Stats,"[",TestTrain),FUN=function(x){x[[1]][c(1,3,4,5,6)]}))
-    StatsFrame = data.frame(Stat=factor(names(Statistics)),
-                            Value=as.vector(Statistics),
-                            Model=factor(rep(modelNames,each=5),levels=modelNames,ordered=TRUE))
-    
-    g<-ggplot(StatsFrame,aes(x=Stat,y=Value,fill=Model,facets=Stat), color=factor(Model)) +
-      stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_manual(values=DiscColors)+
-      ggtitle("Model Evaluation Metrics")+xlab("")
+      Statistics = unlist(lapply(lapply(Stats,"[",TestTrain),FUN=function(x){x[[1]][c(1,3,4,5,6)]}))
+      StatsFrame = data.frame(Stat=factor(names(Statistics)),
+                              Value=as.vector(Statistics),
+                              Model=factor(rep(modelNames,each=5),levels=modelNames,ordered=TRUE))
+      
+      g<-ggplot(StatsFrame,aes(x=Stat,y=Value,fill=Model,facets=Stat), color=factor(Model)) +
+        stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_manual(values=DiscColors)+
+        ggtitle("Model Evaluation Metrics")+xlab("")+ylim(0,1)
   
   }
   if(PlotType == "ROC"){
      
       pre<-cbind(seq(1:length(resp)),resp,
                  matrix(unlist(lapply(predictedVals,"[",TestTrain)),ncol=length(modelNames)))
+     
       g<-auc.roc.plot(pre,Thresh,col=DiscColors,
          model.names=modelNames)+
          theme(axis.text.x = element_text(size = rel(cexMult)))
@@ -48,12 +50,12 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
       geom_text(data=Mdat[seq(from=2,to=nrow(Mdat),by=4),], aes(x=1, y=1, label=paste(round(Percent),"%")))+
       geom_text(data=Mdat[seq(from=3,to=nrow(Mdat),by=4),], aes(x=2, y=2, label=paste(round(Percent),"%")))+
       geom_text(data=Mdat[seq(from=4,to=nrow(Mdat),by=4),], aes(x=1, y=2, label=paste(round(Percent),"%")))+
-      theme(strip.text.x = element_text(size = rel(cexMult)))+
-      theme(axis.text.x = element_text(size = rel(cexMult)))
+      theme(strip.text.x = element_text(size = rel(cexMult)),
+            axis.text.x = element_text(size = rel(cexMult)))
  
   }
   if(PlotType=="VariableImportance"){
-  
+ 
     #I'M ASSUMING FOR NOW CONSISTENT VARIABLES ACROSS MODELS
     varImpMat<-data.frame(VariableImportance=unlist(lapply(varImp,"[",TestTrain)),
                           Variable=as.factor(rep(datNames,times=length(modelNames))),
@@ -61,8 +63,9 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
     
     g<-ggplot(varImpMat,aes(x=Variable,y=VariableImportance,fill=Model), color=Model) +  
       stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+
-      scale_fill_manual(values=DiscColors)+
-        theme(axis.text.x = element_text(size = rel(cexMult)))+ylab("Drop in AUC")+xlab("Predictors")+
+      scale_fill_manual(values=DiscColors)+ylim(0,max(unlist(varImp),na.rm=TRUE))+
+        theme(axis.text.x = element_text(size = rel(cexMult)))+
+        ylab("Drop in AUC")+xlab("Predictors")+
         ggtitle("Permutation Variable Importance")
   }
   if(PlotType=="Density"){
@@ -77,15 +80,14 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
         facet_wrap(~ Model)+
         scale_fill_manual(values=c("blue","red"))+
         scale_colour_manual(values=c("blue","red"))+
-        theme(strip.text.x = element_text(size = rel(cexMult)))+
-        theme(axis.text.x = element_text(size = rel(cexMult)))
+        theme(strip.text.x = element_text(size = rel(cexMult)),
+              axis.text.x = element_text(size = rel(cexMult)))
   
     }
-    g<-g+theme(axis.title = element_text(size = rel(1.3))) +
-      #theme(axis.title = element_text(size = rel(cexMult))) +	
-      theme(plot.title =element_text(size=1.2*rel(cexMult)))+
-      theme(legend.title=element_text(size=rel(cexMult)))+
-      theme(legend.text=element_text(size=.9*rel(cexMult)))
+    g<-g+theme(axis.title = element_text(size = rel(1.3)),
+               plot.title =element_text(size=1.2*rel(cexMult)),
+               legend.title=element_text(size=rel(cexMult)),
+               legend.text=element_text(size=.9*rel(cexMult)))
       #theme(axis.text.y = element_text(size = rel(cexMult)))   
   
 return(g)

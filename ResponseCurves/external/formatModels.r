@@ -97,12 +97,38 @@ formatModels <- function(fitLst,inputLayers,trainData,threshold,testData){
   d=data.frame(Name=names(dat[[1]]),min=apply(dat[[1]],2,min,na.rm=TRUE),
                max <-apply(dat[[1]],2,max,na.rm=TRUE),mean=apply(dat[[1]],2,mean,na.rm=TRUE))
   dataLst <- split(d,f=seq(1:nrow(d)))
+  #=========================================
+  #producing the plots of evaluation metrics
+  cexMult <- 1.5
+  evalPlotGroup=c("EvaluationMetrics","ROC","ConfusionMatrix","VariableImportance","Density")
+  evaluationPlots<-list()
+  evaluationPlots[[1]]<-lapply(evalPlotGroup,FUN=switchEvalPlots,Stats=Stats,
+                               modelNames=modelLst,
+                               predictedVals=predictedVals,
+                               resp=resp,varImp=varImp,
+                               Thresh=Thresh,
+                               datNames=names(dat[[1]]),
+                               cexMult=cexMult,
+                               TestTrain=1)
+  
+  
+  if(!missing(testData)){
+    evaluationPlots[[2]]<-lapply(evalPlotGroup,FUN=switchEvalPlots,Stats=Stats,
+                                 modelNames=modelLst,
+                                 predictedVals=predictedVals,
+                                 resp=resp,varImp=varImp,
+                                 Thresh=Thresh,
+                                 datNames=names(dat[[1]]),
+                                 cexMult=cexMult,
+                                 TestTrain=2)
+  }
+  
   returnLst<-list(binaryStk=binaryStk,Coords=Coords,dat=dat,
                   dataLst=dataLst,EnsembleBin=EnsembleBin,
                   EnsemblePred=EnsemblePred,messRast=messRast,
                   modelLst=modelLst,predictedStk=predictedStk,predictedVals=predictedVals,
                   resp=resp,Stats=Stats,Thresh=Thresh,
-                  varIncluded=varIncluded,varImp=varImp,Variables=Variables)
+                  varIncluded=varIncluded,varImp=varImp,Variables=Variables,evaluationPlots=evaluationPlots)
   return(returnLst)
 }
 

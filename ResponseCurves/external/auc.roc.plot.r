@@ -29,9 +29,8 @@ auc.roc.plot<-function (DATA,Thresh, threshold = 101, find.auc = TRUE,model.name
     ThreshPoints$Model<-factor(ThreshPoints$Model,levels=Lab,ordered=TRUE)
     ThreshPoints$sensitivity<-as.numeric(ThreshPoints$sensitivity)
     ThreshPoints$specificity<-as.numeric(ThreshPoints$specificity)
-    
     p<-ggplot(PlotDat,aes(x=specificity,y=sensitivity,colour=Model)) + 
-      geom_line(size=1) + xlim(0, 1) + ylim(0, 1)+xlab(xlab)+ylab(ylab)+
+      geom_path(size=1) + xlim(0, 1) + ylim(0, 1)+xlab(xlab)+ylab(ylab)+
       scale_colour_manual(values=col)+
       geom_point(data=ThreshPoints,aes(x=specificity,y=sensitivity,colour=Model),size=rel(3))+
       theme(axis.title = element_text(size = rel(1.3)))+

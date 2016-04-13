@@ -11,9 +11,7 @@ rspHgt <- c("150px","300px","450px","650px","800px")[min(5,length(Out$modelLst))
 Cols <- c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget") 
-cexMult <- 1.5
 evalPlotGroup=c("EvaluationMetrics","ROC","ConfusionMatrix","VariableImportance","Density")
-
 #======================================================
 #======================================================
 app <- shinyApp(
@@ -149,13 +147,7 @@ app <- shinyApp(
    
       lapply(1:5,function(i){
         output[[paste("EvalPlot",i,sep="")]] <- renderPlot({
-          switchEvalPlots(PlotType=evalPlotGroup[i],Stats=Out$Stats,
-                          modelNames=Out$modelLst,
-                          predictedVals=Out$predictedVals,
-                          resp=Out$resp[[as.numeric(input$mapTestTrain)]],varImp=Out$varImp,
-                          Thresh=Out$Thresh,
-                          datNames=names(Out$dat[[1]]),cexMult=cexMult,TestTrain=as.numeric(input$mapTestTrain))
-
+          Out$evaluationPlots[[1]][[i]]
         })
       })
       
@@ -253,19 +245,14 @@ app <- shinyApp(
       #a named list of predictor densities
       lapply(1:length(Out$dataLst),function(i,dat,resp){
       output[[paste("dens",i,sep="")]] <- renderPlot({
-                 cols<-c("blue","red")
-                color.box<-col2rgb(cols,alpha=TRUE)
-                                 color.box[4,]<-60
-                temp.fct<-function(a){return(rgb(red=a[1],green=a[2],blue=a[3],alpha=a[4]))}
-                  
-                cols<-apply(color.box/255,2,temp.fct)
+                 
                   presDens<-density(dat[resp==1,i])
                   absDens<-density(dat[resp==0,i])
                   par(mar=c(2,.3,0,.3),oma=c(0,0,0,0))
                   plot(x=range(c(absDens$x,presDens$x)),y=c(0,max(absDens$y,presDens$y)),type="n",
                   ylab="",xlab=Out$Variables[i],yaxt="n")
-                  polygon(absDens,col=cols[1],border="blue")
-                  polygon(presDens,col=cols[2],border="red")
+                  polygon(absDens,col=changeAlpha("blue",alpha=.5),border="blue")
+                  polygon(presDens,col=changeAlpha("red",alpha=.5),border="red")
           })
       },dat=Out$dat[[as.numeric(input$mapTestTrain)]],
         resp=Out$resp[[as.numeric(input$mapTestTrain)]])      
@@ -303,7 +290,12 @@ ui=navbarPage("Respones Curve Explorer",
               
                 
               ),
-              
+            conditionalPanel(!missing(testData),
+                column(2,
+                   radioButtons("mapTestTrain","Deviance Residuals for Calibration or evaluation data:",
+                             c("Calibration"=1,"Evaluation"=2,"Both"=3),selected=1)
+                )
+            ),
             
             column(2,
               checkboxInput("addMImp", label = "show variable importance with background color",value=FALSE),
@@ -330,8 +322,7 @@ ui=navbarPage("Respones Curve Explorer",
   #===============================================
   # ==========  Model Evaluation ==========#
         tabPanel("Model Evaluation",
-         radioButtons("mapTestTrain","Deviance Residuals for Calibration or evaluation data:",
-                              c("Calibration"="1","Evaluation"="2")),        
+        
          fluidRow(
             column(5,
                 wellPanel(

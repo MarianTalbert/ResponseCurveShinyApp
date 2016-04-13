@@ -9,7 +9,7 @@ ChkLibs(list("rgeos","maptools","randomForest","mgcv","dismo","shiny","earth","P
 # This is almost directly from the dismo vignette 
  files <- list.files(path=paste(system.file(package="dismo"),
  '/ex', sep=''), pattern='grd', full.names=TRUE)
- files<-files[c(1,5,2,7)]
+ files<-files[c(1,3,4,5,2,7,8)]
  files<-files[-c(9)]
  layerStk <- stack(files)
   plot(layerStk)
