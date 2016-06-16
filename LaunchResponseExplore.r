@@ -1,10 +1,10 @@
 setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
-ShinyCode<-file.path(getwd(),"ResponseCurves\\External")
+ShinyCode<-file.path("ResponseCurves\\External")
 sourceList<-list.files(ShinyCode,full.names=TRUE)
 unlist(lapply(as.list(sourceList),source))
 
 ChkLibs(list("rgeos","maptools","randomForest","mgcv","dismo","shiny","earth","PresenceAbsence",
-             "wesanderson","ggplot2","raster","grid","gridExtra","splines","RColorBrewer","plotly","viridis"))
+             "wesanderson","ggplot2","raster","grid","gridExtra","splines","RColorBrewer","viridis"))
 #=====================================================
 # This is almost directly from the dismo vignette 
  files <- list.files(path=paste(system.file(package="dismo"),
