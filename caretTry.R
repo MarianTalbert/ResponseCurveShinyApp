@@ -43,24 +43,21 @@ earthFit <- train(TrainData[tmp,], TrainClasses[tmp],
 #maybe ask the creator if I can get mean probability vectors from hold out
 # folds=5
 # repeats=1
-# myControl <- trainControl(method='cv', number=folds, repeats=repeats, 
+#myControl <- trainControl(method='cv', number=folds, repeats=repeats, 
 #                           returnResamp='none', classProbs=TRUE,
 #                           returnData=FALSE, savePredictions=TRUE, 
 #                           verboseIter=TRUE, allowParallel=TRUE,
 #                           summaryFunction=twoClassSummary,
 #                           index=createMultiFolds(TrainClasses, k=folds, times=repeats))
 
-rpartFit <- train(TrainData[tmp,], TrainClasses[tmp],
-                  method = "glm",
-                    metric = "ROC",trControl=myControl)
+RandForest_Model <- train(TrainData[tmp,], TrainClasses[tmp],
+                  method = "rf",nodesize=30)
 
-rdaFit<-train(TrainData[tmp,],TrainClasses[tmp],method="rda")
+rda_Model<-train(TrainData[tmp,],TrainClasses[tmp],method="rda")
 GLM_Model = glm(pb ~ bio1 + bio5 + bio12+ bio7, data=sdmdata[tmp,],family=binomial)
 MARS_Model = earth(pb~ bio1 + bio5 + bio12 + bio7, data=sdmdata[tmp,],glm=list(family=binomial))
 
-
-fitLst<-list(GLM_Model=GLM_Model,MARS_Model=MARS_Model,glmFit=glmFit,earthFit=earthFit,
-              nneFit=nnetFit)
+fitLst<-list(GLM=GLM_Model,MARS=MARS_Model,RandForest=RandForest_Model,nnet=nnetFit)
 
 
 correlationViewer(sdmdata,layerStk)
