@@ -1,8 +1,10 @@
 ggpairs<-function(dat,alph,pointSize,DevScore,brushRegion,rowNum,colNum){
   
   origCols<-c("blue","red","blue","red")
-  if(any(brushRegion)) origCols[c(1,2)]<-c("lightskyblue3","rosybrown1")
-  Cols<-changeAlpha(origCols,alpha=alph)
+  origCols[c(3,4)]<-changeAlpha(origCols[c(3,4)],alpha=alph)
+  origCols[c(1,2)]<-changeAlpha(origCols[c(1:2)],
+                                alpha=ifelse(any(brushRegion),.2,1)*alph)
+  
   
   dat$brushResp<-factor(paste(c("nonbrush","brush")[as.factor(brushRegion)],
                                  dat[,ncol(dat)],sep="."),
@@ -18,14 +20,16 @@ ggpairs<-function(dat,alph,pointSize,DevScore,brushRegion,rowNum,colNum){
   if(colNum==0){
    
     dat[,respCol]<-as.numeric(dat[,respCol]) 
- 
+
      respPlt<-ggplot(dat, aes_q(x = as.name(names(dat)[rowNum]), 
                                y =as.name(names(dat)[respCol]))) + 
       geom_point(aes_q(x = as.name(names(dat)[rowNum]), 
                        y =as.name(names(dat)[respCol]),
-                       colour=as.name(names(dat)[respCol+1])),size=c(1,2)[as.factor(brushRegion)],alpha=alph) +
+                       colour=as.name(names(dat)[respCol+1])),
+                       size=c(1,2)[as.factor(brushRegion)],
+                        alpha=c(.2*alph,alph)[as.factor(brushRegion)]) +
       stat_smooth(method="glm", method.args=list(family="binomial"), formula = y ~ ns(x, 3))+
-      scale_colour_manual(values = Cols[which(table(dat[,respCol+1])!=0)])+theme(legend.position="none")+
+      scale_colour_manual(values = origCols[which(table(dat[,respCol+1])!=0)])+theme(legend.position="none")+
       theme(panel.grid.minor=element_blank(),
             panel.grid.major=element_blank(),plot.margin=unit(c(0,1,1,0),"mm"))+
       xlab("")+ylab("")
@@ -59,11 +63,12 @@ ggpairs<-function(dat,alph,pointSize,DevScore,brushRegion,rowNum,colNum){
     plot(x=dat[,colNum],y=dat[,rowNum],type="n",
          xaxt=ifelse(rowNum!=(respCol-1),"n","s"),
          main="",xlab="",font.lab=2,
-         yaxt=ifelse(colNum!=1,"n","s"),ylab=ifelse(colNum==1,names(dat)[rowNum],""),tck=.01,mgp=c(1,.01,0))
+         yaxt=ifelse(colNum!=1,"n","s"),ylab=ifelse(colNum==1,names(dat)[rowNum],""),
+         tck=.01,mgp=c(1,.01,0))
     rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
            "grey89",border="grey89")
-    points(x=dat[,colNum],y=dat[,rowNum],col=Cols[dat$brushResp],pch=16,
-           cex=c(pointSize,1.6*pointSize)[factor(brushRegion)],bty="n")
+    points(x=dat[,colNum],y=dat[,rowNum],col=origCols[factor(dat$brushResp)],pch=16,
+           cex=c(pointSize,1.4*pointSize)[factor(brushRegion)],bty="n")
             return()
     }  
   #=============================
