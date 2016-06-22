@@ -26,13 +26,17 @@ app <- shinyApp(
               radioButtons(inputId="sortBy","Sort by:",
                            c("Total high correlations with other variables being considered"="TotCors",
                               "Percent deviance explained in a univariate GAM model"="Dev")),
-              uiOutput("varChoices"),
-              numericInput("numPlts","Number of variables to display" , startNumPlts),
+              numericInput(inputId="numPlts",label="Number of variables to display" , 
+                           value=startNumPlts,max=6),
               sliderInput("pointSize","Scatterplot point size",min=.05,max=6,value=1),
               sliderInput("alpha","Scatterplot point transparency",min=.05,max=1,value=.7),
               actionButton("highlight", label = "Highlight points in brushed area"),
-              actionButton("resethighlight", label = "remove highlight selection"),width=2
-          ),
+              actionButton("resethighlight", label = "remove highlight selection"),
+              uiOutput("varChoices"),
+              width=2
+           ),
+           
+              
           mainPanel(
             uiOutput('plots')
           )
@@ -41,7 +45,6 @@ app <- shinyApp(
      tabPanel("Variable Plot",
         sidebarLayout(
           sidebarPanel(
-            uiOutput("oneVarChoice"),
             checkboxGroupInput("showTrain","Show Calibrarion Data",
                                c("add presence points"="showPres",
                                  "add absence/background points"="showAbs")),
@@ -51,7 +54,9 @@ app <- shinyApp(
                         min=0, max=1, value=.7,step=.1),
             sliderInput("mpTr", "Map transparency", 
                         min=0, max=1, value=1,step=.1),
-            actionButton("resetExtent",label = "Reset spatial extent" ),width=2
+            actionButton("resetExtent",label = "Reset spatial extent" ),
+            uiOutput("oneVarChoice"),
+            width=2
         ),
         mainPanel(
           fluidRow(
@@ -60,7 +65,7 @@ app <- shinyApp(
                 id = "mapbrush",
                 resetOnNew = TRUE
             ))),
-            column(4,plotOutput("Hist")),
+            column(6,plotOutput("Hist")),
             column(4,
                    plotOutput("Gam",height=300,width=300))
           
@@ -276,20 +281,34 @@ app <- shinyApp(
      
      output$Hist<-renderPlot({
       if(!is.null(input$InptVar)){
-        #browser()
+        
         inBounds<-as.factor(c("Outside Subregion","Within Subregion")[
-          as.factor(sdmdata[,2]>=XYs$ylim[1] & 
+          factor(sdmdata[,2]>=XYs$ylim[1] & 
                       sdmdata[,2]<=XYs$ylim[2] & 
                       sdmdata[,1]>=XYs$xlim[1] & 
-                      sdmdata[,1]<=XYs$xlim[2])])
+                      sdmdata[,1]<=XYs$xlim[2],levels=c("FALSE","TRUE"),ordered=TRUE)])
         InputVar<-strsplit(input$InptVar," ")[[1]][1]
-        hst<-ggplot(data.frame(values$dat,inBounds=inBounds), aes_q(x=as.name(InputVar),
-                          fill=as.factor(values$dat$resp)))+
-          geom_histogram()+theme(plot.margin=unit(c(0,0,0,0),"mm"))+
-          scale_fill_manual(values=c("blue","red"),name="Response")+
-          scale_y_discrete(breaks=NULL)+scale_x_continuous(breaks=NULL)
-        if(length(unique(table(inBounds)))>1) hst<-hst+facet_grid(. ~ inBounds)
-        return(hst)
+        par(mfrow=c(1,length(table(inBounds))))
+        colNum<-match(InputVar,names(values$dat))
+        
+        
+        for(i in 1:length(table(inBounds))){
+          hst<-hist(dat[names(table(inBounds))[i]==inBounds,colNum],
+                   ylab="",xlab="",freq=TRUE,xlim=range(dat[,colNum],na.rm=TRUE),
+                   main=ifelse(length(table(inBounds))==1,
+                               paste(names(dat)[colNum],"distribution"),
+                               names(table(inBounds))[i]))
+          rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
+                 "grey89",border="grey89")
+          hist(dat[names(table(inBounds))[i]==inBounds,colNum],breaks=hst$breaks,
+                    add=TRUE,
+                    col="red",
+                    yaxt="n",ylab="",xlab="",freq=TRUE)
+        hist(dat[(names(table(inBounds))[i]==inBounds & values$dat$resp==0),colNum],
+              breaks=hst$breaks,add=TRUE,col="blue",freq=TRUE)
+      
+        }
+      
       }
     })
       
