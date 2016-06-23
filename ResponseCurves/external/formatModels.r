@@ -20,66 +20,37 @@ formatModels <- function(fitLst,inputLayers,trainData,threshold,testData){
    
   } 
   
-  if(inherits(fitLst,"BIOMOD.models.out")){
-   
-    Biomd<-TRUE
-    modelLst<-fitLst@models.computed
-    resp$train<-trainData@data.species
-    Coords<-trainData@coord
-    preds<-get_predictions(fitLst,as.data.frame=TRUE)
-    if(any(preds>2)) preds<-preds/1000 #biomod converts to a 0 to 1000 scale
-    #evalPreds<-get_predictions(myBiomodModelOut,as.data.frame=TRUE,evaluation=TRUE)
-    #should be able to look at evaluation data as well
-    #predicted values identically 1 or 0 cause problems in devianc resids
-   
-    preds[which(preds==1,arr.ind=TRUE)] <- .999999999
-    preds[which(preds==0,arr.ind=TRUE)] <- .00000001
-    predictedVals<-as.list(preds)
-    vi<-as.data.frame(get_variables_importance(myBiomodModelOut))
-    varImp<-as.list(vi)
-    varIncluded<-as.list(as.data.frame(vi>0))
-    traindat<-trainData@data.env.var
-    Variables<-names(traindat)
-    
-    myBiomodProjection <- BIOMOD_Projection(modeling.output = fitLst,
-                                            new.env = inputLayers,
-                                            proj.name = 'current',
-                                            selected.models = 'all',
-                                            compress = FALSE,
-                                            build.clamping.mask = FALSE,keep.in.memory=TRUE,on_0_1000=FALSE)
-    predictedStk <- myBiomodProjection@proj@val 
-  }
-
+ 
   for(i in 1:length(modelLst)){
       cat(paste("preparing model", i,"of",length(modelLst),"\n")) 
       predictedVals[[i]]<-Thresh[[i]]<-Stats[[i]]<-varImp[[i]]<-list()
       
       for(split in 1:(ifelse(missing(testData),1,2))){
       
-              if(!Biomd){ 
+             
                  predictedVals[[i]][[split]]<-predictBinary(fitLst[[i]],
                                                             newdata=dat[[split]])
                  AUCVal[[split]]<-roc(resp[[split]],predictedVals[[i]][[split]])
-              }else AUCVal[[split]]<- roc(resp[[split]],predictedVals[[i]][[split]])
+              
            
             Thresh[[i]]<-optimal.thresholds(DATA=cbind(seq(1:nrow(dat[[1]])),
                                                        resp[[1]],predictedVals[[i]][[1]]))[2,threshold]
             binaryVals<-as.numeric(predictedVals[[i]][[split]]>=Thresh[[i]])
             
             Stats[[i]][[split]]<-calcStat(predictedVals[[i]][[split]],resp[[split]],Thresh[[i]])
-            if(!Biomd){
+            
               Permuted<-permutePredict(dat[[split]],fitLst[[i]],resp[[split]])
               if(split==1) varIncluded[[i]]<-Permuted$varIncluded  
               varImp[[i]][[split]]<-AUCVal[[split]]-Permuted$AUC
-            }
+            
       }
       if(i==1){ 
         #all rasters calculated with training data and training thresholds
-        if(!Biomd) predictedStk<-predict(model=fitLst[[i]],object=inputLayers,fun=predictBinary)
+        predictedStk<-predict(model=fitLst[[i]],object=inputLayers,fun=predictBinary)
         binaryStk<-createBinary(predictedStk[[i]][[1]],Thresh[[i]])
         messRast<-mess(inputLayers,dat[[1]],full=FALSE) 
       }else{ 
-        if(!Biomd) predictedStk<-addLayer(predictedStk,predict(object=inputLayers,model=fitLst[[i]],
+        predictedStk<-addLayer(predictedStk,predict(object=inputLayers,model=fitLst[[i]],
                                                                fun=predictBinary))
         binaryStk<-addLayer(binaryStk,createBinary(predictedStk[[i]][[1]],Thresh[[i]]))
       }
