@@ -108,7 +108,7 @@ app <- shinyApp(
         #Plot the Curves BY MODEL
                responseCurves(fitLst,list(m=Out$modelLst[[i]]),vals=XYs$vals,
                               varIncluded=list(Out$varIncluded[[i]]),
-                         varImp=list(Out$varImp[[i]][[as.numeric(input$mapTestTrain)]]),addImp=input$addMImp,
+                         varImp=list(Out$varImp[[i]][[as.numeric(input$mapTestTrain)]]),addImp=FALSE,
               dat=Out$dat[[1]],resp=Out$resp[[1]],Cols=Cols,Ensemble=FALSE,mapType=input$mapType,modelIdx=i,
               TestTrain=as.numeric(input$mapTestTrain))
         })
@@ -151,12 +151,19 @@ app <- shinyApp(
        # IntractVals$nEvalPlots
    
       lapply(1:5,function(i){
-        output[[paste("EvalPlot",i,sep="")]] <- renderPlot({
+        output[[paste("CalibPlot",i,sep="")]] <- renderPlot({
           Out$evaluationPlots[[1]][[i]]
         })
       })
-      
-      
+      #browser()
+      if(length(Out$evaluationPlots)==2){
+        lapply(1:5,function(i){
+          output[[paste("EvalPlot",i,sep="")]] <- renderPlot({
+            Out$evaluationPlots[[2]][[i]]
+          })
+        })  
+      }
+       
         lapply(1:5,function(i){
           output[[paste("EvalTxt",i,sep="")]] <- renderText({ 
             switchEvalText(PlotType=evalPlotGroup[i])
@@ -303,7 +310,6 @@ ui=navbarPage("Respones Curve Explorer",
             ),
             
             column(2,
-              checkboxInput("addMImp", label = "show variable importance with background color",value=FALSE),
               actionButton("resetNVals", label = "Reset explorer"),
               actionButton("resetExtent",label = "Reset spatial extent" )
               )
@@ -331,36 +337,57 @@ ui=navbarPage("Respones Curve Explorer",
          fluidRow(
             column(5,
                 wellPanel(
-                       plotOutput("EvalPlot1"),style="padding: 5px;", height="350px"),
-                textOutput("EvalTxt1"),
-                       style="padding: 5px;"),
-              column(5,
-                wellPanel(
-                       plotOutput("EvalPlot2"),style="padding: 5px;", height="350px"),
-                       textOutput("EvalTxt2"), 
-                       style="padding: 5px;")
-              ),
+                       plotOutput("CalibPlot1"),style="padding: 5px;", height="350px",
+                       style="padding: 5px;")),
+            conditionalPanel(length(Out$evaluationPlots)==2,
+              column(5,wellPanel(
+                plotOutput("EvalPlot1"),style="padding: 5px;", height="350px")
+            ))),
+         fluidRow(textOutput("EvalTxt1")),
+         
+         fluidRow(
+           column(5,
+                  wellPanel(
+                    plotOutput("CalibPlot2"),style="padding: 5px;", height="350px",
+                    style="padding: 5px;")),
+           conditionalPanel(length(Out$evaluationPlots)==2,
+                            column(5,wellPanel(
+                              plotOutput("EvalPlot2"),style="padding: 5px;", height="350px")
+                            ))),
+         fluidRow(textOutput("EvalTxt2")),
                    
              
-             fluidRow(
-               column(5,
-                      wellPanel(
-                        plotOutput("EvalPlot3", height="350px"),style="padding: 5px;"),
-                      textOutput("EvalTxt3"), 
-                      style="padding: 5px;"),
-               column(5,
-                      wellPanel(
-                        plotOutput("EvalPlot4", height="350px"),style="padding: 5px;"),
-                      textOutput("EvalTxt4"), 
-                      style="padding: 5px;")),
-            fluidRow(
-               column(5,
-                      wellPanel(
-                        plotOutput("EvalPlot5", height="350px"),style="padding: 5px;"),
-                      textOutput("EvalTxt5"), 
-                      style="padding: 5px;")
-               
-             )
+         fluidRow(
+           column(5,
+                  wellPanel(
+                    plotOutput("CalibPlot3"),style="padding: 5px;", height="350px",
+                    style="padding: 5px;")),
+           conditionalPanel(length(Out$evaluationPlots)==2,
+                            column(5,wellPanel(
+                              plotOutput("EvalPlot3"),style="padding: 5px;", height="350px")
+                            ))),
+         fluidRow(textOutput("EvalTxt3")),
+         fluidRow(
+           column(5,
+                  wellPanel(
+                    plotOutput("CalibPlot4"),style="padding: 5px;", height="350px",
+                    style="padding: 5px;")),
+           conditionalPanel(length(Out$evaluationPlots)==2,
+                            column(5,wellPanel(
+                              plotOutput("EvalPlot4"),style="padding: 5px;", height="350px")
+                            ))),
+         fluidRow(textOutput("EvalTxt4")),
+         fluidRow(
+           column(5,
+                  wellPanel(
+                    plotOutput("CalibPlot5"),style="padding: 5px;", height="350px",
+                    style="padding: 5px;")),
+           conditionalPanel(length(Out$evaluationPlots)==2,
+                            column(5,wellPanel(
+                              plotOutput("EvalPlot5"),style="padding: 5px;", height="350px")
+                            ))),
+         fluidRow(textOutput("EvalTxt5"))
+          
                 ),
         #===============================================
         # ==========  Slide Explorer ==========#

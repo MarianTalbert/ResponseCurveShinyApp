@@ -1,9 +1,10 @@
-switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Thresh,datNames,cexMult,TestTrain){
+switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Thresh,datNames,
+                          cexMult,TestTrain){
 #add calibration plot once it's fixed
   DiscColors<-c(rev(wes_palette("Cavalcanti")[c(1,2,4,5)]),wes_palette("GrandBudapest"))[1:length(modelNames)]
   resp<-resp[[TestTrain]]
   if(PlotType == "EvaluationMetrics"){
-   
+      main<-ifelse(TestTrain==1,"Calibration Split Metrics","Evaluation Split Metrics")
       Statistics = unlist(lapply(lapply(Stats,"[",TestTrain),FUN=function(x){x[[1]][c(1,3,4,5,6)]}))
       StatsFrame = data.frame(Stat=factor(names(Statistics)),
                               Value=as.vector(Statistics),
@@ -11,7 +12,7 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
       
       g<-ggplot(StatsFrame,aes(x=Stat,y=Value,fill=Model,facets=Stat), color=factor(Model)) +
         stat_summary(fun.y=mean,position=position_dodge(),geom="bar")+scale_fill_manual(values=DiscColors)+
-        ggtitle("Model Evaluation Metrics")+xlab("")+ylim(0,1)
+        ggtitle(main)+xlab("")+ylim(0,1)
   
   }
   if(PlotType == "ROC"){
@@ -20,7 +21,7 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
                  matrix(unlist(lapply(predictedVals,"[",TestTrain)),ncol=length(modelNames)))
      
       g<-auc.roc.plot(pre,Thresh,col=DiscColors,
-         model.names=modelNames)+
+         model.names=modelNames,TestTrain=TestTrain)+
          theme(axis.text.x = element_text(size = rel(cexMult)))
       
   }
@@ -40,11 +41,11 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
         else Mdat<-rbind(Mdat,M)
     }
     Mdat$Model<-factor(Mdat$Model,levels=modelNames,ordered=TRUE)
-    
+    main=ifelse(TestTrain==1,"Calibration Confusion Matrix","Evaluation Confusion Matrix")
     BlueScale=brewer.pal(9,"Blues")
     g<-ggplot(Mdat,aes(x=Observed,y=Predicted))+geom_tile()+geom_tile(aes(fill=Percent))+
       scale_fill_gradient2(low="white",mid=BlueScale[4],high=BlueScale[9],midpoint=50,limits=c(0,100))+
-      ggtitle("Confusion Matrix")+
+      ggtitle(main)+
       facet_wrap(~ Model) +
       geom_text(data=Mdat[seq(from=1,to=nrow(Mdat),by=4),], aes(x=2, y=1, label=paste(round(Percent),"%")))+
       geom_text(data=Mdat[seq(from=2,to=nrow(Mdat),by=4),], aes(x=1, y=1, label=paste(round(Percent),"%")))+
@@ -66,7 +67,8 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
       scale_fill_manual(values=DiscColors)+ylim(0,max(unlist(varImp),na.rm=TRUE))+
         theme(axis.text.x = element_text(size = rel(cexMult)))+
         ylab("Drop in AUC")+xlab("Predictors")+
-        ggtitle("Permutation Variable Importance")
+        ggtitle(paste(ifelse(TestTrain==1,"Calibration","Evaluation"),
+                      "Permutation Variable Importance"))
   }
   if(PlotType=="Density"){
    
@@ -81,7 +83,9 @@ switchEvalPlots<-function(PlotType,Stats,modelNames,predictedVals,resp,varImp,Th
         scale_fill_manual(values=c("blue","red"))+
         scale_colour_manual(values=c("blue","red"))+
         theme(strip.text.x = element_text(size = rel(cexMult)),
-              axis.text.x = element_text(size = rel(cexMult)))
+              axis.text.x = element_text(size = rel(cexMult)))+
+      ggtitle(paste(ifelse(TestTrain==1,"Calibration","Evaluation"),
+                    "Density"))
   
     }
     g<-g+theme(axis.title = element_text(size = rel(1.3)),

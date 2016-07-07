@@ -14,16 +14,6 @@ tmp <- createDataPartition(sdmdata$pb,
 training <- sdmdata[ tmp,]
 testing <- sdmdata[-tmp,]
 
-knnFit1 <- train(TrainData[tmp,], TrainClasses[tmp],
-                 method = "knn",
-                 preProcess = c("center", "scale"),
-                 tuneLength = 10,
-                 trControl = trainControl(method = "cv"))
-knnFit2 <- train(TrainData[tmp,], TrainClasses[tmp],
-                 method = "knn",
-                 preProcess = c("center", "scale"),
-                 tuneLength = 10,
-                 trControl = trainControl(method = "boot"))
 
 nnetFit <- train(TrainData[tmp,], TrainClasses[tmp],
                  method = "nnet",
@@ -38,18 +28,6 @@ glmFit <- train(TrainData[tmp,], TrainClasses[tmp],
 earthFit <- train(TrainData[tmp,], TrainClasses[tmp],
                   method = "bagEarthGCV")
                   
-#Still working out cv folding make sure it works with the gui and maybe try to plot evaluation 
-#metrics for best fit
-#maybe ask the creator if I can get mean probability vectors from hold out
-# folds=5
-# repeats=1
-#myControl <- trainControl(method='cv', number=folds, repeats=repeats, 
-#                           returnResamp='none', classProbs=TRUE,
-#                           returnData=FALSE, savePredictions=TRUE, 
-#                           verboseIter=TRUE, allowParallel=TRUE,
-#                           summaryFunction=twoClassSummary,
-#                           index=createMultiFolds(TrainClasses, k=folds, times=repeats))
-
 RandForest_Model <- train(TrainData[tmp,], TrainClasses[tmp],
                   method = "rf",nodesize=30)
 
@@ -63,6 +41,21 @@ fitLst<-list(GLM=GLM_Model,MARS=MARS_Model,RandForest=RandForest_Model,nnet=nnet
 correlationViewer(sdmdata,layerStk)
 exploreCurves(fitLst,inputLayers=layerStk,trainData=sdmdata[tmp,],threshold=2,
               boundary=wrld_simpl,testData=sdmdata[-tmp,])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #this resampling might be the best way to get at the evaluation metrics

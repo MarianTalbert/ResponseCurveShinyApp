@@ -1,8 +1,8 @@
 auc.roc.plot<-function (DATA,Thresh, threshold = 101, find.auc = TRUE,model.names,col, 
                         na.rm = FALSE, xlab = "1-Specificity (false positives)",
-    ylab = "Sensitivity (true positives)", main = "ROC Plot",
+    ylab = "Sensitivity (true positives)",TestTrain,
     cexMult=1.5){
-
+  main=ifelse(TestTrain==1,"Calibration ROC Curves","Evaluation ROC Curves")
   N.dat <- ncol(DATA) - 2
   df <- data.frame()
   AUC<-vector()
@@ -34,6 +34,6 @@ auc.roc.plot<-function (DATA,Thresh, threshold = 101, find.auc = TRUE,model.name
       scale_colour_manual(values=col)+
       geom_point(data=ThreshPoints,aes(x=specificity,y=sensitivity,colour=Model),size=rel(3))+
       theme(axis.title = element_text(size = rel(1.3)))+
-      ggtitle("ROC Plot")
+      ggtitle(main)
 return(p)
 }

@@ -268,7 +268,7 @@ app <- shinyApp(
       
      output$Gam<-renderPlot({
       if(!is.null(input$InptVar)){
-        #browser()
+        
         InputVar<-strsplit(input$InptVar," ")[[1]][1]
         varNum<-match(InputVar,names(values$dat))
         brushRgn<-sdmdata[,2]>=XYs$ylim[1] & 
@@ -290,18 +290,19 @@ app <- shinyApp(
         InputVar<-strsplit(input$InptVar," ")[[1]][1]
         par(mfrow=c(1,length(table(inBounds))))
         colNum<-match(InputVar,names(values$dat))
-        
-        
+      
+        hstbounds<-hist(dat[,colNum],plot=FALSE)
         for(i in 1:length(table(inBounds))){
           hst<-hist(dat[names(table(inBounds))[i]==inBounds,colNum],
                    ylab="",xlab="",freq=TRUE,xlim=range(dat[,colNum],na.rm=TRUE),
+                   ylim=c(0,max(hstbounds$counts)),
                    main=ifelse(length(table(inBounds))==1,
                                paste(names(dat)[colNum],"distribution"),
                                names(table(inBounds))[i]))
           rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
                  "grey89",border="grey89")
           hist(dat[names(table(inBounds))[i]==inBounds,colNum],breaks=hst$breaks,
-                    add=TRUE,
+                    add=TRUE,ylim=c(0,max(hstbounds$counts)),
                     col="red",
                     yaxt="n",ylab="",xlab="",freq=TRUE)
         hist(dat[(names(table(inBounds))[i]==inBounds & values$dat$resp==0),colNum],
