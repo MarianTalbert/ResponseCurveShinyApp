@@ -87,10 +87,10 @@ app <- shinyApp(
       
       
       output$EnsembleMap <- renderPlot({
-        if(!missing(a)){ #if some other set chosen for ensemble update ensemble and ensemble binary
-          Out$predictedStk[[length(Out$predictedStk)]]<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean,na.rm=FALSE)
+        #if(!missing(a)){ #if some other set chosen for ensemble update ensemble and ensemble binary
+        #  Out$predictedStk[[length(Out$predictedStk)]]<-stackApply(predictedStk,indices=rep(1,times=length(fitLst)),fun=mean,na.rm=FALSE)
           #and do the same for the binary stack
-        }
+        #}
         
         interactiveMap(Out$predictedStk,Out$binaryStk,Out$messRast,Colors,Cols,input,
                        (length(Out$modelLst)+1),boundary,Out$Coords[[as.numeric(input$mapTestTrain)]],

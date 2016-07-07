@@ -26,7 +26,7 @@ interactionPlot<-function(fitLst,model,vals=NULL,theta=30,phi=25,x,y,dat,resp,mo
          nrz <- nrow(z)
          ncz <- ncol(z)
          zfacet <- z[-1, -1] + z[-1, -ncz] + z[-nrz, -1] + z[-nrz, -ncz]
-         nbcol <- length(Colors)
+         nbcol <- length(Col)
           # Recode facet z-values into color indices
          facetcol <- cut(zfacet, nbcol)
          Xlab <- paste(substr(x,start=1,stop=12),c("\n","")[1+(nchar(x)<=12)],
