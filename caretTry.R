@@ -39,7 +39,7 @@ pb <- c(rep(1, nrow(presvals)), rep(0, nrow(absvals)))
 sdmdata <- data.frame(rbind(bradypus,backgr),cbind(pb, rbind(presvals, absvals)))
 
 
-TrainData <- sdmdata[,4:7]
+TrainData <- sdmdata[,4:10]
 TrainClasses <- factor(sdmdata[,3])
 createFolds(factor(sdmdata[,3]), 
                     k=5)
@@ -50,7 +50,10 @@ tmp <- createDataPartition(sdmdata$pb,
 training <- sdmdata[ tmp,]
 testing <- sdmdata[-tmp,]
 
-
+knnFit1 <- train(TrainData[tmp,], TrainClasses[tmp],
+                                  method = "knn",
+                                  preProcess = c("center", "scale"),
+                                  tuneLength = 10)
 nnetFit <- train(TrainData[tmp,], TrainClasses[tmp],
                  method = "nnet",
                  preProcess = "range",

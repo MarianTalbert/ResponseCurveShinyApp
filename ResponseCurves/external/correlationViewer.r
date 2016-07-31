@@ -8,6 +8,7 @@ correlationViewer<-function(sdmdata,layerStk,Threshld=.7){
   
   missing.summary<-1-apply(apply(dat,2,complete.cases),2,sum)/nrow(dat)
   DevScore <- univariateDev(dat)
+
   names(DevScore$devExp)<-names(dat)[1:(ncol(dat)-1)]
   #calculate total correlations above the threshold
   #and order the data accordingly
@@ -234,8 +235,10 @@ app <- shinyApp(
       })
       
      output$oneVarChoice <- renderUI({
-        choices<-paste(names(dat)[-c(ncol(dat))],
-                       " (",round(values$devExp,digits=3),"%"," deviance explained)",sep="")
+       
+        o<-order(DevScore$devExp,decreasing=TRUE)
+        choices<-paste(names(dat)[o],
+                       " (",round(DevScore$devExp[o],digits=3),"%"," deviance explained)",sep="")
        radioButtons('InptVar', 'Variable', choices=choices)
       })
   
@@ -243,7 +246,7 @@ app <- shinyApp(
         if(!is.null(input$InptVar)){
           InputVar<-strsplit(input$InptVar," ")[[1]][1]
           par(oma=c(0,0,0,0),mar=c(2,2,2,2))
-          
+         
           plot(layerStk, match(InputVar,names(layerStk)),cex.main=1.7,xlim=XYs$xlim,ylim=XYs$ylim,
                col=rev(inferno(25)),alpha=input$mpTr)
           #probably use a choice of maps here mpPtTr
@@ -290,22 +293,22 @@ app <- shinyApp(
         InputVar<-strsplit(input$InptVar," ")[[1]][1]
         par(mfrow=c(1,length(table(inBounds))))
         colNum<-match(InputVar,names(values$dat))
-      
-        hstbounds<-hist(dat[,colNum],plot=FALSE)
+        
+        hstbounds<-hist(values$dat[,colNum],plot=FALSE)
         for(i in 1:length(table(inBounds))){
-          hst<-hist(dat[names(table(inBounds))[i]==inBounds,colNum],
-                   ylab="",xlab="",freq=TRUE,xlim=range(dat[,colNum],na.rm=TRUE),
+          hst<-hist(values$dat[names(table(inBounds))[i]==inBounds,colNum],
+                   ylab="",xlab="",freq=TRUE,xlim=range(values$dat[,colNum],na.rm=TRUE),
                    ylim=c(0,max(hstbounds$counts)),
                    main=ifelse(length(table(inBounds))==1,
-                               paste(names(dat)[colNum],"distribution"),
+                               paste(names(values$dat)[colNum],"distribution"),
                                names(table(inBounds))[i]))
           rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
                  "grey89",border="grey89")
-          hist(dat[names(table(inBounds))[i]==inBounds,colNum],breaks=hst$breaks,
+          hist(values$dat[names(table(inBounds))[i]==inBounds,colNum],breaks=hst$breaks,
                     add=TRUE,ylim=c(0,max(hstbounds$counts)),
                     col="red",
                     yaxt="n",ylab="",xlab="",freq=TRUE)
-        hist(dat[(names(table(inBounds))[i]==inBounds & values$dat$resp==0),colNum],
+        hist(values$dat[(names(table(inBounds))[i]==inBounds & values$dat$resp==0),colNum],
               breaks=hst$breaks,add=TRUE,col="blue",freq=TRUE)
       
         }
