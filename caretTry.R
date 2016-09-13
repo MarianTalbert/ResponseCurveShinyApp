@@ -1,5 +1,5 @@
 
-setwd("H:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
+setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCodeFixed")
 ShinyCode<-file.path("ResponseCurves\\External")
 sourceList<-list.files(ShinyCode,full.names=TRUE)
 unlist(lapply(as.list(sourceList),source))
