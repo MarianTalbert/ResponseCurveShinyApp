@@ -1,31 +1,26 @@
-setwd("C:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
+
+setwd("H:\\GoogleDrive\\Interactive\\Rcode\\Shiny\\MyCode")
 ShinyCode<-file.path("ResponseCurves\\External")
 sourceList<-list.files(ShinyCode,full.names=TRUE)
 unlist(lapply(as.list(sourceList),source))
 
 ChkLibs(list("rgeos","maptools","randomForest","mgcv","dismo","shiny","earth","PresenceAbsence",
              "wesanderson","ggplot2","raster","grid","gridExtra","splines","RColorBrewer",
-             "viridis","caret","MASS","mlbench","rpart"))
+             "viridis","caret","MASS","mlbench","rpart","Cairo"))
 #=====================================================
-# This is almost directly from the dismo vignette 
+# Put together some species distribution data using the bradypus data
+# and snippets of code from the dismo package
+
 files <- list.files(path=paste(system.file(package="dismo"),
                                '/ex', sep=''), pattern='grd', full.names=TRUE)
-files<-files[c(1,3,4,5,2,7,8)]
-files<-files[-c(9)]
-layerStk <- stack(files)
-plot(layerStk)
-data(wrld_simpl)
+files<-files[c(2,3,4,5,6,7)]
+
 file <- paste(system.file(package="dismo"), "/ex/bradypus.csv", sep="")
+layerStk <- stack(files)
+data(wrld_simpl)
 bradypus <- read.table(file, header=TRUE, sep=",")
 # we do not need the first column
 bradypus <- bradypus[,-1]
-#And now plot:
-# first layer of the RasterStack
-plot(layerStk, 1)
-# note the "add=TRUE" argument with plot
-plot(wrld_simpl, add=TRUE)
-# with the points function, "add" is implicit
-points(bradypus, col="blue")
 presvals <- extract(layerStk, bradypus)
 # setting random seed to always create the same
 # random set of points for this example
@@ -35,21 +30,26 @@ PresExt <- extent(-104.7,-36,-26,16)
 backgr <- randomPoints(layerStk,ext=PresExt, 500)
 colnames(backgr)<-c("lon","lat")
 absvals <- extract(layerStk, backgr)
-pb <- c(rep(1, nrow(presvals)), rep(0, nrow(absvals)))
-sdmdata <- data.frame(rbind(bradypus,backgr),cbind(pb, rbind(presvals, absvals)))
+resp <- c(rep(1, nrow(presvals)), rep(0, nrow(absvals)))
+sdmdata <- data.frame(rbind(bradypus,backgr),cbind(resp, rbind(presvals, absvals)))
 
-
-TrainData <- sdmdata[,4:10]
+#using shiny for interactive correlation filtering and selecting the 
+#covariates
+uncorInd<-correlationViewer(sdmdata,layerStk,boundary=wrld_simpl)
+#Selected bio7 12 16 17 1
+sdmdata<-sdmdata[,uncorInd]
+#=====================================
+#now from the caret package we'll split into test and train
+TrainData <- sdmdata[,4:ncol(sdmdata)]
 TrainClasses <- factor(sdmdata[,3])
-createFolds(factor(sdmdata[,3]), 
-                    k=5)
-set.seed(1)
-tmp <- createDataPartition(sdmdata$pb,
+tmp <- createDataPartition(sdmdata$resp,
                            p = .8,
                            list = FALSE)
 training <- sdmdata[ tmp,]
 testing <- sdmdata[-tmp,]
 
+#next we fit models with some "reasonable" predict methods
+#or we can use or hopefully just about any from the caret package
 knnFit1 <- train(TrainData[tmp,], TrainClasses[tmp],
                                   method = "knn",
                                   preProcess = c("center", "scale"),
@@ -71,64 +71,18 @@ RandForest_Model <- train(TrainData[tmp,], TrainClasses[tmp],
                   method = "rf",nodesize=30)
 
 rda_Model<-train(TrainData[tmp,],TrainClasses[tmp],method="rda")
-GLM_Model = glm(pb ~ bio1 + bio5 + bio12+ bio7, data=sdmdata[tmp,],family=binomial)
-MARS_Model = earth(pb~ bio1 + bio5 + bio12 + bio7, data=sdmdata[tmp,],glm=list(family=binomial))
+GLM_Model = glm(resp ~ ., data=sdmdata[tmp,-c(1,2)],family=binomial)
+MARS_Model = earth(resp~ ., data=sdmdata[tmp,-c(1,2)],glm=list(family=binomial))
 
+#=====================================================================
+#This is where the magic happens we put our model fit objects in a list
 fitLst<-list(GLM=GLM_Model,MARS=MARS_Model,RandForest=RandForest_Model,nnet=nnetFit)
 
-
-correlationViewer(sdmdata,layerStk)
+#then using the model fit list, the spatial layer stack, information on the test/train split
+#and possibly a shape file we can interactively explore our models
 exploreCurves(fitLst,inputLayers=layerStk,trainData=sdmdata[tmp,],threshold=2,
               boundary=wrld_simpl,testData=sdmdata[-tmp,])
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#this resampling might be the best way to get at the evaluation metrics
-data(BloodBrain)
-set.seed(1)
-
-tmp <- createDataPartition(logBBB,
-                           p = .8,
-                           times = 10)
-
-rpartFit <- train(bbbDescr, logBBB,
-                  "rpart", 
-                  tuneLength = 16,
-                  trControl = trainControl(
-                    method = "LGOCV", index = tmp))
-
-ctreeFit <- train(bbbDescr, logBBB,
-                  "ctree", 
-                  trControl = trainControl(
-                    method = "LGOCV", index = tmp))
-
-earthFit <- train(bbbDescr, logBBB,
-                  "earth",
-                  tuneLength = 20,
-                  trControl = trainControl(
-                    method = "LGOCV", index = tmp))
-
-#or load pre-calculated results using:
-  #load(url("http://caret.r-forge.r-project.org/exampleModels.RData"))
-  
-  resamps <- resamples(list(CART = rpartFit,
-                            CondInfTree = ctreeFit,
-                            MARS = earthFit))
-
-resamps
-summary(resamps)
 

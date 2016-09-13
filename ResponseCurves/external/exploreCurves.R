@@ -1,4 +1,4 @@
-exploreCurves<-function(fitLst,inputLayers,trainData,threshold=2,boundary=NA,testData){
+exploreCurves <- function(fitLst,inputLayers,trainData,threshold=2,boundary=NA,testData){
 
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget\n") 
@@ -11,7 +11,7 @@ rspHgt <- c("150px","300px","450px","650px","800px")[min(5,length(Out$modelLst))
 Cols <- c(wes_palette("Darjeeling"),wes_palette("GrandBudapest2"),wes_palette("Cavalcanti"),wes_palette("Moonrise3"))
 cat("The interactive widget should come up momentarilly\n")
 cat("Press escape to exit the interactive widget") 
-evalPlotGroup=c("EvaluationMetrics","ROC","ConfusionMatrix","VariableImportance","Density")
+evalPlotGroup <- c("EvaluationMetrics","ROC","ConfusionMatrix","VariableImportance","Density")
 #======================================================
 #======================================================
 app <- shinyApp(

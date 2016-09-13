@@ -1,4 +1,4 @@
-correlationViewer<-function(sdmdata,layerStk,Threshld=.7){              
+correlationViewer<-function(sdmdata,layerStk,boundary=NA,Threshld=.7){              
   #on.exit(return(dat)) #I'll need to reformat this with the selected vars 
   #assuming the data is lon, lat, response, dat
   startNumPlts<-5
@@ -28,19 +28,21 @@ app <- shinyApp(
                            c("Total high correlations with other variables being considered"="TotCors",
                               "Percent deviance explained in a univariate GAM model"="Dev")),
               numericInput(inputId="numPlts",label="Number of variables to display" , 
-                           value=startNumPlts,max=6),
+                           value=startNumPlts,max=5),
               sliderInput("pointSize","Scatterplot point size",min=.05,max=6,value=1),
               sliderInput("alpha","Scatterplot point transparency",min=.05,max=1,value=.7),
               actionButton("highlight", label = "Highlight points in brushed area"),
               actionButton("resethighlight", label = "remove highlight selection"),
               uiOutput("varChoices"),
+              helpText("click the done button to return your choices"),
+              actionButton(inputId="done", "Return Selection"),
               width=2
            ),
            
               
           mainPanel(
-            uiOutput('plots')
-          )
+            uiOutput('plots'),
+          width=10)
         )
       ),
      tabPanel("Variable Plot",
@@ -87,6 +89,7 @@ app <- shinyApp(
         devExp=DevScore$devExp,
         TotCors=TotalCors,
         VarsToUse=names(dat)[1:(ncol(dat)-1)],
+        varsToUse=names(dat)[1:(ncol(dat)-1)],
         Nplots=min(startNumPlts,(ncol(dat)-1))^2+(min(startNumPlts,ncol(dat)-1)),
         n.col=min(ncol(dat)-1,startNumPlts)
       )
@@ -108,20 +111,30 @@ app <- shinyApp(
           XYs$ylim <- c(ymin(layerStk),ymax(layerStk))
         }
       })
+      observe({
+        
+        if(input$done > 0){
+          VarsToUse <- values$varsToUse
+          indToReturn <- c(1,2,3,match(VarsToUse,names(sdmdata),))
+          #browser()
+          stopApp(returnValue=indToReturn)
+          
+        }
+      })
       
       observeEvent(input$resetExtent,{
         XYs$xlim <- c(xmin(layerStk),xmax(layerStk))
         XYs$ylim <- c(ymin(layerStk),ymax(layerStk))
       })
      
-      observeEvent(input$chkGrp,{
-         values$varsToUse<-names(values$dat)[1:(ncol(values$dat)-1)]  
-          if(!is.null(input$chkGrp)){
-               spltDat<-strsplit(input$chkGrp," ")
-               values$varsToUse<-unlist(lapply(spltDat,"[",1))
-          }
-          
-      })
+     observeEvent(input$chkGrp,{
+      
+        values$varsToUse<-names(values$dat)[1:(ncol(values$dat)-1)]  
+         if(!is.null(input$chkGrp)){
+              spltDat<-strsplit(input$chkGrp," ")
+              values$varsToUse<-unlist(lapply(spltDat,"[",1))
+         }
+     })
       
       #both of these are needed where I can't use reactive
       Nplots<-isolate(values$Nplots)
@@ -159,17 +172,17 @@ app <- shinyApp(
             })
           })
         }
-        col.width <- round(10/(n.col()+input$showRespGam)) # Calculate bootstrap column width
+       
         n.row <- ceiling(values$Nplots/(n.col()+input$showRespGam)) # calculate number of rows
         cnter <<- 0 # Counter variable
-        rowStyle<-paste("padding: 1px;height: ",100*col.width,"px;",sep="")
+        rowStyle<-"padding: 1px;height:200,px;"
         # Create row with columns
         rows  <- lapply(1:n.row,function(row.num){
           cols  <- lapply(1:(n.col()+input$showRespGam), function(i) {
             cnter    <<- cnter + 1
             brushName<-paste("plotbrush",cnter,sep="")
             plotname <- paste("plot", cnter, sep="")
-            column(col.width, plotOutput(plotname,
+            column(2, plotOutput(plotname,
                                          brush = brushOpts(
                                            id = brushName,
                                            resetOnNew = TRUE
@@ -250,11 +263,12 @@ app <- shinyApp(
           plot(layerStk, match(InputVar,names(layerStk)),cex.main=1.7,xlim=XYs$xlim,ylim=XYs$ylim,
                col=rev(inferno(25)),alpha=input$mpTr)
           #probably use a choice of maps here mpPtTr
-          plot(wrld_simpl, add=TRUE,cex.main=3)
+          if(inherits(boundary,"SpatialPolygonsDataFrame")) 
+             plot(boundary, add=TRUE,cex.main=3)
           if(!is.null(input$showTrain)){
-           #if(!is.null(XYs$ylim)) browser() 
+           
             inBounds<-sdmdata[,2]>=XYs$ylim[1] & sdmdata[,2]<=XYs$ylim[2] & sdmdata[,1]>=XYs$xlim[1] & sdmdata[,1]<=XYs$xlim[2]
-            #input$varptSize
+           
             if("showPres"%in%input$showTrain) 
                  points(sdmdata[(sdmdata[,3]==1 & inBounds),1],
                      sdmdata[(sdmdata[,3]==1 & inBounds),2], 

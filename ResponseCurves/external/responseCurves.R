@@ -61,6 +61,12 @@ responseCurves<-function(fitLst,model,vals=NULL,varImp,varIncluded,addImp,pIdx,d
                                     type = ifelse(plotR,"l","n"), lwd=2,cex=3,cex.main=3,cex.axis=1.2,yaxt=ifelse(pIdx==1 & !byVar,"s","n"),
                                     ylab=ifelse(pIdx==1 & !byVar,"Predicted Value",""),
                                     xaxt="n",main="",bg=bgCol[v])
+                                    rug(dat[resp==1,pIdx],col=
+                                          changeAlpha(c("red"),alpha=.1),
+                                        lwd=1.5,ticksize=.06)
+                                    rug(dat[resp==0,pIdx],col=
+                                          changeAlpha(c("blue"),alpha=.1),
+                                        lwd=1.5,ticksize=.06)
                                     if(addImp){
                                       Xext<-extendrange(test[1:(lR-1),pIdx])
                                       Yext<-extendrange(c(0,1))

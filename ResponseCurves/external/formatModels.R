@@ -15,7 +15,10 @@ formatModels <- function(fitLst,inputLayers,trainData,threshold,testData){
       dat$test<-testData[,-c(1:3)]
       resp$test<-testData[,3]
     }
-    
+   
+    inputLayers<-dropLayer(inputLayers,
+                           which(!names(inputLayers)%in%names(dat[[1]]),
+                                 arr.ind=TRUE))
     Variables<-names(dat[[1]])
    
   } 
@@ -32,7 +35,6 @@ formatModels <- function(fitLst,inputLayers,trainData,threshold,testData){
                                                             newdata=dat[[split]])
                  AUCVal[[split]]<-roc(resp[[split]],predictedVals[[i]][[split]])
               
-           
             Thresh[[i]]<-optimal.thresholds(DATA=cbind(seq(1:nrow(dat[[1]])),
                                                        resp[[1]],predictedVals[[i]][[1]]))[2,threshold]
             binaryVals<-as.numeric(predictedVals[[i]][[split]]>=Thresh[[i]])
