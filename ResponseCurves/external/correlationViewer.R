@@ -89,8 +89,8 @@ app <- shinyApp(
         devExp=DevScore$devExp,
         TotCors=TotalCors,
         VarsToUse=names(dat)[1:(ncol(dat)-1)],
-        varsToUse=names(dat)[1:(ncol(dat)-1)],
-        Nplots=min(startNumPlts,(ncol(dat)-1))^2+(min(startNumPlts,ncol(dat)-1))
+        Nplots=min(startNumPlts,(ncol(dat)-1))^2+(min(startNumPlts,ncol(dat)-1)),
+        n.col=min(startNumPlts,(ncol(dat)-1))
         )
       
       #setting single predictor brush extent
@@ -120,25 +120,21 @@ app <- shinyApp(
         XYs$ylim <- c(ymin(layerStk),ymax(layerStk))
       })
      
-     observeEvent(input$chkGrp,{
-      
+     observe({
         values$varsToUse<-names(values$dat)[1:(ncol(values$dat)-1)]  
          if(!is.null(input$chkGrp)){
               spltDat<-strsplit(input$chkGrp," ")
               values$varsToUse<-unlist(lapply(spltDat,"[",1))
          }
+        
+        values$Nplots<-min(input$numPlts,(ncol(values$dat)-1))^2+
+          ifelse(input$showRespGam,min(input$numPlts,(ncol(values$dat)-1)),0)
+        values$n.col<-ifelse(length(input$chkGrp)==0,input$numPlts,
+                             min(length(input$chkGrp),input$numPlts))
+        
+        values$Nplots<-min(input$numPlts,(length(input$chkGrp)))^2+
+          ifelse(input$showRespGam,min(input$numPlts,(length(input$chkGrp))),0)
      })
-      
-      #both of these are needed where I can't use reactive
-      #Nplots<-isolate(values$Nplots)
-     observeEvent(input$numPlts,{
-       values$Nplots<-min(input$numPlts,(ncol(values$dat)-1))^2+
-         ifelse(input$showRespGam,min(input$numPlts,(ncol(values$dat)-1)),0)
-     })
-     
-      n.col<-reactive({
-        ifelse(length(input$chkGrp)==0,input$numPlts,min(length(input$chkGrp),input$numPlts))
-               })
       
       NumPlots<-reactive({
         min(input$numPlts,(length(input$chkGrp)))^2+
@@ -146,27 +142,22 @@ app <- shinyApp(
       })
       #===================================================
       #Interactive pairs plot
-     
+      
       output$plots <- renderUI({
-        Nplots<-NumPlots()
-        
+        Nplots<-values$Nplots
+
         for (i in 1:as.numeric(Nplots)) {
-          if(i==1){ 
-            cat(paste("Nplots \n",Nplots))
-            cat(paste("n.col \n",n.col()))
-            cat(paste("input$chkGrp \n",input$chkGrp))
-            
-          }
+          
           local({
             num <- i # Make local variable
             plotname <- paste("plot", num , sep="")
             Nplots<-as.numeric(Nplots)
             output[[plotname]] <- renderPlot({
               
-              colNum<-num %% (n.col()+input$showRespGam)
-              rowNum<-ceiling(num/(n.col()+input$showRespGam))
+              colNum<-num %% (values$n.col+input$showRespGam)
+              rowNum<-ceiling(num/(values$n.col+input$showRespGam))
               #modular arithmitic doesn't quite map how I need
-              if(colNum==0) colNum<-n.col()+input$showRespGam
+              if(colNum==0) colNum<-values$n.col+input$showRespGam
               #use the zero column for the relationship bw resp and pred if it is to be used
               
               vtu<-c(names(values$dat)[names(values$dat)%in%values$varsToUse],"resp")
@@ -183,12 +174,12 @@ app <- shinyApp(
           })
         }
        
-        n.row <- ceiling(Nplots/(n.col()+input$showRespGam)) # calculate number of rows
+        n.row <- ceiling(Nplots/(values$n.col+input$showRespGam)) # calculate number of rows
         cnter <<- 0 # Counter variable
         rowStyle<-"padding: 1px;height:200,px;"
         # Create row with columns
         rows  <- lapply(1:n.row,function(row.num){
-          cols  <- lapply(1:(n.col()+input$showRespGam), function(i) {
+          cols  <- lapply(1:(values$n.col+input$showRespGam), function(i) {
             cnter    <<- cnter + 1
             brushName<-paste("plotbrush",cnter,sep="")
             plotname <- paste("plot", cnter, sep="")
@@ -221,8 +212,8 @@ app <- shinyApp(
         plotNum<-gsub("plotbrush","",Name)
         
         #I need to make sure this works 
-        Yvar<-ceiling(as.numeric(plotNum)/(n.col()+input$showRespGam))
-        Xvar<-as.numeric(plotNum)%%(n.col()+input$showRespGam)-input$showRespGam
+        Yvar<-ceiling(as.numeric(plotNum)/(values$n.col+input$showRespGam))
+        Xvar<-as.numeric(plotNum)%%(values$n.col+input$showRespGam)-input$showRespGam
         
         if (!is.null(brush)) {
           #three cases for the response look at the X and the correct response
