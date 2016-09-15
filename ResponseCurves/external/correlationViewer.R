@@ -90,15 +90,9 @@ app <- shinyApp(
         TotCors=TotalCors,
         VarsToUse=names(dat)[1:(ncol(dat)-1)],
         varsToUse=names(dat)[1:(ncol(dat)-1)],
-        Nplots=min(startNumPlts,(ncol(dat)-1))^2+(min(startNumPlts,ncol(dat)-1)),
-        n.col=min(ncol(dat)-1,startNumPlts)
-      )
+        Nplots=min(startNumPlts,(ncol(dat)-1))^2+(min(startNumPlts,ncol(dat)-1))
+        )
       
-      observeEvent(input$numPlts,{
-           values$Nplots<-min(input$numPlts,(ncol(values$dat)-1))^2+
-                 ifelse(input$showRespGam,min(input$numPlts,(ncol(values$dat)-1)),0)
-        })
-     
       #setting single predictor brush extent
       observeEvent(input$mapbrush,{
         brush <- input$mapbrush
@@ -115,8 +109,7 @@ app <- shinyApp(
         
         if(input$done > 0){
           VarsToUse <- values$varsToUse
-          indToReturn <- c(1,2,3,match(VarsToUse,names(sdmdata),))
-          #browser()
+          indToReturn <- c(1,2,3,match(VarsToUse,names(sdmdata)))
           stopApp(returnValue=indToReturn)
           
         }
@@ -137,16 +130,33 @@ app <- shinyApp(
      })
       
       #both of these are needed where I can't use reactive
-      Nplots<-isolate(values$Nplots)
+      #Nplots<-isolate(values$Nplots)
+     observeEvent(input$numPlts,{
+       values$Nplots<-min(input$numPlts,(ncol(values$dat)-1))^2+
+         ifelse(input$showRespGam,min(input$numPlts,(ncol(values$dat)-1)),0)
+     })
+     
+      n.col<-reactive({
+        ifelse(length(input$chkGrp)==0,input$numPlts,min(length(input$chkGrp),input$numPlts))
+               })
       
-      n.col<-reactive({min(ncol(values$dat)-1,input$numPlts)})
+      NumPlots<-reactive({
+        min(input$numPlts,(length(input$chkGrp)))^2+
+          ifelse(input$showRespGam,min(input$numPlts,(length(input$chkGrp))),0)
+      })
       #===================================================
       #Interactive pairs plot
      
       output$plots <- renderUI({
-        Nplots<-values$Nplots
+        Nplots<-NumPlots()
+        
         for (i in 1:as.numeric(Nplots)) {
-          
+          if(i==1){ 
+            cat(paste("Nplots \n",Nplots))
+            cat(paste("n.col \n",n.col()))
+            cat(paste("input$chkGrp \n",input$chkGrp))
+            
+          }
           local({
             num <- i # Make local variable
             plotname <- paste("plot", num , sep="")
@@ -173,7 +183,7 @@ app <- shinyApp(
           })
         }
        
-        n.row <- ceiling(values$Nplots/(n.col()+input$showRespGam)) # calculate number of rows
+        n.row <- ceiling(Nplots/(n.col()+input$showRespGam)) # calculate number of rows
         cnter <<- 0 # Counter variable
         rowStyle<-"padding: 1px;height:200,px;"
         # Create row with columns

@@ -123,9 +123,8 @@ app <- shinyApp(
       # Insert the right number of plot output objects into the web page
       output$ClickMaps <- renderUI({
         plot_output_list <- lapply(1:length(fitLst), function(i) {
-          plotMap <- paste("map", i, sep="")
-          plotCurves <- paste("curves", i, sep="")
-         
+          plotMap <- paste0("map", i)
+          plotCurves <- paste0("curves", i)
           fluidRow(
             column(4,
                    wellPanel(
@@ -151,21 +150,21 @@ app <- shinyApp(
        # IntractVals$nEvalPlots
    
       lapply(1:5,function(i){
-        output[[paste("CalibPlot",i,sep="")]] <- renderPlot({
+        output[[paste0("CalibPlot",i)]] <- renderPlot({
           Out$evaluationPlots[[1]][[i]]
         })
       })
       #browser()
       if(length(Out$evaluationPlots)==2){
         lapply(1:5,function(i){
-          output[[paste("EvalPlot",i,sep="")]] <- renderPlot({
+          output[[paste0("EvalPlot",i)]] <- renderPlot({
             Out$evaluationPlots[[2]][[i]]
           })
         })  
       }
        
         lapply(1:5,function(i){
-          output[[paste("EvalTxt",i,sep="")]] <- renderText({ 
+          output[[paste0("EvalTxt",i)]] <- renderText({ 
             switchEvalText(PlotType=evalPlotGroup[i])
                       })
                   })
@@ -175,12 +174,12 @@ app <- shinyApp(
       #Response curves for sliders
       
       observeEvent(input$addVals,{
-        IntractV<-unlist(lapply(paste(Out$Variables,"aa",sep=""),FUN=function(l) input[[l]]))
+        IntractV<-unlist(lapply(paste0(Out$Variables,"aa"),FUN=function(l) input[[l]]))
         IntractVals$Vals<-rbind(IntractVals$Vals,IntractV)
        })
       
       lapply(1:length(Out$dataLst),IntractVals=IntractVals,function(i,IntractVals){
-      output[[paste("slideRsp",i,sep="")]]<-renderPlot({
+      output[[paste0("slideRsp",i)]]<-renderPlot({
         responseCurves(fitLst,Out$modelLst,vals=IntractVals$Vals,i,varIncluded=Out$varIncluded,
                        varImp=Out$varImp,
                        addImp=input$addImp,dat=Out$dat[[1]],resp=Out$resp[[1]],Cols=Cols,
@@ -246,8 +245,8 @@ app <- shinyApp(
       # named sliders
       #creating a named list of sliders so I can put them where I feel like 
       lapply(1:length(Out$dataLst),function(i){
-      output[[paste("slide",i,sep="")]] <- renderUI({ 
-          sliderInput(inputId=paste(as.character(Out$dataLst[[i]]$Name),"aa",sep=""),
+      output[[paste0("slide",i)]] <- renderUI({ 
+          sliderInput(inputId=paste0(as.character(Out$dataLst[[i]]$Name),"aa"),
           label=as.character(Out$dataLst[[i]]$Name),min=signif(Out$dataLst[[i]]$min,digits=3),
           max=signif(Out$dataLst[[i]]$max,digits=3),
           value=signif(Out$dataLst[[i]]$mean,digits=3),round=TRUE)
@@ -256,7 +255,7 @@ app <- shinyApp(
       #=========================
       #a named list of predictor densities
       lapply(1:length(Out$dataLst),function(i,dat,resp){
-      output[[paste("dens",i,sep="")]] <- renderPlot({
+      output[[paste0("dens",i)]] <- renderPlot({
                  
                   presDens<-density(dat[resp==1,i])
                   absDens<-density(dat[resp==0,i])
@@ -315,19 +314,17 @@ ui=navbarPage("Respones Curve Explorer",
               )
         ),
        
-        conditionalPanel(TRUE,
-                         fluidRow(
-                           column(4,
-                                  wellPanel(
-                                    plotOutput("EnsembleMap", dblclick = "plotdblclick",height="300px",
-                                      brush = brushOpts(
-                                      id = "plotbrush",
-                                      resetOnNew = TRUE
-                                    )),style="padding: 5px;"),style="padding: 5px;"),
-                           column(6,
-                                  wellPanel(plotOutput("EnsemblePlot",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
+       fluidRow(
+           column(4,
+                  wellPanel(
+                    plotOutput("EnsembleMap", dblclick = "plotdblclick",height="300px",
+                      brush = brushOpts(
+                      id = "plotbrush",
+                      resetOnNew = TRUE
+                    )),style="padding: 5px;"),style="padding: 5px;"),
+           column(6,
+                  wellPanel(plotOutput("EnsemblePlot",height="300px"),style="padding: 5px;"),style="padding: 5px;" )
                            
-                         )
         ),
         uiOutput("ClickMaps")),
   #===============================================
